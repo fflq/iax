@@ -929,6 +929,7 @@ error:
 
 static inline void iwl_pcie_txq_progress(struct iwl_txq *txq)
 {
+	//IWL_ERR(trans, "*** fflq pcie %s\n", __func__) ;
 	lockdep_assert_held(&txq->lock);
 
 	if (!txq->wd_timeout)

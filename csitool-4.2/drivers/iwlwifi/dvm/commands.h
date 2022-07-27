@@ -3944,6 +3944,11 @@ struct iwl_bfee_notif {
 	u8 agc, antenna_sel;
 	__le16 len;
 	__le16 fake_rate_n_flags;
+	//fflq
+#ifdef FLQ_DEVFN
+	//u8 dev_name[12+1] ;
+	u8 devfn ;
+#endif
 	u8 payload[0];
 } __attribute__ ((packed));
 

@@ -1043,6 +1043,7 @@ static int iwl_init_drv(struct iwl_priv *priv)
 
 	/* Dan's parameters */
 	priv->connector_log = iwlwifi_mod_params.connector_log;
+	IWL_ERR(priv, "*** fflq c_log %d\n", priv->connector_log) ;
 	priv->bf_enabled = 1;		/* Enabled */
 	priv->rotate_rates = 0;		/* Disabled */
 	priv->last_rotate_rate = 0;	/* Disabled */
