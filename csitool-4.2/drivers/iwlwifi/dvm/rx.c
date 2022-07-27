@@ -927,8 +927,11 @@ static int iwlagn_rx_reply_rx(struct iwl_priv *priv,
 	rx_pkt_status = *(__le32 *)(pkt->data + sizeof(*amsdu) + len);
 	ampdu_status = iwlagn_translate_rx_status(priv,
 						  le32_to_cpu(rx_pkt_status));
-	if (priv->connector_log & IWL_CONN_RX_MPDU_MSK)
+
+	if (priv->connector_log & IWL_CONN_RX_MPDU_MSK) {
+		//IWL_ERR(priv, "*** fflq dvm %s, send_msg rx_mpdu %d\n", __func__, IWL_CONN_RX_MPDU) ;
 		connector_send_msg((void *)header, len, IWL_CONN_RX_MPDU);
+	}
 
 	if ((unlikely(phy_res->cfg_phy_cnt > IWLAGN_MAX_CFG_PHY_CNT))) {
 		IWL_DEBUG_DROP(priv, "dsp size out of range [0,%d]: %d\n",
@@ -1137,10 +1140,13 @@ int iwl_rx_dispatch(struct iwl_op_mode *op_mode, struct iwl_rx_cmd_buffer *rxb,
 	 *   handle those that need handling via function in
 	 *   rx_handlers table.  See iwl_setup_rx_handlers() */
 	if (priv->rx_handlers[pkt->hdr.cmd]) {
+		//IWL_ERR(priv, "*** fflq dvm %s, rx_handlers[%d]\n", __func__, pkt->hdr.cmd);
 		priv->rx_handlers_stats[pkt->hdr.cmd]++;
 		err = priv->rx_handlers[pkt->hdr.cmd] (priv, rxb, cmd);
 	} else {
 		/* No handling needed */
+		//fflq, here many info
+		//IWL_ERR(priv, "*** fflq rx_dispatch, No handler needed for %s, 0x%02x\n",
 		IWL_DEBUG_RX(priv, "No handler needed for %s, 0x%02x\n",
 			     iwl_dvm_get_cmd_string(pkt->hdr.cmd),
 			     pkt->hdr.cmd);

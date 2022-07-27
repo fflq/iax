@@ -40,6 +40,8 @@
 #include "dev.h"
 #include "agn.h"
 #include "connector.h"
+//fflq
+#include "../pcie/internal.h"
 
 int iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
 		struct iwl_device_cmd *cmd)
@@ -96,11 +98,31 @@ int iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
 		bfee_notif->bfee_count = cpu_to_le16(bfee_count);
 	}
 
+	Nrx = bfee_notif->Nrx;
+	Ntx = bfee_notif->Ntx;
 	/* Log the bytes to a file */
-	if (priv->connector_log & IWL_CONN_BFEE_NOTIF_MSK)
+	if (priv->connector_log & IWL_CONN_BFEE_NOTIF_MSK) {
+		//IWL_ERR(priv, "*** fflq dvm %s, send_msg bfeee_notif %d\n", __func__, IWL_CONN_BFEE_NOTIF) ;
+		IWL_ERR(priv, "*** fflq dvm bfee_notif, send_msg(%d), Nrx=%u Ntx=%u Antsel=%02x, "
+				"len=%u calc_len=%u\n", IWL_CONN_BFEE_NOTIF, Nrx, Ntx, bfee_notif->antenna_sel, 
+				len, (30*(3+2*Nrx*Ntx*8)+7)/8);
+
+		//fflq, this len is csi len, is payload[0]
+		//memcpy(bfee_notif->dev_name, dev_name(priv->dev), sizeof(bfee_notif->dev_name)) ;
+		// from drivers/pci/probe.c
+		//dev_set_name(&dev->dev, "%04x:%02x:%02x.%d", pci_domain_nr(dev->bus), dev->bus->number, 
+		//	PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn));
+		// iwlwifi/pcie/drv.c
+		struct pci_dev *pci_dev = IWL_TRANS_GET_PCIE_TRANS(priv->trans)->pci_dev;
+		//bfee_notif->reserved1 = (pci_dev->bus->number<<8) + pci_dev->devfn ;
+		bfee_notif->reserved1 = (pci_dev->bus->number*1000) + pci_dev->devfn ;
+		IWL_INFO(priv, "---%s, %s=%zd, %d/%d----\n", dev_driver_string(priv->dev), dev_name(priv->dev), 
+			strlen(dev_name(priv->dev)), pci_dev->devfn, bfee_notif->reserved1) ;
+
 		connector_send_msg((void *)bfee_notif,
 			len + sizeof(struct iwl_bfee_notif),
 			IWL_CONN_BFEE_NOTIF);
+	}
 
 	/* Now print out that we got a notification, and the size of it */
 	Nrx = bfee_notif->Nrx;

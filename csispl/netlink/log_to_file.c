@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 		++count;
 		if (ret != l)
 			exit_program_err(1, "fwrite");
-		if (count > 30)	exit_program(0);
+		//if (count > 30)	exit_program(0);
 	}
 
 	exit_program(0);
