@@ -28,7 +28,7 @@ methods (Access='public')
 
 	function sfd = wait_conn(obj, ip, port)
 		%sfd = tcpserver(7020,"Timeout",20,"ByteOrder","big-endian") ;
-		sfd = tcpip(ip, port, 'NetworkRole', 'server') ;
+		sfd = tcpip(ip, port, 'NetworkRole', 'server', 'Timeout', 60) ;
 		fprintf("* [csi_server][%s:%d] accept...\n", ip, port) ;
 		fopen(sfd) ;
 		fprintf("* [csi_server] got\n\n") ;
