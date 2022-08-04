@@ -19,31 +19,32 @@ if (local)
 	%figure(2); plot(angles) ; legend('1','2','3') ;
 else
 	server = CSIServer() ;
-	n = 1 ;
+	n = 0 ;
 	while true
-		csi_st = server.read_csi() ; 
+		csi_st = server.read_csi()  
 		if (isempty(csi_st))
+			fprintf("* empty csi_st\n") ;
 			pause(2) ;
 			continue ;
 		end
-		%fprintf("* pci(%d), %s\n", csi_st.pci, mat2str(csi_st.perm)) ;
-		if (csi_st.pci ~= 4000)
-			continue ;
-		end
-		%fp = fopen('/tmp/flqpi.log', 'w') ;
-		%fwrite(fp, length(data), 'uint16', 'b') ;
-		%fwrite(fp, data, 'uint8') ;
-		fprintf("- %d, mean(%f), %s\n", n, mean(rc12), mat2str(csi_st.perm)) ;
-		r = calc_rc12(csi_st) ;
-		if (r > 0)
-			skip = 5 ;
-			if (n > skip)
-				figure(1); hold on ;
-				plot(n-skip:n, rc12(end-skip:end), '--o') ;
-			end
-			n = n+1 ;
-		end
+		n = n+1 ;
 		pause(0.00001) ;
+		fprintf("* %d, pci(%d), %s\n", n, csi_st.pci, mat2str(csi_st.perm)) ;
+		if (csi_st.pci == 4000)
+			%fp = fopen('/tmp/flqpi.log', 'w') ;
+			%fwrite(fp, length(data), 'uint16', 'b') ;
+			%fwrite(fp, data, 'uint8') ;
+			r = calc_rc12(csi_st) ;
+			fprintf("- %d, %d, mean(%f), %s\n", n, length(rc12), mean(rc12), mat2str(csi_st.perm)) ;
+			if (r > 0)
+				len = length(rc12) ;
+				skip = 5 ;
+				if (len > skip)
+					figure(1); hold on ;
+					plot(len-skip:len, rc12(end-skip:end), '--o') ;
+				end
+			end
+		end
 	end
 end
 
@@ -57,8 +58,8 @@ function r = calc_rc12(csi_st)
 	perm = csi_st.perm ;
 	perms(end+1,:) = csi_st.perm ;
 
-	%if (true)
-	if (perm(1)+perm(2) == 3)
+	if (true)
+	%if (perm(1)+perm(2) == 3)
 		%db(sum(abs(csi),2))
 		%csi(perm(1:3),:) = csi(1:3,:) ;
 		%db(sum(abs(csi),2)) ;
