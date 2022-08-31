@@ -14,8 +14,9 @@ while true
 		continue ;
 	end
 	csi = get_scaled_csi(csi_st) ;
+	rss = get_total_rss(csi_st) ;
 	csi = squeeze(csi) ;
-	fprintf("*%d, %d, %f, 4/%d, 8/%d\n", n, csi_st.pci, csi_st.timestamp_low/1e6, length(tscell{1}), length(tscell{2})) ;
+	fprintf("*%d, pic/%d, rss/%f, ts/%f, 4/%d, 8/%d\n", n, csi_st.pci, rss, csi_st.timestamp_low/1e6, length(tscell{1}), length(tscell{2})) ;
 
 	if (csi_st.pci == 4000)
 		tscell{1}(end+1) = csi_st.timestamp_low/1e6 ;
