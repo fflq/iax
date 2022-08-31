@@ -11,16 +11,16 @@ function s = gs()
 
     %% 调试控制
     g.debug = false ;
-    g.display = true ;
     g.display = false ;
+    g.display = true ;
     g.pmufig = false ;
     g.aoafig = false ;
     g.aoafig = true ;
     g.netpac = false ;
     g.sendaoa = false ;
     g.apmode = true ;
-    g.origin_spotfi = true ;
     g.origin_spotfi = false ;
+    g.origin_spotfi = true ;
 
     g.gpu = true ;
     g.single = true ;
@@ -28,10 +28,11 @@ function s = gs()
     %% 实现相关
     g.envs = struct ;
     g.envs.c = 3e8 ;
-    g.envs.fc = 5.63e9;
+    g.envs.fc = 5.32e9;
     g.envs.fs = 312.5e3; % fgap
     g.envs.lambda = g.envs.c/g.envs.fc ;
     g.envs.d = g.envs.lambda/2 ;
+	g.envs.d
 
     % antenna num, and num for smoothing music
     g.envs.nant_tx = 1 ;   

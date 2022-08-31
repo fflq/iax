@@ -6,7 +6,7 @@ Instrument Tools, Signal Processing Toolbox
 %addpath('./csilibs') ;
 
 
-classdef CSIServer
+classdef CSIServer < handle
 
 properties (Access='public')
 	ip = '0.0.0.0';
@@ -34,7 +34,7 @@ methods (Access='public')
 		fprintf("* [csi_server] got\n\n") ;
 	end
 
-	function csi_st = read_csi(obj)
+	function csi_st = read_csi_st(obj)
 		csi_st = [] ;
 
     	[data, r] = obj.recv_csi(obj.clientfd) ;

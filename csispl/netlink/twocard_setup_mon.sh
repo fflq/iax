@@ -39,8 +39,8 @@ set_monitor() {
 }
 
 
+#set_monitor wlp1s0 
 set_monitor wlp4s0 
-set_monitor wlp8s0 
 
 #service network-manager start
 

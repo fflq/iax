@@ -119,7 +119,8 @@ int main(int argc, char** argv)
 	{
 		/* Receive from socket with infinite timeout */
 		ret = recv(sock_fd, buf, sizeof(buf), 0);
-		if (ret == -1)	exit_program_err(-1, "recv");
+		//if (ret == -1)	exit_program_err(-1, "recv");
+		if (ret == -1)	continue ;
 
 		/* Pull out the message portion and print some stats */
 		cmsg = NLMSG_DATA(buf);
@@ -146,9 +147,11 @@ int main(int argc, char** argv)
 		pos += 2 ;
 		memcpy(sbuf+pos, cmsg->data, l) ;
 		pos += l ;
-		printf("*%d pac\n", ++n) ;
 		//sendto(sfd, &sbuf, pos, 0, (struct sockaddr *)&saddr, sizeof(saddr)) ;
-		if (0 > send(sfd, &sbuf, pos, 0))
+		int sret = send(sfd, &sbuf, pos, 0);
+		printf("*%d pac-%d send-%d\n", ++n, ret, sret) ;
+		//if (0 > send(sfd, &sbuf, pos, 0))
+		if (0 > sret)
 		{
 			printf("send fail\n") ;
 			sfd = conn_server(process_server, process_port) ;
