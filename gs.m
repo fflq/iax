@@ -32,7 +32,6 @@ function s = gs()
     g.envs.fs = 312.5e3; % fgap
     g.envs.lambda = g.envs.c/g.envs.fc ;
     g.envs.d = g.envs.lambda/2 ;
-	g.envs.d
 
     % antenna num, and num for smoothing music
     g.envs.nant_tx = 1 ;   
@@ -53,7 +52,7 @@ function s = gs()
     % 同spotfi的设置
     if (g.origin_spotfi)
         g.envs.corr_threshold = 0.4 ;
-        g.envs.d = 2.6e-2 ;
+        %g.envs.d = 2.6e-2 ;
         g.envs.niter = 2 ;
         g.envs.nsignal = 2 ; % fixed signal nums
     end

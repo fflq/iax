@@ -11,7 +11,7 @@ addpath('./csilibs') ;
 %server = CSIFile('./data/csi.dat') ;
 server = CSIServer() ;
 while true
-	csi_st = server.read_csi_st() ;
+	csi_st = server.read_csi_st() 
 	if (isempty(csi_st))
 		pause(2) ; continue ;
 	end
@@ -22,6 +22,13 @@ end
 function handle_csist(csi_st)
 	persistent angles
 	csi = Util.get_csi(csi_st) ;
-	angles(end+1) = angle(csi(1,1)) ;
-	Util.plot_realtime1(1, angles) ;
+	%angles(end+1,1) = angle(csi(1,1)) ;
+	%angles(end,2) = angle(csi(2,1)) ;
+	%angles(end,3) = angle(csi(3,1)) ;
+	angles(end+1,1) = mean(angle(csi(1,:))) ;
+	angles(end,2) = mean(angle(csi(2,:))) ;
+	angles(end,3) = mean(angle(csi(3,:))) ;
+	Util.plot_realtime1(1, angles(:,1)) ;
+	Util.plot_realtime1(1, angles(:,2), 'c--o') ;
+	Util.plot_realtime1(1, angles(:,3), 'y--o') ;
 end

@@ -3,12 +3,15 @@ close all ;
 addpath('./csilibs') ;
 
 server = CSIServer() ;
+%server = CSIFile("/tmp/csi.dat") ;
 aoas = [] ;
 while true
 	csi_st = server.read_csi_st() ;
 	if (isempty(csi_st))
-		pause(2) ; continue ;
+		aoas
+		pause(10) ; continue ;
 	end
+	%csi_st.pci=4000;
 	fprintf("& pci/%d\n", csi_st.pci) ;
 	if (csi_st.pci ~= 4000)
 		continue ;

@@ -33,6 +33,7 @@
 #include "agn.h"
 
 const u8 iwl_bcast_addr[ETH_ALEN] = { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF };
+//flq
 const u8 iwl_monitor_addr[ETH_ALEN] = { 0x00, 0x16, 0xEA, 0x12, 0x34, 0x56 };
 
 static int iwl_sta_ucode_activate(struct iwl_priv *priv, u8 sta_id)
