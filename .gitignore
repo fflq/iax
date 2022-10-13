@@ -56,3 +56,6 @@ cscope.*
 
 *.o
 *.cmd
+
+send_data
+recv_csi

@@ -53,14 +53,9 @@ int main(int argc, char** argv)
 	int32_t diff;
 
 	/* Parse arguments */
-	if (argc > 6) {
+	if (argc > 5) {
 		printf("Usage: random_packets <number> <length> <mode: 0=my MAC, 1=injection MAC> <delay in us>\n");
 		return 1;
-	}
-	//fflq
-	if (argc > 5) {
-		mon = argv[5] ;
-		printf("* set inj %s\n", mon) ;
 	}
 	if (argc < 5 || (1 != sscanf(argv[4], "%u", &delay_us))) {
 		delay_us = 0;
