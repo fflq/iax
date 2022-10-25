@@ -4,7 +4,9 @@
 module_Init(iwl_mvm_init) ;
 iwl_mvm_init() {
 	iwl_mvm_rate_control_register();
-	iwl_opmode_register("iwlmvm", &iwl_mvm_ops) ;
+	iwl_opmode_register("iwlmvm", &iwl_mvm_ops) {
+		iwl_op_mode_mvm_start();
+	}
 }
 
 #define IWL_MVM_COMMON_OPS					\
