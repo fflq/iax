@@ -24,10 +24,11 @@ struct flq_nl_sock
 };
 
 
-
+FILE *g_fp_csi = NULL ;
 struct nl_cb *gcb = NULL ;
 unsigned int gportid = 0;
 int gr = 1 ;
+int gc = 0 ;
 
 void call_iwl_mvm_vendor_csi_register(struct nl_sock *sk, int family_id)
 {
@@ -71,10 +72,8 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 {
 	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
-	struct nlattr *msg_vendor_data, *nmsg_csi_hdr, *nmsg_csi_data ;
+	struct nlattr *msg_vendor_data, *nmsg_csi_hdr = NULL, *nmsg_csi_data = NULL ;
 	struct nlattr *nested_tb_msg[NL80211_ATTR_MAX + 1];
-	FILE *fp_csi_hdr = fopen("./csi_hdr", "w") ;
-	FILE *fp_csi_data = fopen("./csi_data", "w") ;
 
 	printf("* %s\n", __func__) ;
 	//nl_msg_dump(msg, stdout);
@@ -94,35 +93,35 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 		nla_parse_nested(nested_tb_msg, NL80211_ATTR_MAX, msg_vendor_data, NULL) ;
 		output_tb_msg(nested_tb_msg) ;
 
-		if ((nmsg_csi_hdr = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_HDR])) {
-			printf("* %s tb_msg[%x], nested csi_hdr len%d\n", 
-					__func__, IWL_MVM_VENDOR_ATTR_CSI_HDR, nmsg_csi_hdr->nla_len) ;
-			uint16_t csi_hdr_len = nmsg_csi_hdr->nla_len ;
+		nmsg_csi_hdr = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_HDR] ;
+	 	nmsg_csi_data = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_DATA] ;
+		if (nmsg_csi_hdr && nmsg_csi_data) {
+			printf("* %s, csi_hdr(%x,%u) csi_data(%x,%u)\n", __func__, 
+					nmsg_csi_hdr->nla_type, nmsg_csi_hdr->nla_len,
+					nmsg_csi_data->nla_type, nmsg_csi_data->nla_len) ;
+
+			uint32_t n32 ;
+			uint16_t csi_hdr_len = nmsg_csi_hdr->nla_len - 4 ;
 			uint8_t *csi_hdr = nla_get_string(nmsg_csi_hdr) ;
-			fwrite(csi_hdr, 1, csi_hdr_len, fp_csi_hdr) ;
-			printf("- %02x%02x\n", *csi_hdr, *(csi_hdr+1)) ;
-		}
-		if ((nmsg_csi_data = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_DATA])) {
-			printf("* %s tb_msg[%x], nested csi_data len%d\n", 
-					__func__, IWL_MVM_VENDOR_ATTR_CSI_DATA, nmsg_csi_data->nla_len) ;
-			uint16_t csi_data_len = nmsg_csi_data->nla_len ;
+			n32 = htonl(csi_hdr_len) ;
+			fwrite(&n32, 1, 4, g_fp_csi) ;
+			fwrite(csi_hdr, 1, csi_hdr_len, g_fp_csi) ;
+			if (csi_hdr_len != 272) {
+				printf("* %s, csi_hdr_len %d != 272\n", __func__, csi_hdr_len) ;
+				return NL_SKIP;
+			}
+
+			uint16_t csi_data_len = nmsg_csi_data->nla_len - 4 ;
 			uint8_t *csi_data = nla_get_string(nmsg_csi_data) ;
-			fwrite(csi_data, 1, csi_data_len, fp_csi_data) ;
-			printf("- %02x%02x\n", *csi_data, *(csi_data+1)) ;
+			n32 = htonl(csi_data_len) ;
+			fwrite(&n32, 1, 4, g_fp_csi) ;
+			fwrite(csi_data, 1, csi_data_len, g_fp_csi) ;
+			fflush(g_fp_csi) ;
+
+			printf("* gc%d csi, csi_hdr(%02x%02x), csidata(%02x%02x)\n", 
+					++gc, *csi_hdr, *(csi_hdr+1), *csi_data, *(csi_data+1)) ;
 		}
 	}
-
-	if (tb_msg[IWL_MVM_VENDOR_ATTR_CSI_HDR]) {
-		//strcpy(((Wifi*)arg)->ifname, nla_get_string(tb_msg[NL80211_ATTR_IFNAME]));
-	}
-	if (tb_msg[IWL_MVM_VENDOR_ATTR_CSI_DATA]) {
-		//((Wifi*)arg)->ifindex = nla_get_u32(tb_msg[NL80211_ATTR_IFINDEX]);
-	}
-
-	fclose(fp_csi_hdr) ;
-	fclose(fp_csi_data) ;
-	if (nmsg_csi_data->nla_len == 900)
-	exit(0) ;
 
 	return NL_SKIP;
 }
@@ -161,6 +160,8 @@ void recv_msg(struct nl_sock *sk)
 
 int main()
 {
+	g_fp_csi = fopen("./ax.csi", "w") ;
+
 	struct nl_sock *sk = nl_socket_alloc() ;
 	if (!sk) {
 		perror("failed nl_socket_alloc\n") ;
@@ -207,6 +208,8 @@ int main()
 		//nl_socket_add_memberships(sk, n, 0) ;
 		++ n ;
 	}
+
+	fclose(g_fp_csi) ;
 
 	return 0 ;
 }
