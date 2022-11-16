@@ -19,7 +19,8 @@ systemctl restart NetworkManager.service
 sleep 1 ;
 cd /sys/kernel/debug/iwlwifi/0000:08:00.0/iwlmvm/ ;
 echo 1 > csi_enabled ;
-cat mem ;
+#noneed
+#cat mem ;
 #echo 1 > /sys/kernel/debug/iwlwifi/0000:08:00.0/iwlmvm/csi_enabled ;
 #sudo cat /sys/kernel/debug/iwlwifi/0000:08:00.0/iwlmvm/mem ;
 

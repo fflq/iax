@@ -96,10 +96,11 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 		nmsg_csi_hdr = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_HDR] ;
 	 	nmsg_csi_data = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_DATA] ;
 		if (nmsg_csi_hdr && nmsg_csi_data) {
-			printf("* %s, csi_hdr(%x,%u) csi_data(%x,%u)\n", __func__, 
+			printf("* %s, %d csi_hdr(%x,%u) csi_data(%x,%u)\n", __func__, gc, 
 					nmsg_csi_hdr->nla_type, nmsg_csi_hdr->nla_len,
 					nmsg_csi_data->nla_type, nmsg_csi_data->nla_len) ;
 
+			if (nmsg_csi_data->nla_len == 420 || nmsg_csi_data->nla_len == 832) {
 			uint32_t n32 ;
 			uint16_t csi_hdr_len = nmsg_csi_hdr->nla_len - 4 ;
 			uint8_t *csi_hdr = nla_get_string(nmsg_csi_hdr) ;
@@ -120,6 +121,7 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 
 			printf("* gc%d csi, csi_hdr(%02x%02x), csidata(%02x%02x)\n", 
 					++gc, *csi_hdr, *(csi_hdr+1), *csi_data, *(csi_data+1)) ;
+		}
 		}
 	}
 
@@ -160,7 +162,8 @@ void recv_msg(struct nl_sock *sk)
 
 int main()
 {
-	g_fp_csi = fopen("./ax.csi", "w") ;
+	//g_fp_csi = fopen("./ax.csi", "w") ;
+	g_fp_csi = fopen("./ax.csi", "a") ;
 
 	struct nl_sock *sk = nl_socket_alloc() ;
 	if (!sk) {
