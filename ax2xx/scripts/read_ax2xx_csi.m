@@ -31,18 +31,49 @@ function sts = read_ax2xx_csi(filename, savename)
 		if (isempty(csi_st))
 			continue ;
 		end
-		plot_csi(csi_st.csi) ;
 
 		%[hdr_len, csi_len, 111111, hdr_st.csi_len, hdr_st.ntone] 
-		st = fill_st(hdr_st, csi_st)  
+		st = fill_st(hdr_st, csi_st) ;  
 		sts{end+1} = st ;
+
+		plot_csi(csi_st.csi) ;
 		input('-') ;
 	end
 	if ~isempty(savename)
 		save(savename, "sts");
 	end
 
+	disp('-----------') ;
+	%map_sts(sts) ;
+
 	fclose(f) ;	
+end
+
+
+function map_sts(sts)
+	map = containers.Map() ;
+	for i = 1:length(sts)
+		st = sts{i} ;
+		csi_len_str = int2str(st.csi_len) ;
+		if any(strcmp(keys(map),csi_len_str))
+			map(csi_len_str) = [map(csi_len_str); st] ;
+		else
+			map(csi_len_str) = st ;
+		end
+	end
+	map_keys = keys(map) ;
+	map_vals = values(map) ;
+	for i = 1:length(map_keys)
+		[str2num(map_keys{i}), length(map_vals{i})]
+	end
+	sts = map('416') ;
+	save("axcsi_nonht20.mat", 'sts');
+	sts = map('448') ;
+	save("axcsi_ht20.mat", 'sts');
+	sts = map('1824') ;
+	save("axcsi_ht40.mat", 'sts');
+	sts = map('3872') ;
+	save("axcsi_vht80.mat", 'sts');
 end
 
 
@@ -78,10 +109,53 @@ end
 function plot_csi(csi)
 	csi = squeeze(csi(:,1,:)) ;
 	csi_phase = unwrap(angle(csi.')) ;
+	%csi_phase = angle(csi.') ;
 	csi_mag = abs(csi.') ;
 	%plot(csi_phase) ;
 	plot(csi_mag) ;
 	pause(0.1) ;
+end
+
+
+function [nrx,ntx,ntone,type] = get_csi_type(len)
+	%len=(nrx,ntx,ntone)*4
+	%NONHT20: 208=(1,1,52), 416=(2,1,52), 832=(2,2,52)
+	%HT20: 224=(1,1,56), 448=(2,1,56), 896=(2,2,56)
+	%HT40: 456=(1,1,114), 912=(2,1,114), 1824=(2,2,114)
+	%VHT80: 968=(1,1,242), 1936=(2,1,242), 3872=(2,2,242)
+	%%HE160: 1936=(1,1,484), 3872=(2,1,484), 7744=(2,2,484), =2VHT80
+	%HE160: 1936=(1,1,498), 3872=(2,1,498), 7744=(2,2,498), =2VHT80
+	%80MHZ-wifi6-phone-hotpot 14152, 14912
+	if ~mod(len, 208) 
+		type = -20 ;
+		ntone = 52 ;
+	elseif ~mod(len, 224) 
+		type = 20 ;
+		ntone = 56 ;
+	elseif ~mod(len, 456) 
+		type = 40 ;
+		ntone = 114 ;
+	elseif ~mod(len, 968) 
+		type = 80 ;
+		ntone = 242 ;
+	elseif ~mod(len, 1936) 
+		type = 160 ;
+		ntone = 484 ;
+	else
+		fprintf("*len=%d?\n",len) ;
+		type = -999 ;
+		ntone = len/4 ;
+	end
+	nrxtx = len/ntone/4 ;
+	%ntx<=ntx
+	if (nrxtx >= 2)
+		nrx = 2 ;
+	else
+		nrx = 1 ;
+	end
+	ntx = nrxtx / nrx ;
+
+	[nrx,ntx,ntone,type]
 end
 
 
@@ -93,22 +167,11 @@ function csi_st = get_csi_st(f, len, ntone)
 	ht20_null_subcidxs = [8, 22, 35, 49] ;
 	csi_st.subcidxs = ht20_subcidxs ;
 
-	%HT
-	if (~mod(len, 448)) %HT20:224,448,896
-		csi_st.ntone = 56 ;
-	elseif (~mod(len, 416)) %NONHT:208,416
-		csi_st.ntone = 52 ;
-	else
-		fprintf("*len=%d?\n",len) ;
-		fread(f, len) ;
-		csi_st = [] ;
-		return ;
-	end
-	csi_st.nrx = 2 ;
-	csi_st.ntx = len/csi_st.nrx/csi_st.ntone/4 ;
+	[csi_st.nrx,csi_st.ntx,csi_st.ntone,type] = get_csi_type(len) ;
 
 	csi = get_csi(f, csi_st.nrx, csi_st.ntx, csi_st.ntone) ; 
-	csi_st.csi = csi(:,:,ht20_subcidxs) ;
+	%csi_st.csi = csi(:,:,ht20_subcidxs) ;
+	csi_st.csi = csi ;
 	%csi_st.csi(:,ht20_null_subcidxs) = nan ;
 	%csi_st.csi = fillmissing(csi_st.csi, 'linear', 2, 'EndValues', 'previous') ;
 end
