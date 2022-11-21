@@ -59,3 +59,5 @@ cscope.*
 
 send_data
 recv_csi
+
+ax.csi

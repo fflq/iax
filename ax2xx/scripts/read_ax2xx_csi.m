@@ -15,7 +15,9 @@ function sts = read_ax2xx_csi(filename, savename)
 	pos = 0; 
 	sts = {} ;
 	while pos < file_len
-		fprintf("* %.2f %%\n", 100*ftell(f)/file_len) ;
+		if ~mod(length(sts),1000)
+			fprintf("* read %.2f %%\n", 100*ftell(f)/file_len) ;
+		end
 
 		hdr_len = fread(f, 1, 'uint32', 'b') ;
 		if (hdr_len ~= 272)
@@ -35,45 +37,12 @@ function sts = read_ax2xx_csi(filename, savename)
 		%[hdr_len, csi_len, 111111, hdr_st.csi_len, hdr_st.ntone] 
 		st = fill_st(hdr_st, csi_st) ;  
 		sts{end+1} = st ;
-
-		plot_csi(csi_st.csi) ;
-		input('-') ;
 	end
 	if ~isempty(savename)
 		save(savename, "sts");
 	end
 
-	disp('-----------') ;
-	%map_sts(sts) ;
-
 	fclose(f) ;	
-end
-
-
-function map_sts(sts)
-	map = containers.Map() ;
-	for i = 1:length(sts)
-		st = sts{i} ;
-		csi_len_str = int2str(st.csi_len) ;
-		if any(strcmp(keys(map),csi_len_str))
-			map(csi_len_str) = [map(csi_len_str); st] ;
-		else
-			map(csi_len_str) = st ;
-		end
-	end
-	map_keys = keys(map) ;
-	map_vals = values(map) ;
-	for i = 1:length(map_keys)
-		[str2num(map_keys{i}), length(map_vals{i})]
-	end
-	sts = map('416') ;
-	save("axcsi_nonht20.mat", 'sts');
-	sts = map('448') ;
-	save("axcsi_ht20.mat", 'sts');
-	sts = map('1824') ;
-	save("axcsi_ht40.mat", 'sts');
-	sts = map('3872') ;
-	save("axcsi_vht80.mat", 'sts');
 end
 
 
@@ -103,17 +72,6 @@ function hdr_st = get_csi_hdr_st(f, len)
 	hdr_st.mac = join(string(dec2hex(fread(f, 6))),':') ;
 	%74
 	fread(f, len-74) ;
-end
-
-
-function plot_csi(csi)
-	csi = squeeze(csi(:,1,:)) ;
-	csi_phase = unwrap(angle(csi.')) ;
-	%csi_phase = angle(csi.') ;
-	csi_mag = abs(csi.') ;
-	%plot(csi_phase) ;
-	plot(csi_mag) ;
-	pause(0.1) ;
 end
 
 
@@ -155,7 +113,7 @@ function [nrx,ntx,ntone,type] = get_csi_type(len)
 	end
 	ntx = nrxtx / nrx ;
 
-	[nrx,ntx,ntone,type]
+	%[nrx,ntx,ntone,type]
 end
 
 

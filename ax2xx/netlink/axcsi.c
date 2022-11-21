@@ -162,8 +162,8 @@ void recv_msg(struct nl_sock *sk)
 
 int main()
 {
-	//g_fp_csi = fopen("./ax.csi", "w") ;
-	g_fp_csi = fopen("./ax.csi", "a") ;
+	g_fp_csi = fopen("./ax.csi", "w") ;
+	//g_fp_csi = fopen("./ax.csi", "a") ;
 
 	struct nl_sock *sk = nl_socket_alloc() ;
 	if (!sk) {
