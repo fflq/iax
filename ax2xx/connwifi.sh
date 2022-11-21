@@ -5,9 +5,9 @@ if [ $# -gt 1 ]; then
 	wlan=$1 ;
 fi
 
-pkill wpa_supplicant 
 #use system auto
+pkill wpa_supplicant 
 exit 0
-wpa_supplicant -Dnl80211 -i$wlan -c./wpa.conf -B
+wpa_supplicant -Dnl80211 -i$wlan -c../hostapd/wpa.conf -B
 dhclient $wlan
 
