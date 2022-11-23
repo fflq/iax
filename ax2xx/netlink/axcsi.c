@@ -35,6 +35,7 @@ void call_iwl_mvm_vendor_csi_register(struct nl_sock *sk, int family_id)
 	int r ;
   	struct nl_msg* msg = nlmsg_alloc();
 	int devidx = if_nametoindex("wlp8s0") ;
+	//devidx = if_nametoindex("mon0") ;
   
 	//fflqkey, refer __cfg80211_alloc_vendor_skb
 #define INTEL_OUI	0X001735
@@ -68,6 +69,15 @@ void output_tb_msg(struct nlattr **tb_msg)
 	}
 }
 
+
+void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_data_len) 
+{
+	uint8_t *mac = csi_hdr+68 ;
+	printf("*** mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", 
+			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]) ;
+}
+
+
 static int valid_cb(struct nl_msg *msg, void *arg) 
 {
 	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
@@ -100,7 +110,8 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 					nmsg_csi_hdr->nla_type, nmsg_csi_hdr->nla_len,
 					nmsg_csi_data->nla_type, nmsg_csi_data->nla_len) ;
 
-			if (nmsg_csi_data->nla_len == 420 || nmsg_csi_data->nla_len == 832) {
+			if (nmsg_csi_data->nla_len == 420 || nmsg_csi_data->nla_len == 832) { }
+
 			uint32_t n32 ;
 			uint16_t csi_hdr_len = nmsg_csi_hdr->nla_len - 4 ;
 			uint8_t *csi_hdr = nla_get_string(nmsg_csi_hdr) ;
@@ -121,7 +132,7 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 
 			printf("* gc%d csi, csi_hdr(%02x%02x), csidata(%02x%02x)\n", 
 					++gc, *csi_hdr, *(csi_hdr+1), *csi_data, *(csi_data+1)) ;
-		}
+			handle_csi(csi_hdr, csi_hdr_len, csi_data, csi_data_len) ;
 		}
 	}
 
