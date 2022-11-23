@@ -2,7 +2,7 @@
 set -x ;
 
 name=$(date +%s)
-mv /lib/modules/5.15.0-48-generic/updates /tmp/$name
+mv /lib/modules/$(uname -r)/updates /tmp/$name
 
 depmod
 
