@@ -35,6 +35,7 @@ function sts = load_csi(reload)
 	filename = "../netlink/ax.csi" ;
 	savename = "./axcsi.mat" ;
 	if reload || ~exist(savename)
+		fprintf("* reload %s\n", filename) ;
 		sts = read_ax2xx_csi(filename, savename) ;
 	else
 		sts = load(savename).sts ;
@@ -48,8 +49,8 @@ function stats_macs(st, print)
 		map = containers.Map() ;
 	end
 	if (print)
-		macs = keys(map) 
-		macns = values(map) 
+		macs = keys(map) ;
+		macns = values(map) ; 
 		for i = 1:length(macs)
 			fprintf("-%d. %s %d\n", i, macs{1,i}, macns{1,i});
 		end
