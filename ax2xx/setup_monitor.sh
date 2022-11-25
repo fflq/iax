@@ -6,6 +6,17 @@ mon=mon
 chn=4
 bw=HT20
 
+if [ $# -ge 3 ]; then
+	wlan=$1 ;
+	chn=$2 ;
+	bw=$3 ;
+else
+	echo "Usage: $0 wlan chn bw" ;
+	echo "- wlan gen mon (monitor type)" ;
+	exit ;
+fi
+
+
 #service network-manager stop
 
 ifconfig $wlan down
@@ -29,4 +40,6 @@ iw $mon set channel $chn $bw
 #so, ./axcsi in monitor need (wlp8s0-down, one-mon-up)
 
 
+### recover --------------------------------------
+#sudo service network-manager restart
 

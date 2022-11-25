@@ -150,8 +150,17 @@ function csi = get_csi(f, nrx, ntx, ntone)
 end
 
 
+function r = get_file_len(f)
+	fseek(f, 0, 'eof') ;
+	r = ftell(f) ;
+	fseek(f, 0, 'bof') ;
+end
+
+
+
 
 %用ph状态中选择部分属性填充csi_st结构
+%{
 function st = fill_qca_st(ph)
 	st.peer_mac = ph.peer_mac ;
 
@@ -223,10 +232,6 @@ function ph = get_payload_header(f)
 	ph.csi_len = ph.csi_st_len - ph.csi_st_header_len ;
 end
 
+%}
 
-function r = get_file_len(f)
-	fseek(f, 0, 'eof') ;
-	r = ftell(f) ;
-	fseek(f, 0, 'bof') ;
-end
 
