@@ -18,6 +18,7 @@ fi
 
 
 #service network-manager stop
+rfkill unblock all ;
 
 ifconfig $wlan down
 iw dev $wlan interface add $mon type monitor

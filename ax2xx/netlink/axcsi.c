@@ -8,6 +8,13 @@
 #include <net/if.h>
 #include <unistd.h>
 
+#define DEBUG
+#ifdef DEBUG
+#define flqstdout(fmt, ...)	fprintf(stdout, fmt, ##__VA_ARGS__)
+#else
+#define flqstdout(fmt, ...)	
+#endif
+
 
 //from include/netlink-private/types.h, origin struct nl_sock
 struct flq_nl_sock
@@ -48,12 +55,12 @@ void call_iwl_mvm_vendor_csi_register(struct nl_sock *sk, int family_id)
 	//nla_put(msg, NL80211_ATTR_VENDOR_DATA, 0, NULL) ;
 
 	int r = nl_send_auto(sk, msg);
-	printf("%s, send return %d\n", __func__, r) ;
+	flqstdout("%s, send return %d\n", __func__, r) ;
 
 	r = nl_recvmsgs_default(sk) ;
 	//struct nl_cb *cb = nl_cb_alloc(NL_CB_DEFAULT);
 	//r = nl_recvmsgs_report(sk, gcb); 
-	printf("%s, recv return %d\n", __func__, r) ;
+	flqstdout("%s, recv return %d\n", __func__, r) ;
 }
 
 
@@ -63,10 +70,65 @@ void output_tb_msg(struct nlattr **tb_msg)
 	for (i = 0; i < NL80211_ATTR_MAX; ++ i)
 	{
 		if (tb_msg[i])
-			printf("-- tb_msg[%x]: len %d, type %x\n", i, tb_msg[i]->nla_len, tb_msg[i]->nla_type) ;
+			flqstdout("-- tb_msg[%x]: len %d, type %x\n", i, tb_msg[i]->nla_len, tb_msg[i]->nla_type) ;
 	}
 }
 
+
+void calc_ntxrx(int csi_len, int ntone, int *p_nrx, int *p_ntx, int *p_ntone)
+{
+	int type, _ntone ;
+
+	if (0 == csi_len%208) {
+		type = -20 ;
+		_ntone = 52 ;
+	}
+	else if (0 == csi_len%224) {
+		type = 20 ;
+		_ntone = 56 ;
+	}
+	else if (0 == csi_len%224) {
+		type = 40 ;
+		_ntone = 114 ;
+	}
+	else if (0 == csi_len%224) {
+		type = 80 ;
+		_ntone = 242 ;
+	}
+	else if (0 == csi_len%224) {
+		type = 160 ;
+		_ntone = 484 ;
+	}
+	else {
+		flqstdout("* csi_len=%d?\n",csi_len) ;
+		type = -999 ;
+		_ntone = csi_len/4 ;
+	}
+
+	if (_ntone != ntone) {
+		flqstdout("* _ntone(%d) != ntone(%d)\n", _ntone, ntone) ;
+		exit(EXIT_FAILURE) ;
+	}
+	int nrxtx = csi_len/ntone/4 ;
+	//ntx<=ntx
+	if (nrxtx >= 2) *p_nrx = 2 ;
+	else *p_nrx = 1 ;
+	*p_ntx = nrxtx / *p_nrx ;
+	*p_ntone = _ntone ;
+}
+
+
+void output_hexs(uint8_t *data, int len)
+{
+	int n = 0 ;
+	for (n = 0; n < len; ++n) {
+		if (0 == n % 16)	printf("\n%08d:", n) ;
+		else if (0 == n % 8)	printf("  ") ;
+		else if (0 == n % 4)	printf(" ") ;
+		printf(" %02X", data[n]) ;
+	}
+	printf("\n") ;
+}
 
 void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_data_len) 
 {
@@ -81,12 +143,35 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 	fwrite(csi_data, 1, csi_data_len, g_fp_csi) ;
 	fflush(g_fp_csi) ;
 
-	printf("* %s, csi_hdr(%02x%02x), csidata(%02x%02x)\n", 
+	/*
+	flqstdout("* %s, csi_hdr(%02x%02x), csidata(%02x%02x)\n", 
 			__func__, *csi_hdr, *(csi_hdr+1), *csi_data, *(csi_data+1)) ;
+	*/
+	flqstdout("* %s\n", __func__) ;
 
-	uint8_t *mac = csi_hdr+68 ;
-	printf("-- mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", 
-			mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]) ;
+	uint8_t *hdr_mac = csi_hdr+68 ;
+	uint32_t hdr_csi_len = *(uint32_t*)csi_hdr ;
+	uint8_t hdr_nrx = *(csi_hdr+46) ;
+	uint8_t hdr_ntx = *(csi_hdr+47) ;
+	uint32_t hdr_ntone = *(uint32_t*)(csi_hdr+52) ;
+	uint32_t calc_nrx, calc_ntx, calc_ntone ;
+	calc_ntxrx(hdr_csi_len, hdr_ntone, &calc_nrx, &calc_ntx, &calc_ntone) ;
+	uint32_t hdr_rssi1 = *(uint32_t*)(csi_hdr+60) ;
+	uint32_t hdr_rssi2 = *(uint32_t*)(csi_hdr+64) ;
+	uint32_t hdr_ts = *(uint32_t*)(csi_hdr+88) ;
+	flqstdout("-- mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", 
+			hdr_mac[0], hdr_mac[1], hdr_mac[2], hdr_mac[3], hdr_mac[4], hdr_mac[5]) ;
+	flqstdout("-- (nrx,ntx,ntone)=(%d,%d,%d),calc{%d,%d,%d}\n", 
+			hdr_nrx, hdr_ntx, hdr_ntone, calc_nrx, calc_ntx, calc_ntone) ;
+	if (hdr_nrx*hdr_ntx*hdr_ntone != calc_nrx*calc_ntx*calc_ntone) {
+		flqstdout("* calcs not right\n") ;
+		exit(EXIT_FAILURE) ;
+	}
+	printf("-- rssi(%d,%d) ts(%u)\n", hdr_rssi1, hdr_rssi2, hdr_ts) ;
+	//if (hdr_ntx*hdr_nrx*hdr_ntone == 2*2*56)
+		output_hexs(csi_hdr, csi_hdr_len) ;
+	/*
+		*/
 }
 
 
@@ -97,7 +182,7 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 	struct nlattr *msg_vendor_data, *nmsg_csi_hdr = NULL, *nmsg_csi_data = NULL ;
 	struct nlattr *nested_tb_msg[NL80211_ATTR_MAX + 1];
 
-	//printf("* %s\n", __func__) ;
+	flqstdout("* %s\n", __func__) ;
 	//nl_msg_dump(msg, stdout);
 	//return NL_SKIP ;
 
@@ -111,14 +196,14 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 #define IWL_MVM_VENDOR_ATTR_CSI_HDR		0x4d
 #define IWL_MVM_VENDOR_ATTR_CSI_DATA	0x4e
 	if ((msg_vendor_data = tb_msg[NL80211_ATTR_VENDOR_DATA])) {
-		printf("* %s, tb_msg[%x] is vendor_data\n", __func__, NL80211_ATTR_VENDOR_DATA) ;
+		flqstdout("-- tb_msg[%x] is vendor_data\n", NL80211_ATTR_VENDOR_DATA) ;
 		nla_parse_nested(nested_tb_msg, NL80211_ATTR_MAX, msg_vendor_data, NULL) ;
 		output_tb_msg(nested_tb_msg) ;
 
 		nmsg_csi_hdr = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_HDR] ;
 	 	nmsg_csi_data = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_DATA] ;
 		if (nmsg_csi_hdr && nmsg_csi_data) {
-			printf("** %s, (nla_type,nla_len) csi_hdr(%x,%u) csi_data(%x,%u)\n", __func__, 
+			flqstdout("-- (nla_type,nla_len) csi_hdr(%x,%u) csi_data(%x,%u)\n", 
 					nmsg_csi_hdr->nla_type, nmsg_csi_hdr->nla_len,
 					nmsg_csi_data->nla_type, nmsg_csi_data->nla_len) ;
 
@@ -129,7 +214,7 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 			uint8_t *csi_data = nla_get_string(nmsg_csi_data) ;
 
 			if ((csi_hdr_len != 272) || !csi_hdr || !csi_data) {
-				printf("** %s, csi_hdr_len(%d)!=272 or !csi_hdr or !csi_data\n", __func__, csi_hdr_len) ;
+				flqstdout("* %s, csi_hdr_len(%d)!=272 or !csi_hdr or !csi_data\n", __func__, csi_hdr_len) ;
 				return NL_SKIP;
 			}
 
@@ -146,7 +231,7 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 static int finish_cb(struct nl_msg *msg, void *arg) {
 	int *finished = arg;
   	*finished = 1;
-  	printf("* %s -------\n", __func__) ;
+  	flqstdout("* %s -------\n", __func__) ;
 	nl_msg_dump(msg, stdout);
   	return NL_SKIP;
 }
@@ -163,13 +248,17 @@ void loop_recv_msg(struct nl_sock *sk)
   	nl_socket_modify_cb(sk, NL_CB_VALID, NL_CB_CUSTOM, valid_cb, NULL);
   	nl_socket_modify_cb(sk, NL_CB_FINISH, NL_CB_CUSTOM, finish_cb, &finished);
 
-	printf("\n\n") ;
+	flqstdout("\n\n") ;
 	while (!finished) { 
 		//r = nl_recvmsgs(sk, cb); 
 		//r = nl_recvmsgs_report(sk, gcb) ;
 		r = nl_recvmsgs_default(sk) ;
-		printf("* %s %d, %u nl_recvmsgs %d\n\n", __func__, ++n, gportid, r) ;
-		if (r < 0)	break ;
+		flqstdout("* %s %d, %u nl_recvmsgs %d\n\n", __func__, ++n, gportid, r) ;
+		//if (r < 0)	break ;
+		if (r < 0){
+			flqstdout("* nl_recvmsgs err %d\n\n", r) ;
+			continue ;
+		}
 	}
 }
 
@@ -177,7 +266,7 @@ void loop_recv_msg(struct nl_sock *sk)
 void handle_args(int argc, char **argv)
 {
 	if (argc < 3) {
-		printf("Usage: sudo %s wlan file\n- wlan: eg wlp8s0\n- file: eg ./a.csi\n"
+		flqstdout("Usage: sudo %s wlan file\n- wlan: eg wlp8s0\n- file: eg ./a.csi\n"
 				"* eg: sudo %s wlp8s0 ./a.csi\n", argv[0], argv[0]) ;
 		exit(EXIT_FAILURE) ;
 	}
@@ -185,10 +274,10 @@ void handle_args(int argc, char **argv)
  		gdevidx = if_nametoindex(argv[1]) ;
 		g_fp_csi = fopen(argv[2], "w") ;
 		if (!gdevidx || !g_fp_csi) {
-			printf("* args err\n") ;
+			flqstdout("* args err\n") ;
 			exit(EXIT_FAILURE) ;
 		}
-		printf("* %s, %s/%d %s\n", __func__, argv[1], gdevidx, argv[2]) ;
+		flqstdout("* %s, %s/%d %s\n", __func__, argv[1], gdevidx, argv[2]) ;
 	}
 }
 
@@ -226,7 +315,7 @@ struct nl_sock *init_nl_socket()
   	//nl_cb_set(gcb, NL_CB_FINISH, NL_CB_CUSTOM, finish_cb, &gr);
 
 	struct flq_nl_sock *flqsk = (struct flq_nl_sock*)sk ;
-	printf("* (nl_family,nl_pid,nl_groups), s_local(%u,%u,%u), s_peer(%u,%u,%u)\n", 
+	flqstdout("* (nl_family,nl_pid,nl_groups), s_local(%u,%u,%u), s_peer(%u,%u,%u)\n", 
 			flqsk->s_local.nl_family, flqsk->s_local.nl_pid, flqsk->s_local.nl_groups,
 			flqsk->s_peer.nl_family, flqsk->s_peer.nl_pid, flqsk->s_peer.nl_groups) ;
 	gportid = flqsk->s_local.nl_pid ;

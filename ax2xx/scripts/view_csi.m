@@ -3,8 +3,8 @@
 %addpath('../../') ;
 
 
-function view_csi(reload)
-	sts = load_csi(reload) ;
+function view_csi(filename, reload)
+	sts = load_csi(filename, reload) ;
 
 	phaseoff = [] ;
 	len = length(sts) ;
@@ -31,8 +31,8 @@ function view_csi(reload)
 	stats_macs([], true) ;
 end
 
-function sts = load_csi(reload)
-	filename = "../netlink/ax.csi" ;
+function sts = load_csi(filename, reload)
+	%filename = "../netlink/ax.csi" ;
 	savename = "./axcsi.mat" ;
 	if reload || ~exist(savename)
 		fprintf("* reload %s\n", filename) ;
