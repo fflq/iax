@@ -100,9 +100,10 @@ void calc_ntxrx(int csi_len, int ntone, int *p_nrx, int *p_ntx, int *p_ntone)
 		_ntone = 484 ;
 	}
 	else {
-		flqstdout("* csi_len=%d?\n",csi_len) ;
+		flqstdout("* no analysis csi_len=%d?\n",csi_len) ;
 		type = -999 ;
-		_ntone = csi_len/4 ;
+		//_ntone = csi_len/4 ;
+		_ntone = ntone ;
 	}
 
 	if (_ntone != ntone) {
