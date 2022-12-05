@@ -9,5 +9,6 @@ fi
 echo "* for pci($pci)" ;
 
 cd /sys/kernel/debug/iwlwifi/$pci/iwlmvm/ ;
+echo 100000 > csi_interval ;
 echo 1 > csi_enabled ; 
 

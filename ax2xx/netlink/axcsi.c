@@ -7,6 +7,11 @@
 #include <linux/nl80211.h>      
 #include <net/if.h>
 #include <unistd.h>
+#include <errno.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define DEBUG
 #ifdef DEBUG
@@ -157,8 +162,15 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 	uint32_t hdr_ntone = *(uint32_t*)(csi_hdr+52) ;
 	uint32_t calc_nrx, calc_ntx, calc_ntone ;
 	calc_ntxrx(hdr_csi_len, hdr_ntone, &calc_nrx, &calc_ntx, &calc_ntone) ;
-	uint32_t hdr_rssi1 = *(uint32_t*)(csi_hdr+60) ;
-	uint32_t hdr_rssi2 = *(uint32_t*)(csi_hdr+64) ;
+
+	// rssi in net/mac80211/sta_info.c/sta_set_sinfo() is s8 named x.(from iw dev link)
+	// and csi_hdr get is -x, so convert. just compare and guess. 
+	// why sep 4B, may struct support 4 ants
+	//uint32_t hdr_rssi1 = *(uint32_t*)(csi_hdr+60) - 128 ;
+	//uint32_t hdr_rssi2 = *(uint32_t*)(csi_hdr+64) - 128 ;
+	uint32_t hdr_rssi1 = -*(csi_hdr+60) ;
+	uint32_t hdr_rssi2 = -*(csi_hdr+64) ;
+
 	uint32_t hdr_ts = *(uint32_t*)(csi_hdr+88) ;
 	flqstdout("-- mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", 
 			hdr_mac[0], hdr_mac[1], hdr_mac[2], hdr_mac[3], hdr_mac[4], hdr_mac[5]) ;
@@ -168,9 +180,12 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 		flqstdout("* calcs not right\n") ;
 		exit(EXIT_FAILURE) ;
 	}
+
 	printf("-- rssi(%d,%d) ts(%u)\n", hdr_rssi1, hdr_rssi2, hdr_ts) ;
+	//system("iw wlp8s0 link | grep signal") ;
+	
 	//if (hdr_ntx*hdr_nrx*hdr_ntone == 2*2*56)
-		output_hexs(csi_hdr, csi_hdr_len) ;
+	output_hexs(csi_hdr, csi_hdr_len) ;
 	/*
 		*/
 }
@@ -254,7 +269,8 @@ void loop_recv_msg(struct nl_sock *sk)
 		//r = nl_recvmsgs(sk, cb); 
 		//r = nl_recvmsgs_report(sk, gcb) ;
 		r = nl_recvmsgs_default(sk) ;
-		flqstdout("* %s %d, %u nl_recvmsgs %d\n\n", __func__, ++n, gportid, r) ;
+		//flqstdout("* %s %d, %u nl_recvmsgs %d\n\n", __func__, ++n, gportid, r) ;
+		printf("* %s %d, %u nl_recvmsgs %d\n\n", __func__, ++n, gportid, r) ;
 		//if (r < 0)	break ;
 		if (r < 0){
 			flqstdout("* nl_recvmsgs err %d\n\n", r) ;
@@ -275,7 +291,7 @@ void handle_args(int argc, char **argv)
  		gdevidx = if_nametoindex(argv[1]) ;
 		g_fp_csi = fopen(argv[2], "w") ;
 		if (!gdevidx || !g_fp_csi) {
-			flqstdout("* args err\n") ;
+			flqstdout("* args err(%s), devidx(%d) fp_csi(%p)\n", strerror(errno), gdevidx, g_fp_csi) ;
 			exit(EXIT_FAILURE) ;
 		}
 		flqstdout("* %s, %s/%d %s\n", __func__, argv[1], gdevidx, argv[2]) ;

@@ -1,0 +1,26 @@
+
+
+iw
+link.c
+
+
+//NL80211_STA_INFO_SIGNAL
+TOPLEVEL(link, NULL, 0, 0, CIB_NETDEV, handle_link,
+	 "Print information about the current link, if any.");
+HIDDEN(link, get_sta, "<mac-addr>", NL80211_CMD_GET_STATION, 0,
+	CIB_NETDEV, handle_link_sta);
+handle_link_sta(msg) {
+	NLA_PUT(msg, NL80211_ATTR_MAC, ETH_ALEN, mac_addr) ;
+}
+print_link_sta() {
+	nla_parse(tb) ;
+	nla_parse_nested(tb[NL80211_ATTR_STA_INFO]) ;
+}
+
+
+//net/mac80211/sta_info.c
+sta_set_sinfo() {
+	// here send nl data to above, and get rssi.
+	// And, here except global-rssi, and has each ant rssi
+}
+
