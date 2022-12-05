@@ -27,6 +27,7 @@ systemctl restart NetworkManager.service
 sleep 1 ;
 #echo 1 > /sys/kernel/debug/iwlwifi/$pci/iwlmvm/csi_enabled ;
 cd /sys/kernel/debug/iwlwifi/$pci/iwlmvm/ ;
+echo 100000 > csi_interval ;
 echo 1 > csi_enabled ; 
 
 
