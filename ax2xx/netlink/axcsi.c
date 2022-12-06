@@ -155,7 +155,8 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 	*/
 	flqstdout("* %s\n", __func__) ;
 
-	uint8_t *hdr_mac = csi_hdr+68 ;
+	uint32_t hdr_ftm = *(uint32_t*)(csi_hdr+8) ;
+
 	uint32_t hdr_csi_len = *(uint32_t*)csi_hdr ;
 	uint8_t hdr_nrx = *(csi_hdr+46) ;
 	uint8_t hdr_ntx = *(csi_hdr+47) ;
@@ -171,7 +172,15 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 	uint32_t hdr_rssi1 = -*(csi_hdr+60) ;
 	uint32_t hdr_rssi2 = -*(csi_hdr+64) ;
 
-	uint32_t hdr_ts = *(uint32_t*)(csi_hdr+88) ;
+	uint8_t *hdr_mac = csi_hdr+68 ;
+
+	//1B,0-255-loop,may seq
+	uint8_t hdr_seq = *(csi_hdr+76) ;
+
+	uint32_t hdr_us = *(uint32_t*)(csi_hdr+88) ;
+
+	uint32_t hdr_rate_flag = *(uint32_t*)(csi_hdr+92) ;
+
 	flqstdout("-- mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", 
 			hdr_mac[0], hdr_mac[1], hdr_mac[2], hdr_mac[3], hdr_mac[4], hdr_mac[5]) ;
 	flqstdout("-- (nrx,ntx,ntone)=(%d,%d,%d),calc{%d,%d,%d}\n", 
@@ -181,7 +190,8 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 		exit(EXIT_FAILURE) ;
 	}
 
-	printf("-- rssi(%d,%d) ts(%u)\n", hdr_rssi1, hdr_rssi2, hdr_ts) ;
+	printf("-- rssi(%d,%d) seq(%d) us(%u) ftm(%u) ratef(%x)\n", 
+			hdr_rssi1, hdr_rssi2, hdr_seq, hdr_us, hdr_ftm, hdr_rate_flag) ;
 	//system("iw wlp8s0 link | grep signal") ;
 	
 	//if (hdr_ntx*hdr_nrx*hdr_ntone == 2*2*56)
