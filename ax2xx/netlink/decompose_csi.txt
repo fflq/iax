@@ -15,3 +15,9 @@
 type=s8, refer from net/mac80211/sta_info.c/sta_set_sinfo()
 #why sep 4B, may struct support 4 ants
 
+
+*[76]
+seq,1B,0-255
+
+
+
