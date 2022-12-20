@@ -1,0 +1,118 @@
+
+VERSION = 20081101
+
+MAJOR = 1
+MINOR = 0
+TINY = 0
+
+HOME = .
+top_builddir = $(HOME)
+
+prefix = /usr/local
+exec_prefix = ${prefix}
+ETC	= ${DESTDIR}${prefix}/etc
+BIN	= ${DESTDIR}${exec_prefix}/bin
+SHARE = ${DESTDIR}${prefix}/share/lorcon/
+MAN = ${DESTDIR}${prefix}/share/man
+LIB = ${DESTDIR}${exec_prefix}/lib
+INCLUDE = ${DESTDIR}${prefix}/include
+
+CC = gcc
+LDFLAGS = 
+LIBS =  -lm 
+CFLAGS = -I./   -DHAVE_CONFIG_H -g -O2 -DTX80211_VERSION=$(VERSION)
+LIBTOOL = $(SHELL) $(top_builddir)/libtool
+LTCOMPILE = $(LIBTOOL) --mode=compile $(CC) $(CFLAGS)
+
+DEPEND = .depend
+
+LIBOBJ = ifcontrol_linux.lo iwcontrol.lo madwifing_control.lo nl80211_control.lo \
+		 wtinject.lo mwoldinject.lo mwnginject.lo \
+		 ajinject.lo p54inject.lo wginject.lo \
+		 hapinject.lo rt2500inject.lo rtlinject.lo \
+		 rt2570inject.lo airpinject.lo rt73inject.lo \
+		 rt61inject.lo zd1211rwinject.lo mac80211inject.lo \
+		 bcm43xxinject.lo tx80211.lo \
+		 lorcon_decode.lo lorcon_packasm.lo lorcon_forge.lo 
+LIBOUT = liborcon.la
+
+TXTESTOBJ = tx.o
+TXTESTOUT = tx
+
+TXTUNOBJ  = tuntx.o
+TXTUNOUT  = tuntx
+
+L2PINGOBJ = l2ping80211.o
+L2PINGOUT = l2ping80211
+
+all:	$(DEPEND) $(LIBOUT) 
+
+$(LIBOUT):	$(LIBOBJ)
+	$(LIBTOOL) --mode=link $(CC) $(LDFLAGS) $(LIBS) -o $(LIBOUT) $(LIBOBJ) \
+					  -rpath $(LIB) -release $(MAJOR).$(MINOR).$(TINY)
+
+$(TXTESTOUT):	$(TXTESTOBJ)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $(TXTESTOUT) $(TXTESTOBJ) $(LIBS) -lorcon
+
+$(TXTUNOUT):	$(TXTUNOBJ)
+	$(CC) $(LDFLAGS) -o $(TXTUNOUT) $(TXTUNOBJ) $(LIBS) -lorcon -lpcap
+
+$(L2PINGOUT):	$(L2PINGOBJ)
+	$(CC) $(LDFLAGS) -o $(L2PINGOUT) $(L2PINGOBJ) $(LIBS) -lorcon -lpcap
+
+install:	$(LIBOUT)
+	install -d -m 755 $(LIB)
+	$(LIBTOOL) --mode=install install -c $(LIBOUT) $(LIB)/$(LIBOUT)
+	install -d -m 755 $(INCLUDE)
+	install -m 644 tx80211.h $(INCLUDE)/tx80211.h
+	install -m 644 tx80211_packet.h $(INCLUDE)/tx80211_packet.h
+	install -m 644 tx80211_errno.h $(INCLUDE)/tx80211_errno.h
+	install -m 644 lorcon_packasm.h $(INCLUDE)/lorcon_packasm.h
+	install -m 644 lorcon_forge.h $(INCLUDE)/lorcon_forge.h
+	install -m 644 ieee80211.h $(INCLUDE)/lorcon_ieee80211.h
+	install -d -m 755 $(MAN)/man3
+	install -o root -m 644 lorcon.3 $(MAN)/man3/lorcon.3
+
+	$(LDCONFIG)
+
+clean:
+	@-rm -f *.o
+	@-rm -f *.lo
+	@-rm -f *.la
+	@-rm -rf .libs
+	@-rm -f $(TXTESTOUT)
+
+distclean:
+	@-$(MAKE) clean
+	@-rm -f *~
+	@-rm cscope.out
+	@-rm -f $(DEPEND)
+	@-rm -f config.status
+	@-rm -f config.h
+	@-rm -f config.log
+	@-rm -f Makefile
+
+dep:
+	@$(MAKE) depend
+
+depend:
+	@$(MAKE) $(DEPEND)
+
+$(DEPEND):
+	@-rm -f $(DEPEND)
+	@echo "Generating dependencies... "
+	@echo > $(DEPEND)
+	@$(CC) $(CFLAGS) -MM \
+		`echo $(LIBOBJ) | sed -e "s/\.lo/\.c/g"` >> $(DEPEND)
+
+include $(DEPEND)
+
+.c.o:	$(DEPEND)
+	$(CC) $(CFLAGS) -c $*.c -o $@ 
+
+.c.lo:	$(DEPEND)
+	$(LTCOMPILE) -c $*.c -o $@
+
+.SUFFIXES: .c .o .lo
+
+

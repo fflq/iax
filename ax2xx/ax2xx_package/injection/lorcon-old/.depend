@@ -1,0 +1,50 @@
+
+ifcontrol_linux.o: ifcontrol_linux.c config.h ifcontrol_linux.h tx80211.h \
+ tx80211_packet.h tx80211_errno.h
+iwcontrol.o: iwcontrol.c config.h iwcontrol.h tx80211.h tx80211_packet.h \
+ tx80211_errno.h
+madwifing_control.o: madwifing_control.c config.h madwifing_control.h \
+ tx80211.h tx80211_packet.h tx80211_errno.h ifcontrol_linux.h
+nl80211_control.o: nl80211_control.c config.h tx80211.h tx80211_packet.h \
+ tx80211_errno.h
+wtinject.o: wtinject.c config.h wtinject.h iwcontrol.h tx80211.h \
+ tx80211_packet.h tx80211_errno.h tx80211_errno.h ifcontrol_linux.h
+mwoldinject.o: mwoldinject.c config.h mwoldinject.h wtinject.h \
+ iwcontrol.h tx80211.h tx80211_packet.h tx80211_errno.h
+mwnginject.o: mwnginject.c config.h mwnginject.h wtinject.h iwcontrol.h \
+ tx80211.h tx80211_packet.h tx80211_errno.h ifcontrol_linux.h \
+ madwifing_control.h tx80211_errno.h
+ajinject.o: ajinject.c config.h ajinject.h tx80211.h tx80211_packet.h \
+ tx80211_errno.h tx80211_packet.h
+p54inject.o: p54inject.c config.h p54inject.h wtinject.h iwcontrol.h \
+ tx80211.h tx80211_packet.h tx80211_errno.h
+wginject.o: wginject.c config.h wginject.h tx80211.h tx80211_packet.h \
+ tx80211_errno.h
+hapinject.o: hapinject.c config.h hapinject.h wtinject.h iwcontrol.h \
+ tx80211.h tx80211_packet.h tx80211_errno.h
+rt2500inject.o: rt2500inject.c config.h rt2500inject.h wtinject.h \
+ iwcontrol.h tx80211.h tx80211_packet.h tx80211_errno.h
+rtlinject.o: rtlinject.c config.h rtlinject.h wtinject.h iwcontrol.h \
+ tx80211.h tx80211_packet.h tx80211_errno.h
+rt2570inject.o: rt2570inject.c config.h rt2570inject.h wtinject.h \
+ iwcontrol.h tx80211.h tx80211_packet.h tx80211_errno.h
+airpinject.o: airpinject.c config.h
+rt73inject.o: rt73inject.c config.h rt73inject.h wtinject.h iwcontrol.h \
+ tx80211.h tx80211_packet.h tx80211_errno.h
+rt61inject.o: rt61inject.c config.h rt61inject.h wtinject.h iwcontrol.h \
+ tx80211.h tx80211_packet.h tx80211_errno.h
+zd1211rwinject.o: zd1211rwinject.c config.h zd1211rwinject.h wtinject.h \
+ iwcontrol.h tx80211.h tx80211_packet.h tx80211_errno.h
+mac80211inject.o: mac80211inject.c config.h mac80211inject.h wtinject.h \
+ iwcontrol.h tx80211.h tx80211_packet.h tx80211_errno.h
+bcm43xxinject.o: bcm43xxinject.c config.h bcm43xxinject.h wtinject.h \
+ iwcontrol.h tx80211.h tx80211_packet.h tx80211_errno.h
+tx80211.o: tx80211.c config.h tx80211.h tx80211_packet.h tx80211_errno.h \
+ tx80211_errno.h ifcontrol_linux.h
+lorcon_decode.o: lorcon_decode.c config.h tx80211.h tx80211_packet.h \
+ tx80211_errno.h
+lorcon_packasm.o: lorcon_packasm.c config.h lorcon_packasm.h \
+ tx80211_packet.h
+lorcon_forge.o: lorcon_forge.c config.h tx80211.h tx80211_packet.h \
+ tx80211_errno.h lorcon_packasm.h tx80211_packet.h lorcon_forge.h \
+ ieee80211.h
