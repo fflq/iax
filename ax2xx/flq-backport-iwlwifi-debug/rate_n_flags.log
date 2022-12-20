@@ -1,6 +1,8 @@
 
 
 * flq_monitor_tx_rate
+NOHT20 c100
+
 HT20 c200
 HT40 ca00
 HT-LDPC (HTX | 0x10000)
