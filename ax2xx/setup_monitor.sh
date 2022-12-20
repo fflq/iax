@@ -17,12 +17,18 @@ else
 fi
 
 
-service network-manager stop
+#service network-manager stop
+nmcli dev set $wlan managed no
 #nmcli r wifi off
-#rfkill unblock all ;
+rfkill unblock wifi ;
+#airmon-ng check kill
+iw $wlan set power_save off
 
 ifconfig $wlan down
+ifconfig $mon > /dev/null 2>&1
+if [ $? -ne 0 ]; then
 iw dev $wlan interface add $mon type monitor
+fi
 ifconfig $mon up
 #ifconfig $wlan up
 
@@ -30,7 +36,6 @@ ifconfig $mon up
 #iw dev $wlan interface add wlan type managed
 #ifconfig wlan up
 
-#airmon-ng check kill
 #need wlan down, wlp8s0(wlan-managed, mon-monitor)
 iw $mon set channel $chn $bw
 
