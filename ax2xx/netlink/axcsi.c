@@ -21,6 +21,44 @@
 #endif
 
 
+enum {
+	CH_TYPE_NOHT,
+	CH_TYPE_HT20,
+	CH_TYPE_HT40,
+	CH_TYPE_VHT80,
+	CH_TYPE_VHT160,
+	CH_TYPE_HE20,
+	CH_TYPE_HE40,
+	CH_TYPE_HE80,
+	CH_TYPE_HE160,
+	CH_TYPE_MAX
+} ;
+//#define GET_CH_TYPE_STR(ch_type) ##
+typedef struct ch_type {
+	int idx ;
+	int ntone ;
+	int single_stream_len ;
+	char *name ;
+	int same_to ;
+} ch_type_t, *p_ch_type_t ;
+
+#define CH_TYPE_ROW_SAME(_ch_type,_ntone,_sslen,_same_to) [_ch_type] = \
+	{.idx=_ch_type, .ntone=_ntone, .single_stream_len=_sslen, .name=#_ch_type, .same_to=_same_to}
+#define CH_TYPE_ROW(_ch_type,_ntone,_sslen) CH_TYPE_ROW_SAME(_ch_type,_ntone,_sslen,-1)
+// NOHT HT20 HT40 VHT80 VHT160 HE20 HE40 HE80 HE160
+const ch_type_t g_ch_types[CH_TYPE_MAX] = { 
+	CH_TYPE_ROW(CH_TYPE_NOHT, 52, 208), 
+	CH_TYPE_ROW(CH_TYPE_HT20, 56, 224), 
+	CH_TYPE_ROW(CH_TYPE_HT40, 114, 456), 
+	CH_TYPE_ROW_SAME(CH_TYPE_VHT80, 242, 968, CH_TYPE_HE20), 
+	CH_TYPE_ROW(CH_TYPE_VHT160, 498, 1992), 
+	CH_TYPE_ROW_SAME(CH_TYPE_HE20, 242, 968, CH_TYPE_VHT80), 
+	CH_TYPE_ROW(CH_TYPE_HE40, 484, 1936), 
+	CH_TYPE_ROW(CH_TYPE_HE80, 996, 3984), 
+	CH_TYPE_ROW(CH_TYPE_HE160, 2020, 8080), 
+} ;
+
+
 //from include/netlink-private/types.h, origin struct nl_sock
 struct flq_nl_sock
 {
@@ -80,47 +118,29 @@ void output_tb_msg(struct nlattr **tb_msg)
 }
 
 
-void calc_ntxrx(int csi_len, int ntone, int *p_nrx, int *p_ntx, int *p_ntone)
+/*
+%len=(nrx,ntx,ntone)*4
+%NOHT/BCC
+%NOHT20: 208=(1,1,52), 416=(2,1,52), 832=(2,2,52)
+%HT/BCC
+%HT20: 224=(1,1,56), 448=(2,1,56), 896=(2,2,56)
+%HT40: 456=(1,1,114), 912=(2,1,114), 1824=(2,2,114)
+%VHT/BCC
+%VHT80: 968=(1,1,242), 1936=(2,1,242), 3872=(2,2,242)
+%VHT160: 1992=(1,1,498), 3984=(2,1,498), 7968=(2,2,498)
+%HE/LDPC
+%HE20: 968=(1,1,242), 1936=(2,1,242), 3872=(2,2,242)
+%HE40: 1936=(1,1,484), 3872=(2,1,484), 7744=(2,2,484)
+%HE80: 3984=(1,1,996), 7968=(2,1,996), 15936=(2,2,996)
+%HE160: 8080=(1,1,2020), 16160=(2,1,2020), 32320=(2,2,2020)
+%Note
+%VHT80 and HE20 are same, avoid use
+*/
+int get_ch_type(int csi_len, int nrx, int ntx, int ntone)
 {
-	int type, _ntone ;
-
-	if (0 == csi_len%208) {
-		type = -20 ;
-		_ntone = 52 ;
-	}
-	else if (0 == csi_len%224) {
-		type = 20 ;
-		_ntone = 56 ;
-	}
-	else if (0 == csi_len%224) {
-		type = 40 ;
-		_ntone = 114 ;
-	}
-	else if (0 == csi_len%224) {
-		type = 80 ;
-		_ntone = 242 ;
-	}
-	else if (0 == csi_len%224) {
-		type = 160 ;
-		_ntone = 484 ;
-	}
-	else {
-		flqstdout("* no analysis csi_len=%d?\n",csi_len) ;
-		type = -999 ;
-		//_ntone = csi_len/4 ;
-		_ntone = ntone ;
-	}
-
-	if (_ntone != ntone) {
-		flqstdout("* _ntone(%d) != ntone(%d)\n", _ntone, ntone) ;
-		exit(EXIT_FAILURE) ;
-	}
-	int nrxtx = csi_len/ntone/4 ;
-	//ntx<=ntx
-	if (nrxtx >= 2) *p_nrx = 2 ;
-	else *p_nrx = 1 ;
-	*p_ntx = nrxtx / *p_nrx ;
-	*p_ntone = _ntone ;
+	for (int i = CH_TYPE_MAX-1; i >= 0; -- i)
+		if (0 == csi_len % g_ch_types[i].single_stream_len)
+			return i ;
 }
 
 
@@ -162,8 +182,10 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 	uint8_t hdr_ntx = *(csi_hdr+47) ;
 	uint32_t hdr_ntone = *(uint32_t*)(csi_hdr+52) ;
 	uint32_t calc_nrx, calc_ntx, calc_ntone ;
-	calc_ntxrx(hdr_csi_len, hdr_ntone, &calc_nrx, &calc_ntx, &calc_ntone) ;
-
+	int ch_type = get_ch_type(hdr_csi_len, hdr_nrx, hdr_ntx, hdr_ntone) ;
+	int ch_type2 = g_ch_types[ch_type].same_to ; 
+	char *ch_type2_name = ch_type2 >= 0 ? g_ch_types[ch_type2].name : "" ;
+		
 	// rssi in net/mac80211/sta_info.c/sta_set_sinfo() is s8 named x.(from iw dev link)
 	// and csi_hdr get is -x, so convert. just compare and guess. 
 	// why sep 4B, may struct support 4 ants
@@ -183,12 +205,8 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 
 	flqstdout("-- mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", 
 			hdr_mac[0], hdr_mac[1], hdr_mac[2], hdr_mac[3], hdr_mac[4], hdr_mac[5]) ;
-	flqstdout("-- (nrx,ntx,ntone)=(%d,%d,%d),calc{%d,%d,%d}\n", 
-			hdr_nrx, hdr_ntx, hdr_ntone, calc_nrx, calc_ntx, calc_ntone) ;
-	if (hdr_nrx*hdr_ntx*hdr_ntone != calc_nrx*calc_ntx*calc_ntone) {
-		flqstdout("* calcs not right\n") ;
-		exit(EXIT_FAILURE) ;
-	}
+	flqstdout("-- (nrx,ntx,ntone)=(%d,%d,%d), %s %s\n", hdr_nrx, hdr_ntx, hdr_ntone, 
+			g_ch_types[ch_type].name, ch_type2_name) ;
 
 	printf("-- rssi(%d,%d) seq(%d) us(%u) ftm(%u) ratef(%x)\n", 
 			hdr_rssi1, hdr_rssi2, hdr_seq, hdr_us, hdr_ftm, hdr_rate_flag) ;
@@ -376,4 +394,52 @@ int main(int argc, char **argv)
 
 
 
+
+/*
+ * nonuse
+
+void calc_ntxrx(int csi_len, int ntone, int *p_nrx, int *p_ntx, int *p_ntone)
+{
+	int type, _ntone ;
+
+	if (0 == csi_len%208) {
+		type = -20 ;
+		_ntone = 52 ;
+	}
+	else if (0 == csi_len%224) {
+		type = 20 ;
+		_ntone = 56 ;
+	}
+	else if (0 == csi_len%456) {
+		type = 40 ;
+		_ntone = 114 ;
+	}
+	else if (0 == csi_len%968) {
+		type = 80 ;
+		_ntone = 242 ;
+	}
+	else if (0 == csi_len%1936) {
+		type = 160 ;
+		_ntone = 484 ;
+	}
+	else {
+		flqstdout("* no analysis csi_len=%d?\n",csi_len) ;
+		type = -999 ;
+		//_ntone = csi_len/4 ;
+		_ntone = ntone ;
+	}
+
+	if (_ntone != ntone) {
+		flqstdout("* _ntone(%d) != ntone(%d)\n", _ntone, ntone) ;
+		exit(EXIT_FAILURE) ;
+	}
+	int nrxtx = csi_len/ntone/4 ;
+	//ntx<=ntx
+	if (nrxtx >= 2) *p_nrx = 2 ;
+	else *p_nrx = 1 ;
+	*p_ntx = nrxtx / *p_nrx ;
+	*p_ntone = _ntone ;
+}
+
+*/
 

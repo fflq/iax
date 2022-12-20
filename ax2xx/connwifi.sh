@@ -11,7 +11,8 @@ if [ $# -ge 3 ]; then
 fi
 
 sudo service network-manager stop
-sudo rfkill unblock all ;
+sudo rfkill unblock wifi ;
+sudo airmon-ng check kill ;
 
 #conn wifi by sta
 echo "* run sta conn $wifiname" ;
