@@ -13,7 +13,7 @@
 #include "util.h"
 
 static void init_lorcon();
-static char *mon = "mon" ;
+static char *mon = "mon0" ;
 
 struct lorcon_packet
 {

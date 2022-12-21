@@ -19,7 +19,7 @@ fi
 #[function handle args]
 interval_us=10000
 chtype=NOHT
-mac=00:16:ea:12:34:56
+#macs=00:16:ea:12:34:56
 
 if [ $# -ge 1 ]; then
 	interval_us=$1 ;

@@ -3,7 +3,7 @@
 
 
 wlan=wlp8s0 
-mon=mon
+mon=mon0
 chn=4
 chtype=HT20
 if [ $# -ge 3 ]; then
@@ -12,7 +12,7 @@ if [ $# -ge 3 ]; then
 	chtype=$3 ;
 else
 	echo "Usage: $0 wlan chn chtype" ;
-	echo " - wlan: gen 'mon' (is monitor type)" ;
+	echo " - wlan: gen 'mon0' (is monitor type)" ;
 	echo " - chn: channel"
 	echo " - chtype: custom format. eg HT40 VHT80 HE160"
 	echo " * eg: $0 wlp3s0 64 HT20"
