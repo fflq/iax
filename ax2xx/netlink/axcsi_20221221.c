@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include "iwl_fw_api_rs.h"
-#include "axcsi.h"
 
 #define DEBUG
 #ifdef DEBUG
@@ -24,14 +23,66 @@
 #endif
 
 
-typedef struct pair_t {
+enum {
+	CH_TYPE_NOHT,
+	CH_TYPE_HT20,
+	CH_TYPE_HT40,
+	CH_TYPE_VHT80,
+	CH_TYPE_VHT160,
+	CH_TYPE_HE20,
+	CH_TYPE_HE40,
+	CH_TYPE_HE80,
+	CH_TYPE_HE160,
+	CH_TYPE_MAX
+} ;
+//#define GET_CH_TYPE_STR(ch_type) ##
+typedef struct ch_type {
+	int idx ;
+	int ntone ;
+	int single_stream_len ;
+	char *name ;
+	int same_to ;
+} ch_type_t, *p_ch_type_t ;
+
+#define CH_TYPE_ROW_SAME(_ch_type,_ntone,_sslen,_same_to) [_ch_type] = \
+	{.idx=_ch_type, .ntone=_ntone, .single_stream_len=_sslen, .name=#_ch_type, .same_to=_same_to}
+#define CH_TYPE_ROW(_ch_type,_ntone,_sslen) CH_TYPE_ROW_SAME(_ch_type,_ntone,_sslen,-1)
+// NOHT HT20 HT40 VHT80 VHT160 HE20 HE40 HE80 HE160
+const ch_type_t g_ch_types[CH_TYPE_MAX] = { 
+	CH_TYPE_ROW(CH_TYPE_NOHT, 52, 208), 
+	CH_TYPE_ROW(CH_TYPE_HT20, 56, 224), 
+	CH_TYPE_ROW(CH_TYPE_HT40, 114, 456), 
+	CH_TYPE_ROW_SAME(CH_TYPE_VHT80, 242, 968, CH_TYPE_HE20), 
+	CH_TYPE_ROW(CH_TYPE_VHT160, 498, 1992), 
+	CH_TYPE_ROW_SAME(CH_TYPE_HE20, 242, 968, CH_TYPE_VHT80), 
+	CH_TYPE_ROW(CH_TYPE_HE40, 484, 1936), 
+	CH_TYPE_ROW(CH_TYPE_HE80, 996, 3984), 
+	CH_TYPE_ROW(CH_TYPE_HE160, 2020, 8080), 
+} ;
+
+
+typedef struct id_str_t {
 	int id ;
 	char *str ;
-	int num ;
-} pair_t, *p_pair_t ;
-#define PAIR_RSHIFTN_ROW(_id,_n,_str,_num) [_id>>_n] = {.id=_id,.str=_str,.num=_num}
-#define PAIR_STR_RSHIFTN_ROW(_id,_n,_str) PAIR_RSHIFTN_ROW(_id,_n,_str,-1) 
-#define PAIR_NUM_RSHIFTN_ROW(_id,_n,_num) PAIR_RSHIFTN_ROW(_id,_n,NULL,_num) 
+}
+#define ID_STR_ROW(_id) [_id] = {.id=_ch_type, .str=#_ch_type}
+const id_str_t g_mod_types[16] = {
+} ;
+
+
+//from include/netlink-private/types.h, origin struct nl_sock
+struct flq_nl_sock
+{
+	struct sockaddr_nl	s_local;
+	struct sockaddr_nl	s_peer;
+	int			s_fd;
+	int			s_proto;
+	unsigned int		s_seq_next;
+	unsigned int		s_seq_expect;
+	int			s_flags;
+	struct nl_cb *		s_cb;
+	size_t			s_bufsize;
+};
 
 
 FILE *g_fp_csi = NULL ;
@@ -96,6 +147,13 @@ void output_tb_msg(struct nlattr **tb_msg)
 %Note
 %VHT80 and HE20 are same, avoid use
 */
+int get_ch_type(int csi_len, int nrx, int ntx, int ntone)
+{
+	for (int i = CH_TYPE_MAX-1; i >= 0; -- i)
+		if (0 == csi_len % g_ch_types[i].single_stream_len)
+			return i ;
+}
+
 
 void output_hexs(uint8_t *data, int len)
 {
@@ -109,80 +167,109 @@ void output_hexs(uint8_t *data, int len)
 	printf("\n") ;
 }
 
-typedef struct rate_info_t {
-	int mod_type ;
-	char *mod_type_str ;
-	int he_type ;
-	char *he_type_str ;
-	int chan_width ;
-	char *chan_width_str ;
-	int ant_sel ;
-	int ldpc ;
-} rate_info_t, *p_rate_info_t ;
 
-
-#define MOD_TYPE_ROW(_id,_str) PAIR_STR_RSHIFTN_ROW(_id,RATE_MCS_MOD_TYPE_POS,_str)
-pair_t g_mod_types[(RATE_MCS_MOD_TYPE_MSK>>RATE_MCS_MOD_TYPE_POS)+1] = {
-	MOD_TYPE_ROW(RATE_MCS_CCK_MSK, "CCK"), 
-	MOD_TYPE_ROW(RATE_MCS_LEGACY_OFDM_MSK, "NOHT"), 
-	MOD_TYPE_ROW(RATE_MCS_HT_MSK, "HT"), 
-	MOD_TYPE_ROW(RATE_MCS_VHT_MSK, "VHT"), 
-	MOD_TYPE_ROW(RATE_MCS_HE_MSK, "HE"), 
-	MOD_TYPE_ROW(RATE_MCS_EHT_MSK, "EH"), 
-} ;
-
-#define HE_TYPE_ROW(_id,_str) PAIR_STR_RSHIFTN_ROW(_id,RATE_MCS_HE_TYPE_POS,_str)
-pair_t g_he_types[(RATE_MCS_HE_TYPE_MSK>>RATE_MCS_HE_TYPE_POS)+1] = {
-	HE_TYPE_ROW(RATE_MCS_HE_TYPE_SU, "HE-SU"), 
-	HE_TYPE_ROW(RATE_MCS_HE_TYPE_EXT_SU, "HE-EXT-SU"), 
-	HE_TYPE_ROW(RATE_MCS_HE_TYPE_MU, "HE-MU"), 
-	HE_TYPE_ROW(RATE_MCS_HE_TYPE_TRIG, "HE-TRIG"), 
-} ;
-
-#define CHAN_WIDTH_ROW(_id,_num) PAIR_NUM_RSHIFTN_ROW(_id,RATE_MCS_CHAN_WIDTH_POS,_num)
-pair_t g_chan_widths[(RATE_MCS_CHAN_WIDTH_MSK>>RATE_MCS_CHAN_WIDTH_POS)+1] = {
-	CHAN_WIDTH_ROW(RATE_MCS_CHAN_WIDTH_20, 20), 
-	CHAN_WIDTH_ROW(RATE_MCS_CHAN_WIDTH_40, 40), 
-	CHAN_WIDTH_ROW(RATE_MCS_CHAN_WIDTH_80, 80), 
-	CHAN_WIDTH_ROW(RATE_MCS_CHAN_WIDTH_160, 160), 
-	CHAN_WIDTH_ROW(RATE_MCS_CHAN_WIDTH_320, 320), 
-} ;
-
-
-
-void handle_rate_n_flags(uint32_t rate_n_flags, p_rate_info_t p_rinfo)
+void handle_rate_n_flags(uint32_t rate_n_flags)
 {
 	//Bits 10-8: rate format, mod type
-	p_rinfo->mod_type = (rate_n_flags & RATE_MCS_MOD_TYPE_MSK) >> RATE_MCS_MOD_TYPE_POS ; 
-	p_rinfo->mod_type_str = g_mod_types[p_rinfo->mod_type].str ;
-
+	switch (rate_n_flags & RATE_MCS_MOD_TYPE_MSK) {
+		case RATE_MCS_CCK_MSK: 
+			printf("*mod_type cck\n") ;
+			break ;
+		case RATE_MCS_LEGACY_OFDM_MSK:
+			printf("*mod_type noht\n") ;
+			break ;
+		case RATE_MCS_HT_MSK:
+			printf("*mod_type ht\n") ;
+			break ;
+		case RATE_MCS_VHT_MSK:
+			printf("*mod_type vht\n") ;
+			break ;
+		case RATE_MCS_HE_MSK:
+			printf("*mod_type he\n") ;
 	//Bits 24-23: HE type
-	p_rinfo->he_type = (rate_n_flags & RATE_MCS_HE_TYPE_MSK) >> RATE_MCS_HE_TYPE_POS ;
-	p_rinfo->he_type_str = g_he_types[p_rinfo->he_type].str ;
+	switch (rate_n_flags & RATE_MCS_HE_TYPE_MSK) {
+		case RATE_MCS_HE_TYPE_SU :
+			printf("* he_type su\n") ;
+			break ;
+		case RATE_MCS_HE_TYPE_EXT_SU :
+			printf("* he_type ext_su\n") ;
+			break ;
+		case RATE_MCS_HE_TYPE_MU :
+			printf("* he_type mu_su\n") ;
+			break ;
+		case RATE_MCS_HE_TYPE_TRIG :
+			printf("* he_type trig\n") ;
+			break ;
+	}
+
+			break ;
+		case RATE_MCS_EHT_MSK:
+			printf("*mod_type eht\n") ;
+			break ;
+	}
 
 	//BIts 13-11: chan width
-	uint32_t chan_width_type = (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK) >> RATE_MCS_CHAN_WIDTH_POS ;
-	p_rinfo->chan_width = g_chan_widths[chan_width_type].num ;
+	switch (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK) {
+		case RATE_MCS_CHAN_WIDTH_20:
+			printf("*chan_width 20\n") ;
+			break ;
+		case RATE_MCS_CHAN_WIDTH_40:
+			printf("*chan_width 40\n") ;
+			break ;
+		case RATE_MCS_CHAN_WIDTH_80:
+			printf("*chan_width 80\n") ;
+			break ;
+		case RATE_MCS_CHAN_WIDTH_160:
+			printf("*chan_width 160\n") ;
+			break ;
+		case RATE_MCS_CHAN_WIDTH_320:
+			printf("*chan_width 320\n") ;
+			break ;
+	}
 
 	//Bits 15-14: antenna selection
-	p_rinfo->ant_sel = (rate_n_flags & RATE_MCS_ANT_MSK) >> RATE_MCS_ANT_POS ; 
+	switch (rate_n_flags & RATE_MCS_ANT_MSK) {
+	}
 
 	//Bits 16: LDPC enables
-	p_rinfo->ldpc = (rate_n_flags & RATE_MCS_LDPC_MSK) >> RATE_MCS_LDPC_POS ; 
+	if (rate_n_flags & RATE_MCS_LDPC_MSK) 
+		printf("* ldpc\n") ;
+	else
+		printf("* bcc\n") ;
 
-	flqstdout("mod_type(%u,%s) he_type(%u,%s) chan_width_type(%u,%u) ant_sel(%u) ldpc(%u)\n",
-			p_rinfo->mod_type, p_rinfo->mod_type_str, p_rinfo->he_type, p_rinfo->he_type_str, 
-			chan_width_type, p_rinfo->chan_width, p_rinfo->ant_sel, p_rinfo->ldpc) ;
 }
 
+//for little endian
+struct csi_hdr_t {
+	uint32_t csi_len ; // 0
+	uint8_t v4_7[4] ; // 4
+	uint32_t ftm ; // 8
+	uint8_t v12_45[34] ; // 12
+	uint8_t nrx ; // 46
+	uint8_t ntx ; // 47
+	uint8_t v48_51[4] ; // 48
+	uint8_t ntone ; // 52
+	uint8_t v53_59[7] ; // 53
+	
+	uint8_t opp_rssi1 ; // 60
+	uint8_t v61[3] ;
+	uint8_t opp_rssi2 ; // 64
+	uint8_t v65[3] ;
+	uint8_t smac[6] ; // 68
+	uint8_t v74_75[2] ; // 74
+	uint8_t seq ; // 76
+	uint8_t v77_87[11] ; // 77
+	uint32_t us ; // 88
+	uint32_t rate_n_flags ; // 92
+	uint8_t v96_271[0] ; // 96
+
+} __attribute__((packet)) ;
+typedef struct csi_hdr_t csi_hdr_t, *p_csi_hdr_t ; 
 
 void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_data_len) 
 {
-	flqstdout("* %s\n", __func__) ;
-
 	uint32_t n32 ;
 
-	// save to file
 	n32 = htonl(csi_hdr_len) ;
 	fwrite(&n32, 1, 4, g_fp_csi) ;
 	fwrite(csi_hdr, 1, csi_hdr_len, g_fp_csi) ;
@@ -192,21 +279,65 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 	fwrite(csi_data, 1, csi_data_len, g_fp_csi) ;
 	fflush(g_fp_csi) ;
 
-	// decompose csi_hdr
+	printf("%d----\n", sizeof(csi_hdr_t)) ;
 	csi_hdr_t *pch = (p_csi_hdr_t)csi_hdr ;
 	flqstdout("csi_len(%u) ftm(%u) nrx(%u) ntx(%u) ntone(%u)\n", 
 			pch->csi_len, pch->ftm, pch->nrx, pch->ntx, pch->ntone) ;
 	flqstdout("rssi1(%d) rssi2(%d) seq(%u) us(%u) rnf(0x%x)\n", 
 			-pch->opp_rssi1, -pch->opp_rssi2, pch->seq, pch->us, pch->rate_n_flags) ;
 	uint8_t *smac = pch->smac ;
-	flqstdout("mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", 
+	flqstdout("-- mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", 
 			smac[0], smac[1], smac[2], smac[3], smac[4], smac[5]) ;
 
-	rate_info_t rinfo ;
-	handle_rate_n_flags(pch->rate_n_flags, &rinfo) ;
-	flqstdout("%s\n", rinfo.mod_type_str) ;
 
+	/*
+	flqstdout("* %s, csi_hdr(%02x%02x), csidata(%02x%02x)\n", 
+			__func__, *csi_hdr, *(csi_hdr+1), *csi_data, *(csi_data+1)) ;
+	*/
+	flqstdout("* %s\n", __func__) ;
+
+	uint32_t hdr_csi_len = *(uint32_t*)csi_hdr ;
+	uint32_t hdr_ftm = *(uint32_t*)(csi_hdr+8) ;
+
+	uint8_t hdr_nrx = *(csi_hdr+46) ;
+	uint8_t hdr_ntx = *(csi_hdr+47) ;
+	uint32_t hdr_ntone = *(uint32_t*)(csi_hdr+52) ;
+	uint32_t calc_nrx, calc_ntx, calc_ntone ;
+	int ch_type = get_ch_type(hdr_csi_len, hdr_nrx, hdr_ntx, hdr_ntone) ;
+	int ch_type2 = g_ch_types[ch_type].same_to ; 
+	char *ch_type2_name = ch_type2 >= 0 ? g_ch_types[ch_type2].name : "" ;
+		
+	// rssi in net/mac80211/sta_info.c/sta_set_sinfo() is s8 named x.(from iw dev link)
+	// and csi_hdr get is -x, so convert. just compare and guess. 
+	// why sep 4B, may struct support 4 ants
+	//uint32_t hdr_rssi1 = *(uint32_t*)(csi_hdr+60) - 128 ;
+	//uint32_t hdr_rssi2 = *(uint32_t*)(csi_hdr+64) - 128 ;
+	uint32_t hdr_rssi1 = -*(csi_hdr+60) ;
+	uint32_t hdr_rssi2 = -*(csi_hdr+64) ;
+
+	uint8_t *hdr_mac = csi_hdr+68 ;
+
+	//1B,0-255-loop,may seq
+	uint8_t hdr_seq = *(csi_hdr+76) ;
+
+	uint32_t hdr_us = *(uint32_t*)(csi_hdr+88) ;
+
+	uint32_t hdr_rate_n_flags = *(uint32_t*)(csi_hdr+92) ;
+	handle_rate_n_flags(hdr_rate_n_flags) ;
+
+	flqstdout("-- mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", 
+			hdr_mac[0], hdr_mac[1], hdr_mac[2], hdr_mac[3], hdr_mac[4], hdr_mac[5]) ;
+	flqstdout("-- (nrx,ntx,ntone)=(%d,%d,%d), %s %s\n", hdr_nrx, hdr_ntx, hdr_ntone, 
+			g_ch_types[ch_type].name, ch_type2_name) ;
+
+	printf("-- rssi(%d,%d) seq(%d) us(%u) ftm(%u) rnf(0x%x)\n", 
+			hdr_rssi1, hdr_rssi2, hdr_seq, hdr_us, hdr_ftm, hdr_rate_n_flags) ;
+	//system("iw wlp8s0 link | grep signal") ;
+	
+	//if (hdr_ntx*hdr_nrx*hdr_ntone == 2*2*56)
 	output_hexs(csi_hdr, csi_hdr_len) ;
+	/*
+		*/
 }
 
 
@@ -383,4 +514,54 @@ int main(int argc, char **argv)
 }
 
 
+
+
+
+/*
+ * nonuse
+
+void calc_ntxrx(int csi_len, int ntone, int *p_nrx, int *p_ntx, int *p_ntone)
+{
+	int type, _ntone ;
+
+	if (0 == csi_len%208) {
+		type = -20 ;
+		_ntone = 52 ;
+	}
+	else if (0 == csi_len%224) {
+		type = 20 ;
+		_ntone = 56 ;
+	}
+	else if (0 == csi_len%456) {
+		type = 40 ;
+		_ntone = 114 ;
+	}
+	else if (0 == csi_len%968) {
+		type = 80 ;
+		_ntone = 242 ;
+	}
+	else if (0 == csi_len%1936) {
+		type = 160 ;
+		_ntone = 484 ;
+	}
+	else {
+		flqstdout("* no analysis csi_len=%d?\n",csi_len) ;
+		type = -999 ;
+		//_ntone = csi_len/4 ;
+		_ntone = ntone ;
+	}
+
+	if (_ntone != ntone) {
+		flqstdout("* _ntone(%d) != ntone(%d)\n", _ntone, ntone) ;
+		exit(EXIT_FAILURE) ;
+	}
+	int nrxtx = csi_len/ntone/4 ;
+	//ntx<=ntx
+	if (nrxtx >= 2) *p_nrx = 2 ;
+	else *p_nrx = 1 ;
+	*p_ntx = nrxtx / *p_nrx ;
+	*p_ntone = _ntone ;
+}
+
+*/
 
