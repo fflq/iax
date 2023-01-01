@@ -115,6 +115,7 @@ void handle_rate_n_flags(uint32_t rate_n_flags, p_rate_info_t p_rinfo)
 	flqstdout("mod_type(%u,%s) he_type(%d,%s) chan_width_type(%u,%u) ant_sel(%u) ldpc(%u)\n",
 			p_rinfo->mod_type, p_rinfo->mod_type_str, p_rinfo->he_type, p_rinfo->he_type_str, 
 			p_rinfo->chan_width_type, p_rinfo->chan_width, p_rinfo->ant_sel, p_rinfo->ldpc) ;
+	if (p_rinfo->chan_width_type == 2) getchar() ;
 }
 
 
@@ -147,7 +148,7 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 	rate_info_t rinfo ;
 	handle_rate_n_flags(pch->rate_n_flags, &rinfo) ;
 
-	output_hexs(csi_hdr, csi_hdr_len) ;
+	//output_hexs(csi_hdr, csi_hdr_len) ;
 }
 
 

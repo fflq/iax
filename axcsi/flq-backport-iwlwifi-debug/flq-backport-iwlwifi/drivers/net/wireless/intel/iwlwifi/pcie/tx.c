@@ -901,6 +901,7 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id,
 int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
 			  struct iwl_host_cmd *cmd)
 {
+	//printk("***fflq iwl_pcie_enqueue_hcmd\n") ;
 	struct iwl_txq *txq = trans->txqs.txq[trans->txqs.cmd.q_id];
 	struct iwl_device_cmd *out_cmd;
 	struct iwl_cmd_meta *out_meta;

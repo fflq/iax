@@ -27,6 +27,7 @@
 int iwl_pcie_gen2_enqueue_hcmd(struct iwl_trans *trans,
 			       struct iwl_host_cmd *cmd)
 {
+	//printk("***fflq iwl_pcie_gen2_enqueue_hcmd\n") ;
 	struct iwl_trans_pcie *trans_pcie = IWL_TRANS_GET_PCIE_TRANS(trans);
 	struct iwl_txq *txq = trans->txqs.txq[trans->txqs.cmd.q_id];
 	struct iwl_device_cmd *out_cmd;
@@ -142,6 +143,13 @@ int iwl_pcie_gen2_enqueue_hcmd(struct iwl_trans *trans,
 	out_cmd->hdr_wide.sequence =
 		cpu_to_le16(QUEUE_TO_SEQ(trans->txqs.cmd.q_id) |
 					 INDEX_TO_SEQ(txq->write_ptr));
+	if (out_cmd->hdr_wide.cmd == 43) {
+	//fflq ap5g cmd(43) group_id(1) version(0) length(28) sequence(35)
+	//fflq ap2g cmd(24) group_id(1) version(0) length(48) sequence(33)
+	struct iwl_cmd_header_wide flqhw = out_cmd->hdr_wide;
+	printk("***fflq %s, cmd(%d) group_id(%d) version(%d) length(%d) sequence(%u)\n",
+			__func__, flqhw.cmd, flqhw.group_id, flqhw.version, flqhw.length, flqhw.sequence) ;
+	}
 
 	cmd_pos = sizeof(struct iwl_cmd_header_wide);
 	copy_size = sizeof(struct iwl_cmd_header_wide);

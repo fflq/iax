@@ -185,7 +185,7 @@ int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
 	}
 
 	ret = iwl_trans_txq_send_hcmd(trans, cmd);
-	//printk(KERN_ERR "***fflq %s, iwl_trans_txq_send_hcmd %d\n", __func__, ret) ;
+	//printk(KERN_ERR "***fflq %s, iwl_trans_txq_send_hcmd=%d\n", __func__, ret) ;
 
 	if (!(cmd->flags & CMD_ASYNC))
 		lock_map_release(&trans->sync_cmd_lockdep_map);

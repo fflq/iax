@@ -440,7 +440,7 @@ iwl_mvm_update_mcc(struct iwl_mvm *mvm, const char *alpha2,
 	IWL_DEBUG_LAR(mvm, "send MCC update to FW with '%c%c' src = %d\n",
 		      alpha2[0], alpha2[1], src_id);
 
-	ret = iwl_mvm_send_cmd(mvm, &cmd);
+	ret = iwl_mvm_send_cmd(mvm, &cmd); //fflq
 	if (ret)
 		return ERR_PTR(ret);
 

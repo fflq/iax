@@ -949,6 +949,7 @@ static inline int drv_start_ap(struct ieee80211_local *local,
 			       struct ieee80211_sub_if_data *sdata,
 			       struct ieee80211_bss_conf *link_conf)
 {
+	printk("***fflq drv_start_ap\n") ;
 	int ret = 0;
 
 	/* make sure link_conf is protected */

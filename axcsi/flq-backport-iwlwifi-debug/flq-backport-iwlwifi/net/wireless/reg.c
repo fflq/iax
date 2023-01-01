@@ -1370,6 +1370,7 @@ static int reg_rules_intersect(const struct ieee80211_regdomain *rd1,
 			       const struct ieee80211_reg_rule *rule2,
 			       struct ieee80211_reg_rule *intersected_rule)
 {
+	printk("***fflq reg_rules_intersect\n") ;
 	const struct ieee80211_freq_range *freq_range1, *freq_range2;
 	struct ieee80211_freq_range *freq_range;
 	const struct ieee80211_power_rule *power_rule1, *power_rule2;
@@ -2182,6 +2183,7 @@ static bool reg_is_world_roaming(struct wiphy *wiphy)
 	return false;
 }
 
+//fflq handle_reg_beacon
 static void handle_reg_beacon(struct wiphy *wiphy, unsigned int chan_idx,
 			      struct reg_beacon *reg_beacon)
 {
@@ -2807,7 +2809,7 @@ static enum reg_request_treatment
 reg_process_hint_driver(struct wiphy *wiphy,
 			struct regulatory_request *driver_request)
 {
-	printk(KERN_ERR "***fflq %s\n", __func__) ;
+	printk(KERN_ERR "***fflq reg_process_hint_driver\n") ;
 	const struct ieee80211_regdomain *regd, *tmp;
 	enum reg_request_treatment treatment;
 
@@ -3162,6 +3164,7 @@ static void reg_process_pending_beacon_hints(void)
 
 static void reg_process_self_managed_hint(struct wiphy *wiphy)
 {
+	printk("***fflq reg_process_self_managed_hint\n") ;
 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
 	const struct ieee80211_regdomain *tmp;
 	const struct ieee80211_regdomain *regd;
@@ -3492,7 +3495,7 @@ static void restore_custom_reg_settings(struct wiphy *wiphy)
  */
 static void restore_regulatory_settings(bool reset_user, bool cached)
 {
-	printk(KERN_ERR "***fflq %s\n", __func__) ;
+	printk(KERN_ERR "***fflq restore_regulatory_settings\n") ;
 	char alpha2[2];
 	char world_alpha2[2];
 	struct reg_beacon *reg_beacon, *btmp;
@@ -3690,6 +3693,11 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
 	reg_beacon = kzalloc(sizeof(struct reg_beacon), gfp);
 	if (!reg_beacon)
 		return -ENOMEM;
+
+	printk("***fflq Found new beacon on frequency: %d.%03d MHz (Ch %d) on %s\n",
+		 beacon_chan->center_freq, beacon_chan->freq_offset,
+		 ieee80211_freq_khz_to_channel(ieee80211_channel_to_khz(beacon_chan)),
+		 wiphy_name(wiphy));
 
 	pr_debug("Found new beacon on frequency: %d.%03d MHz (Ch %d) on %s\n",
 		 beacon_chan->center_freq, beacon_chan->freq_offset,
@@ -3965,7 +3973,7 @@ static int reg_set_rd_country_ie(const struct ieee80211_regdomain *rd,
 int set_regdom(const struct ieee80211_regdomain *rd,
 	       enum ieee80211_regd_source regd_src)
 {
-	printk(KERN_ERR "***fflq %s\n", __func__) ;
+	printk(KERN_ERR "***fflq set_regdom\n") ;
 	struct regulatory_request *lr;
 	bool user_reset = false;
 	int r;
@@ -3983,12 +3991,13 @@ int set_regdom(const struct ieee80211_regdomain *rd,
 
 	lr = get_last_request();
 
+	printk("***fflq %s, lr->initiator %d\n", __func__, lr->initiator) ;
 	/* Note that this doesn't update the wiphys, this is done below */
 	switch (lr->initiator) {
 	case NL80211_REGDOM_SET_BY_CORE:
 		r = reg_set_rd_core(rd);
 		break;
-	case NL80211_REGDOM_SET_BY_USER:
+	case NL80211_REGDOM_SET_BY_USER: //fflq
 		cfg80211_save_user_regdom(rd);
 		r = reg_set_rd_user(rd, lr);
 		user_reset = true;

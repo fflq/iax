@@ -21,6 +21,7 @@ struct iwl_mvm_iface_iterator_data {
 static int iwl_mvm_binding_cmd(struct iwl_mvm *mvm, u32 action,
 			       struct iwl_mvm_iface_iterator_data *data)
 {
+	printk("***fflq iwl_mvm_binding_cmd\n") ;
 	struct iwl_binding_cmd cmd;
 	struct iwl_mvm_phy_ctxt *phyctxt = data->phyctxt;
 	int i, ret;
@@ -31,6 +32,7 @@ static int iwl_mvm_binding_cmd(struct iwl_mvm *mvm, u32 action,
 
 	if (fw_has_capa(&mvm->fw->ucode_capa,
 			IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT)) {
+		printk("***fflq IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT\n") ;
 		size = sizeof(cmd);
 		cmd.lmac_id = cpu_to_le32(iwl_mvm_get_lmac_id(mvm->fw,
 							      phyctxt->channel->band));
@@ -51,8 +53,13 @@ static int iwl_mvm_binding_cmd(struct iwl_mvm *mvm, u32 action,
 							      data->colors[i]));
 
 	status = 0;
+	//fflqkey different cmd cause diff
+	printk("***fflq id%d color%d action%d macs(%x:%x:%x:%x:%x:%x)\n",
+			phyctxt->id, phyctxt->color, action, 
+			cmd.macs[0], cmd.macs[1], cmd.macs[2], cmd.macs[3], cmd.macs[4], cmd.macs[5]) ;
 	ret = iwl_mvm_send_cmd_pdu_status(mvm, BINDING_CONTEXT_CMD,
 					  size, &cmd, &status);
+	printk("***fflq %s, iwl_mvm_send_cmd_pdu_status=%d\n", __func__, ret) ;
 	if (ret) {
 		printk(KERN_ERR "***fflq %s, send binding (action:%d): %d\n", __func__, action, ret);
 		IWL_ERR(mvm, "Failed to send binding (action:%d): %d\n",
@@ -132,6 +139,7 @@ static int iwl_mvm_binding_update(struct iwl_mvm *mvm,
 
 int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
 {
+	printk(KERN_ERR "***fflq iwl_mvm_binding_add_vif\n") ;
 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
 
 	if (WARN_ON_ONCE(!mvmvif->deflink.phy_ctxt))
