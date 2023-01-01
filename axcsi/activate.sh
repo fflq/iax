@@ -69,7 +69,7 @@ mvm_dbgfs_dir=/sys/kernel/debug/iwlwifi/$pci/iwlmvm/ ;
 echo $interval_us | sudo tee $mvm_dbgfs_dir/csi_interval > /dev/null ;
 
 # rnf
-echo $rnf | sudo tee $mvm_dbgfs_dir/flq_monitor_tx_rate > /dev/null ;
+echo $rnf | sudo tee $mvm_dbgfs_dir/monitor_tx_rate > /dev/null ;
 
 # filter macs
 if [ "$macs" != "" ]; then

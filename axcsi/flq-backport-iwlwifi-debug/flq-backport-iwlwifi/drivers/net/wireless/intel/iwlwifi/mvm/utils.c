@@ -72,7 +72,8 @@ int iwl_mvm_send_cmd_pdu(struct iwl_mvm *mvm, u32 id,
  */
 int iwl_mvm_send_cmd_status(struct iwl_mvm *mvm, struct iwl_host_cmd *cmd, u32 *status)//fflq
 {
-	//printk(KERN_ERR "***fflq %s, flags(%d) id(%d)\n", __func__, cmd->flags, cmd->id) ;
+	//fflq ap5g crash-5 here is: flags(0) id(43)
+	printk("***fflq iwl_mvm_send_cmd_status, flags(%d) id(%d)\n", cmd->flags, cmd->id) ;
 	struct iwl_rx_packet *pkt;
 	struct iwl_cmd_response *resp;
 	int ret, resp_len;
@@ -95,6 +96,7 @@ int iwl_mvm_send_cmd_status(struct iwl_mvm *mvm, struct iwl_host_cmd *cmd, u32 *
 	cmd->flags |= CMD_WANT_SKB;
 
 	ret = iwl_trans_send_cmd(mvm->trans, cmd);
+	printk("***fflq iwl_mvm_send_cmd_status, iwl_trans_send_cmd=%d\n", ret) ;
 	if (ret == -ERFKILL) {
 		/*
 		 * The command failed because of RFKILL, don't update

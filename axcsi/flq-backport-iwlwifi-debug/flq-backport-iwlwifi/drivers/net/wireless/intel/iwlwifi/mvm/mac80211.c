@@ -191,6 +191,7 @@ struct ieee80211_regdomain *iwl_mvm_get_regdomain(struct wiphy *wiphy,
 	mvm->lar_regdom_set = true;
 	mvm->mcc_src = src_id;
 
+	printk("***fflq iwl_mvm_get_regdomain, iwl_mei_set_country_code(%d)", resp->mcc) ;
 	iwl_mei_set_country_code(__le16_to_cpu(resp->mcc));
 
 out:
@@ -2940,6 +2941,7 @@ bool iwl_mvm_start_ap_ibss_common(struct ieee80211_hw *hw,
 				  struct ieee80211_vif *vif,
 				  int *ret)
 {
+	printk(KERN_ERR "***fflq iwl_mvm_start_ap_ibss_common\n") ;
 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
 	int i;
@@ -2981,6 +2983,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
 				 struct ieee80211_vif *vif,
 				 struct ieee80211_bss_conf *link_conf)
 {
+	printk(KERN_ERR "***fflq iwl_mvm_start_ap_ibss\n") ;
 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
 	int ret;
@@ -3022,7 +3025,8 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
 	}
 
 	/* Perform the binding */
-	ret = iwl_mvm_binding_add_vif(mvm, vif);
+	ret = iwl_mvm_binding_add_vif(mvm, vif); //fflq crash -5 here
+	printk("***fflq %s, iwl_mvm_binding_add_vif=%d\n", __func__, ret) ;
 	if (ret)
 		goto out_remove;
 
@@ -3061,7 +3065,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
 		}
 	}
 
-	if (iwl_mvm_start_ap_ibss_common(hw, vif, &ret))
+	if (iwl_mvm_start_ap_ibss_common(hw, vif, &ret)) //fflq
 		goto out_failed;
 
 	ret = iwl_mvm_update_quotas(mvm, false, NULL);
@@ -6397,7 +6401,7 @@ int iwl_mvm_set_hw_timestamp(struct ieee80211_hw *hw,
 	return ret;
 }
 
-const struct ieee80211_ops iwl_mvm_hw_ops = {
+const struct ieee80211_ops iwl_mvm_hw_ops = { //fflq
 	.tx = iwl_mvm_mac_tx,
 	.wake_tx_queue = iwl_mvm_mac_wake_tx_queue,
 	.ampdu_action = iwl_mvm_mac_ampdu_action,

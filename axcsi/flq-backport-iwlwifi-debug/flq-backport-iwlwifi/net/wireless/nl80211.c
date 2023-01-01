@@ -1122,9 +1122,12 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
 		if (nla_put_flag(msg, __NL80211_FREQUENCY_ATTR_NO_IBSS))
 			goto nla_put_failure;
 	}
+	//chan->flags &= ~IEEE80211_CHAN_RADAR ; //fflqkey change chan->flags, iw list radar dect
 	if (chan->flags & IEEE80211_CHAN_RADAR) {
-		if (nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR))
+		printk("***fflq nl80211_msg_put_channel, NL80211_FREQUENCY_ATTR_RADAR\n") ;
+		if (nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR)) {
 			goto nla_put_failure;
+		}
 		if (large) {
 			u32 time;
 
@@ -5788,6 +5791,7 @@ static bool nl80211_valid_auth_type(struct cfg80211_registered_device *rdev,
 
 static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
 {
+	printk("***fflq nl80211_start_ap\n") ;
 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
 	unsigned int link_id = nl80211_link_id(info->attrs);
 	struct net_device *dev = info->user_ptr[1];
@@ -6056,7 +6060,8 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
 
 	/* FIXME: validate MLO/link-id against driver capabilities */
 
-	err = rdev_start_ap(rdev, dev, params);
+	err = rdev_start_ap(rdev, dev, params); //fflq ap5g err=-5
+	printk("***fflq rdev_start_ap, err=%d\n", err) ;
 	if (!err) {
 		wdev->links[link_id].ap.beacon_interval = params->beacon_interval;
 		wdev->links[link_id].ap.chandef = params->chandef;
@@ -6083,6 +6088,7 @@ out:
 
 static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
 {
+	printk("***fflq nl80211_set_beacon\n") ;
 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
 	unsigned int link_id = nl80211_link_id(info->attrs);
 	struct net_device *dev = info->user_ptr[1];
@@ -6979,6 +6985,7 @@ static int nl80211_parse_sta_txpower_setting(struct genl_info *info,
 
 static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
 {
+	printk("***fflq nl80211_set_station\n") ;
 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
 	struct net_device *dev = info->user_ptr[1];
 	struct station_parameters params;
@@ -8394,7 +8401,7 @@ nla_put_failure:
 
 static int nl80211_get_reg_do(struct sk_buff *skb, struct genl_info *info)
 {
-	printk(KERN_ERR "***fflq %s", __func__) ;
+	printk(KERN_ERR "***fflq nl80211_get_reg_do") ;
 	const struct ieee80211_regdomain *regdom = NULL;
 	struct cfg80211_registered_device *rdev;
 	struct wiphy *wiphy = NULL;
@@ -8601,7 +8608,7 @@ static int parse_reg_rule(struct nlattr *tb[],
 
 static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
 {
-	printk(KERN_ERR "***fflq %s", __func__) ;
+	printk(KERN_ERR "***fflq nl80211_set_reg") ;
 	struct nlattr *tb[NL80211_REG_RULE_ATTR_MAX + 1];
 	struct nlattr *nl_reg_rule;
 	char *alpha2;
@@ -14743,7 +14750,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 					   info->attrs);
 	int i, err;
 	u32 vid, subcmd;
-	printk(KERN_ERR "***fflq %s\n", __func__) ;
+	printk(KERN_ERR "***fflq nl80211_vendor_cmd\n") ;
 
 	if (!rdev->wiphy.vendor_commands)
 		return -EOPNOTSUPP;
@@ -16588,7 +16595,7 @@ static const struct genl_small_ops nl80211_small_ops[] = {
 		.internal_flags = IFLAGS(NL80211_FLAG_NEED_NETDEV_UP),
 	},
 	{
-		.cmd = NL80211_CMD_SET_BEACON,
+		.cmd = NL80211_CMD_SET_BEACON, //fflq
 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
 		.flags = GENL_UNS_ADMIN_PERM,
 		.doit = nl80211_set_beacon,
@@ -16596,7 +16603,7 @@ static const struct genl_small_ops nl80211_small_ops[] = {
 					 NL80211_FLAG_MLO_VALID_LINK_ID),
 	},
 	{
-		.cmd = NL80211_CMD_START_AP,
+		.cmd = NL80211_CMD_START_AP, //fflq
 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
 		.flags = GENL_UNS_ADMIN_PERM,
 		.doit = nl80211_start_ap,
