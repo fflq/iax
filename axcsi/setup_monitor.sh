@@ -12,7 +12,7 @@ if [ $# -ge 3 ]; then
 	chtype=$3 ;
 else
 	echo "Usage: $0 wlan chn chtype" ;
-	echo " - wlan: gen 'mon0' (is monitor type)" ;
+	echo " - wlan: gen mon0 (is monitor type)" ;
 	echo " - chn: channel"
 	echo " - chtype: custom format. eg HT40 VHT80 HE160"
 	echo " * eg: $0 wlp3s0 64 HT20"
@@ -32,8 +32,8 @@ iw_chtype_map=([NOHT]=NOHT [HT20]=HT20 [HT40]=HT40 [HT40-]=HT40- [HT40+]=HT40+\
 iw_chtype_keys=${!iw_chtype_map[*]}
 iw_chtype_vals=${iw_chtype_map[*]}
 if [ "${iw_chtype_map[$chtype]}" = "" ]; then
-	echo "* err. invalid chtype: ($chtype)" ;
-	echo "* valid chtype: ($iw_chtype_keys)" ;
+	echo "- err. invalid chtype: ($chtype)" ;
+	echo "- valid chtype: ($iw_chtype_keys)" ;
 	exit -1 ;
 fi
 iw_chtype=${iw_chtype_map[$chtype]}
@@ -64,12 +64,15 @@ ifconfig $mon up
 #ifconfig wlan up
 
 #need wlan down, wlp8s0(wlan-managed, mon-monitor)
-iw $mon set channel $chn $iw_chtype
+iw $mon set channel $chn $iw_chtype > /dev/null 2>&1
 if [ $? -ne 0 ]; then
-	echo "* err(iw $mon set channel $chn $iw_chtype)"
+	echo "- err(iw $mon set channel $chn $iw_chtype)"
 	if [ "$iw_chtype" = "160MHz" ]; then
-		echo "* please update iw to support 160MHz setting"
-		echo "* (git clone https://git.sipsolutions.net/iw.git)"
+		echo "- please update iw to support 160MHz setting"
+		echo "- (git clone https://git.sipsolutions.net/iw.git)"
+	else
+		echo "- err invalid chtype: ($chtype => $iw_chtype) in chn($chn)" ;
+		echo "- valid chtype: ($iw_chtype_keys)" ;
 	fi
 	exit -1 ;
 fi

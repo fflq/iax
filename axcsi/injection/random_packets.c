@@ -120,6 +120,7 @@ int main(int argc, char** argv)
 		clock_gettime(CLOCK_MONOTONIC, &start);
 	}
 	for (i = 0; i < num_packets; ++i) {
+		if (i % 100 == 0)
 		printf("Sending no.%u/%u packet\n", i, num_packets);
 		payload_memcpy(packet->payload, packet_size,
 				(i*packet_size) % PAYLOAD_SIZE);

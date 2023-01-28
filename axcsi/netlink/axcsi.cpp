@@ -278,7 +278,7 @@ struct nl_sock *init_nl_socket()
 	//nl_socket_add_memberships(sk, 13, 0) ; 
 
   	nl_socket_set_buffer_size(sk, 8192, 8192);
-	nl_socket_disable_seq_check(sk) ;
+	nl_socket_disable_seq_check(sk) ;	// miss will nl_recvmsgs_default=-16
 	int family_id = genl_ctrl_resolve(sk, "nl80211") ;
 	//family_id = 34 ;
 	//int family_id = genl_ctrl_resolve(sk, "iwl_tm_gnl") ;

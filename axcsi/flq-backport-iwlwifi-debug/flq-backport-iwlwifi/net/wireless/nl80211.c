@@ -14770,7 +14770,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 
 	vid = nla_get_u32(info->attrs[NL80211_ATTR_VENDOR_ID]);
 	subcmd = nla_get_u32(info->attrs[NL80211_ATTR_VENDOR_SUBCMD]);
-	printk(KERN_ERR "***fflq %s, (vid,subcmd)=(%x,%x)\n", __func__, vid, subcmd) ;
+	printk(KERN_ERR "***fflq %s, (vid,subcmd)=(0x%x,0x%x)\n", __func__, vid, subcmd) ;
 	for (i = 0; i < rdev->wiphy.n_vendor_commands; i++) {
 		const struct wiphy_vendor_command *vcmd;
 		void *data = NULL;
@@ -14779,8 +14779,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 		vcmd = &rdev->wiphy.vendor_commands[i];
 
 		int n = rdev->wiphy.n_vendor_commands; 
-		printk(KERN_ERR "---***fflq %s, i%d-n%d(%x,%x)=(%x,%x)\n", 
-				__func__, i, n, vid, subcmd, vcmd->info.vendor_id, vcmd->info.subcmd) ;
+		//printk(KERN_ERR "---***fflq %s, i%d-n%d(csi)=(%x,%x)\n", __func__, i, n, vcmd->info.vendor_id, vcmd->info.subcmd) ;
 
 		if (vcmd->info.vendor_id != vid || vcmd->info.subcmd != subcmd)
 			continue;
@@ -14818,7 +14817,10 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 		}
 
 		//fflqkkey
-		printk(KERN_ERR "***fflqkey %s, i%d subcmd%d\n", __func__, i, vcmd->info.subcmd) ;
+		//if (vcmd->info.vendor_id == INTEL_OUI && vcmd->info.subcmd == IWL_MVM_VENDOR_CMD_CSI_EVENT)
+		if (vcmd->info.vendor_id == 0x001735 && vcmd->info.subcmd == 0x24)
+			printk(KERN_ERR "---fflqkey %s, i%d call csi(0x%x,0x%x)\n", __func__, i, 
+					vcmd->info.vendor_id, vcmd->info.subcmd) ;
 
 		rdev->cur_cmd_info = info;
 		err = vcmd->doit(&rdev->wiphy, wdev, data, len);
