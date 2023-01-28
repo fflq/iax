@@ -4,4 +4,6 @@ cd lorcon-old ;
 make ;
 make install ;
 
+cd .. ;
+make ;
 

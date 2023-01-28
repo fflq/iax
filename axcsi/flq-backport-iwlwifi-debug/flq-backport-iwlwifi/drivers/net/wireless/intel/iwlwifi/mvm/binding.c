@@ -48,20 +48,21 @@ static int iwl_mvm_binding_cmd(struct iwl_mvm *mvm, u32 action,
 
 	for (i = 0; i < MAX_MACS_IN_BINDING; i++)
 		cmd.macs[i] = cpu_to_le32(FW_CTXT_INVALID);
-	for (i = 0; i < data->idx; i++)
-		cmd.macs[i] = cpu_to_le32(FW_CMD_ID_AND_COLOR(data->ids[i],
-							      data->colors[i]));
+	for (i = 0; i < data->idx; i++) {
+		printk("***fflq iwl_mvm_binding_cmd, data.idx=%d/i%d, ids%d, colors%d, cmd%d\n", 
+				data->idx, i, data->ids[i], data->colors[i], FW_CMD_ID_AND_COLOR(data->ids[i], data->colors[i]));
+		cmd.macs[i] = cpu_to_le32(FW_CMD_ID_AND_COLOR(data->ids[i], data->colors[i]));
+	}
 
 	status = 0;
 	//fflqkey different cmd cause diff
-	printk("***fflq id%d color%d action%d macs(%x:%x:%x:%x:%x:%x)\n",
-			phyctxt->id, phyctxt->color, action, 
-			cmd.macs[0], cmd.macs[1], cmd.macs[2], cmd.macs[3], cmd.macs[4], cmd.macs[5]) ;
+	printk("***fflq id%d color%d action%d macs(%x:%x:%x)\n", phyctxt->id, phyctxt->color, 
+			action, cmd.macs[0], cmd.macs[1], cmd.macs[2]); // MAX_MACS_IN_BINDING=3
 	ret = iwl_mvm_send_cmd_pdu_status(mvm, BINDING_CONTEXT_CMD,
 					  size, &cmd, &status);
 	printk("***fflq %s, iwl_mvm_send_cmd_pdu_status=%d\n", __func__, ret) ;
 	if (ret) {
-		printk(KERN_ERR "***fflq %s, send binding (action:%d): %d\n", __func__, action, ret);
+		printk("***fflq %s, send binding (action:%d): %d\n", __func__, action, ret);
 		IWL_ERR(mvm, "Failed to send binding (action:%d): %d\n",
 			action, ret);
 		return ret;
@@ -125,8 +126,9 @@ static int iwl_mvm_binding_update(struct iwl_mvm *mvm,
 			action = FW_CTXT_ACTION_REMOVE;
 	}
 
+	printk("***fflq iwl_mvm_binding_update, data.idx=%d\n", data.idx) ;
 	if (add) {
-		if (WARN_ON_ONCE(data.idx >= MAX_MACS_IN_BINDING))
+		if (WARN_ON_ONCE(data.idx >= MAX_MACS_IN_BINDING)) 
 			return -EINVAL;
 
 		data.ids[data.idx] = mvmvif->id;
@@ -139,7 +141,7 @@ static int iwl_mvm_binding_update(struct iwl_mvm *mvm,
 
 int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
 {
-	printk(KERN_ERR "***fflq iwl_mvm_binding_add_vif\n") ;
+	printk("***fflq iwl_mvm_binding_add_vif\n") ;
 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
 
 	if (WARN_ON_ONCE(!mvmvif->deflink.phy_ctxt))

@@ -18,7 +18,7 @@ fi
 
 #[function handle args]
 interval_us=10000
-chtype=NOHT
+#chtype=NOHT
 #macs=00:16:ea:12:34:56
 
 if [ $# -ge 1 ]; then
@@ -47,18 +47,20 @@ echo "* for pci($pci) $interval_us $chtype $macs" ;
 
 #[function judge chtype]
 #flq_chtype => rnf
-declare -A rnf_map
-rnf_map=([NOHT]=0xc100 [HT20]=0xc200 [HT40]=0xca00 [HT40-]=0xca00 [HT40+]=0xca00 \
-	[VHT20]=0xc300 [VHT40]=0xcb00 [VHT40-]=0xcb00 [VHT40+]=0xcb00 [VHT80]=0xd300 [VHT160]=0xdb00 \
-	[HE20]=0x11c400 [HE40]=0x11cc00 [HE40-]=0x11cc00 [HE40+]=0x11cc00 [HE80]=0x11d400 [HE160]=0x11dc00)
-rnf_keys=${!rnf_map[*]}
-rnf_vals=${rnf_map[*]}
-if [ "${rnf_map[$chtype]}" = "" ]; then
-	echo "* err. invalid chtype: ($chtype)" ;
-	echo "* valid chtype: ($rnf_keys)" ;
-	exit -1 ;
+if [ "$chtype" != "" ]; then
+	declare -A rnf_map
+	rnf_map=([NOHT]=0xc100 [HT20]=0xc200 [HT40]=0xca00 [HT40-]=0xca00 [HT40+]=0xca00 \
+		[VHT20]=0xc300 [VHT40]=0xcb00 [VHT40-]=0xcb00 [VHT40+]=0xcb00 [VHT80]=0xd300 [VHT160]=0xdb00 \
+		[HE20]=0x11c400 [HE40]=0x11cc00 [HE40-]=0x11cc00 [HE40+]=0x11cc00 [HE80]=0x11d400 [HE160]=0x11dc00)
+	rnf_keys=${!rnf_map[*]}
+	rnf_vals=${rnf_map[*]}
+	if [ "${rnf_map[$chtype]}" = "" ]; then
+		echo "* err. invalid chtype: ($chtype)" ;
+		echo "* valid chtype: ($rnf_keys)" ;
+		exit -1 ;
+	fi
+	rnf=${rnf_map[$chtype]}
 fi
-rnf=${rnf_map[$chtype]}
 
 
 
@@ -69,7 +71,9 @@ mvm_dbgfs_dir=/sys/kernel/debug/iwlwifi/$pci/iwlmvm/ ;
 echo $interval_us | sudo tee $mvm_dbgfs_dir/csi_interval > /dev/null ;
 
 # rnf
-echo $rnf | sudo tee $mvm_dbgfs_dir/monitor_tx_rate > /dev/null ;
+if [ "$rnf" != "" ]; then
+	echo $rnf | sudo tee $mvm_dbgfs_dir/monitor_tx_rate > /dev/null ;
+fi
 
 # filter macs
 if [ "$macs" != "" ]; then
