@@ -168,7 +168,10 @@ function csi = get_csi(f, len, nrx, ntx, ntone)
 
 	%csi = csi(:,:,ht20_subcidxs) ;
 	%csi(:,ht20_null_subcidxs) = nan ;
+	%plot(abs(squeeze(csi(1,1,:))))
 	%csi = fillmissing(csi, 'linear', 2, 'EndValues', 'previous') ;
+	%input('fm')
+	%plot(abs(squeeze(csi(1,1,:))))
 end
 
 

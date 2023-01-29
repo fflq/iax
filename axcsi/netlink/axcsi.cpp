@@ -115,7 +115,7 @@ void handle_rate_n_flags(uint32_t rate_n_flags, p_rate_info_t p_rinfo)
 	flqstdout("mod_type(%u,%s) he_type(%d,%s) chan_width_type(%u,%u) ant_sel(%u) ldpc(%u)\n",
 			p_rinfo->mod_type, p_rinfo->mod_type_str, p_rinfo->he_type, p_rinfo->he_type_str, 
 			p_rinfo->chan_width_type, p_rinfo->chan_width, p_rinfo->ant_sel, p_rinfo->ldpc) ;
-	if (p_rinfo->chan_width_type == 2) getchar() ;
+	//if (p_rinfo->chan_width_type == 2) getchar() ;
 }
 
 
