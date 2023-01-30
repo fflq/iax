@@ -29,7 +29,7 @@ function sts = read_axcsi(filename, savename)
 		pos = pos + 4 + hdr_len ;
 
 		csi_len = fread(f, 1, 'uint32', 'b') ;
-		csi = get_csi(f, csi_len, hdr_st.nrx, hdr_st.ntx, hdr_st.ntone) ;
+		csi = get_csi(f, csi_len, hdr_st) ;
 		pos = pos + 4 + csi_len ;
 
 		%[hdr_len, csi_len, 111111, hdr_st.csi_len, hdr_st.ntone] 
@@ -47,7 +47,7 @@ function sts = read_axcsi(filename, savename)
 end
 
 
-function st = fill_st(hdr_st, rnf_st, csi)
+function st = fill_st(hdr_st, rnf_st, raw_csi)
 	st = struct() ;
 
 	st.smac = hdr_st.smac ;
@@ -58,6 +58,7 @@ function st = fill_st(hdr_st, rnf_st, csi)
 	st.rnf = dec2hex(hdr_st.rnf) ;
 	st.mod_type_str = rnf_st.mod_type_str ;
 	st.chan_width = rnf_st.chan_width ;
+	st.chan_type_str = rnf_st.chan_type_str ;
 	st.ant_sel = rnf_st.ant_sel ;
 	%st.ldpc = rnf_st.ldpc ;
 
@@ -67,7 +68,54 @@ function st = fill_st(hdr_st, rnf_st, csi)
 	st.ntone = hdr_st.ntone ;
 	st.csi_len = hdr_st.csi_len ;
 
+	st.raw_csi = raw_csi ;
+	st = calib_csi(st) ;
+end
+
+
+% assume idxs not include {1, length(cs)}
+function cs = linear_complex(cs, idxs)
+	cslen = length(cs) ;
+	idxs = sort(idxs) ;
+	for i = 1:length(idxs)
+		idx = idxs(i) ;
+		% left always exists, due to sort
+		lidx = max(idx-1, 1) ;
+		% forward right for first >0
+		ridx = min(idx+find(cs(idx+1:end)~=0, 1), cslen) ;
+		%[lidx, idx, ridx]
+		ratio = (idx-lidx)/(ridx-lidx) ;
+		% [1,0,0,4] => for idx=2, ratio=1/3, mag=1+(4-1)/3=2
+		mag = abs(cs(lidx)) + ratio*(abs(cs(ridx))-abs(cs(lidx))) ;
+		phase = angle(cs(lidx)) + ratio*(angle(cs(ridx))-angle(cs(lidx))) ;
+		cs(idx) = mag*exp(1j*phase) ;
+	end
+end
+
+
+function st = calib_csi(st)
+	st.chan_type_str
+	%if (st.chan_type_str ~= "VHT80") return ; end
+	subc = Subcarry.get_subc_info(st.chan_type_str) ;
+
+	csi = zeros(st.nrx, st.ntx, subc.subcs_len) ; % add for dc0
+	tones = zeros(1, subc.subcs_len) ;
+
+	for irx = 1:st.nrx; for itx = 1:st.ntx; 
+		raw_tones = squeeze(st.raw_csi(irx, itx, :)) ;
+		tones(subc.csi_subcs+subc.subcs_list_offset) = raw_tones ;
+		csi(irx, itx, :) = linear_complex(tones, subc.pilot_dc_subcs+subc.subcs_list_offset) ;
+		if (false)
+		title(st.chan_type_str);
+		plot(subc.subcs, abs(squeeze(csi(irx, itx, :))), 'LineWidth',2) ; hold on ; 
+		plot(subc.subcs, abs(tones)-10, 'LineWidth',2) ; hold on;
+		plot(subc.subcs(1:length(raw_tones)), abs(raw_tones)-20, 'LineWidth',2) ; hold on;
+		input('a') ;
+		end
+	end; end;
+	
 	st.csi = csi ;
+	st.subc = subc ;
 end
 
 
@@ -95,6 +143,8 @@ function rnf_st = get_rnf_st(rnf)
 	%Bits 13-11: chan width
 	chan_width_vals = [20, 40, 80, 160, 320] ;
 	[~, rnf_st.chan_width] = get_rate_mcs_fmt_val(11, 7, chan_width_vals, rnf) ;
+
+	rnf_st.chan_type_str = strcat(rnf_st.mod_type_str, num2str(rnf_st.chan_width)) ;
 
 	%Bits 15-14: ant sel
 	ant_sel_vals = 0:3 ;
@@ -144,19 +194,19 @@ end
 
 
 %从f中提取4*nrx*ntx*ntone字节到csi矩阵
-function csi = get_csi(f, len, nrx, ntx, ntone)
+function csi = get_csi(f, len, hdr_st)
 	%nsymbol = 16 ;
 	csibuf = fread(f, len) ;
 	pos = 1 ;
 
-	csi = zeros(nrx,ntx,ntone) ;
-	for rxidx = 1:nrx; for txidx = 1:ntx; for toneidx = 1:ntone
-		%imag = fread(f, 1, 'int16', 'l') ;
-		%real = fread(f, 1, 'int16', 'l') ;
-		imag = le_int(csibuf(pos:pos+1)) ;
-		real = le_int(csibuf(pos+2:pos+3)) ;
-		csi(rxidx, txidx, toneidx) = real + 1j*imag ;
-		pos = pos + 4 ;
+	csi = zeros(hdr_st.nrx, hdr_st.ntx, hdr_st.ntone) ;
+	for rxidx = 1:hdr_st.nrx; for txidx = 1:hdr_st.ntx; for toneidx = 1:hdr_st.ntone
+			%imag = fread(f, 1, 'int16', 'l') ;
+			%real = fread(f, 1, 'int16', 'l') ;
+			imag = le_int(csibuf(pos:pos+1)) ;
+			real = le_int(csibuf(pos+2:pos+3)) ;
+			csi(rxidx, txidx, toneidx) = real + 1j*imag ;
+			pos = pos + 4 ;
 	end; end; end
 	%csi = squeeze(csi) ;
 
@@ -165,6 +215,7 @@ function csi = get_csi(f, len, nrx, ntx, ntone)
 	%ht20_null_subcidxs = [-21, -7, 0, 7, 21] ;
 	ht20_subcidxs = [1:7, 9:21, 23:34, 36:48, 50:56] ;
 	ht20_null_subcidxs = [8, 22, 35, 49] ;
+	ht20_null_subcidxs = 28+[-21, -7, 35, 49] ;
 
 	%csi = csi(:,:,ht20_subcidxs) ;
 	%csi(:,ht20_null_subcidxs) = nan ;

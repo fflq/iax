@@ -37,8 +37,8 @@ def plot_phase(csist):
 
 
 def csist_callback(csist):
-    plot_mag(csist)
-    #plot_phase(csist)
+    #plot_mag(csist)
+    plot_phase(csist)
 
     
 axcsi.run_axcsi(sys.argv[1], sys.argv[2], csist_callback)
