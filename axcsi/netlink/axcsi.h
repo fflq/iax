@@ -36,12 +36,12 @@ static map<uint32_t, int> g_chan_width_map = {
 %HT40: 456=(1,1,114), 912=(2,1,114), 1824=(2,2,114)
 %VHT/BCC
 %VHT80: 968=(1,1,242), 1936=(2,1,242), 3872=(2,2,242)
-%VHT160: 1992=(1,1,498), 3984=(2,1,498), 7968=(2,2,498)
+%VHT160: 1992=(1,1,498), 3984=(2,1,498), 7968=(2,2,498) %doc say 484(fit data+pilot)
 %HE/LDPC
 %HE20: 968=(1,1,242), 1936=(2,1,242), 3872=(2,2,242)
 %HE40: 1936=(1,1,484), 3872=(2,1,484), 7744=(2,2,484)
 %HE80: 3984=(1,1,996), 7968=(2,1,996), 15936=(2,2,996)
-%HE160: 8080=(1,1,2020), 16160=(2,1,2020), 32320=(2,2,2020)
+%HE160: 8080=(1,1,2020), 16160=(2,1,2020), 32320=(2,2,2020) % may 1992
 %Note
 %VHT80 and HE20 are same, avoid use
 */
@@ -55,8 +55,8 @@ struct csi_hdr_t {
 	uint8_t nrx ; // 46
 	uint8_t ntx ; // 47
 	uint8_t v48_51[4] ; // 48
-	uint8_t ntone ; // 52
-	uint8_t v53_59[7] ; // 53
+	uint32_t ntone ; // 52
+	uint8_t v56_59[4] ; // 56
 	
 	uint8_t opp_rssi1 ; // 60
 	uint8_t v61[3] ;
@@ -80,6 +80,7 @@ typedef struct rate_info_t {
 	const char *he_type_str = nullptr ;
 	int chan_width_type ;
 	int chan_width ;
+	const char *chan_type_str = nullptr ;
 	int ant_sel ;
 	int ldpc ;
 } rate_info_t, *p_rate_info_t ;
