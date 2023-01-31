@@ -24,6 +24,21 @@ import libnl.handlers as nlhandlers
 import struct
 
 from iwl_fw_api_rs import *
+from subcarry import Subcarry
+
+
+class CSIST:
+    csi_len:int; seq:int; us:int; ftm:int
+    smac: str
+
+    rnf:int; chan_width:int; ant_sel:int; ldpc:int
+    mod_type_str:str; chan_type_str:str
+
+    rssi1:int; rssi2:int; nrx:int; ntx:int; ntone:int
+
+    raw_csi:np.array
+    csi: np.array
+    subc: Subcarry
 
 
 gcb = None
@@ -33,9 +48,6 @@ gdevidx = -1
 gfilepath = '/tmp/a'
 csist_callback = None
 
-subcidxs = {
-    'HT20': {s for s in range(-28,28+1)}.difference({-21, -7, 0, 7, 21})
-}
 
 def call_iwl_mvm_vendor_csi_register(sk ,family_id):
     print(sk)
@@ -99,23 +111,41 @@ def handle_rate_n_flags(csist, rnf, endian):
     '''
 
 
-class CSIST:
-    csi_len = 0
-    rnf = 0
-
-
-def handle_csi_mat(csist, csi_data, endian):
+def handle_csi(csist, csi_data, endian):
     pos = 0
-    endian = 'little'
-    csi_mat = np.zeros((csist.nrx, csist.ntx, csist.ntone), dtype='complex')
+    csi = np.zeros((csist.nrx, csist.ntx, csist.ntone), dtype='complex')
     for irx in range(csist.nrx):
         for itx in range(csist.ntx):
             for itone in range(csist.ntone):
                 imag = int.from_bytes(csi_data[pos:pos+2], endian, signed=True)
                 real = int.from_bytes(csi_data[pos+2:pos+4], endian, signed=True)
                 pos = pos + 4
-                csi_mat[irx,itx,itone] = real + 1j*imag
-    csist.csi = csi_mat
+                csi[irx,itx,itone] = real + 1j*imag
+    csist.raw_csi = csi
+
+
+def handle_csi_subcs(csist):
+    #if csist.chan_type_str == "VHT160": return 
+    subc = Subcarry.get_subc(csist.chan_type_str)
+    csi = np.zeros((csist.nrx, csist.ntx, subc.subcs_len), dtype='complex')
+    data_pilot_dc_tones = np.zeros(subc.subcs_len, dtype=complex)
+
+    for irx in range(csist.nrx):
+        for itx in range(csist.ntx):
+            csi_data_pilot_tones = csist.raw_csi[irx, itx]
+            data_pilot_dc_tones[subc.idx_data_pilot_subcs] = csi_data_pilot_tones
+
+            # interp complex num by (mag,phase)
+            # for raw_csi, only data_tones valid
+            x = subc.idx_data_subcs
+            mag = np.interp(subc.idx_data_pilot_dc_subcs, x, np.abs(data_pilot_dc_tones[x]))
+            phase = np.interp(subc.idx_data_pilot_dc_subcs, x, np.angle(data_pilot_dc_tones[x]))
+            x = subc.idx_pilot_dc_subcs
+            data_pilot_dc_tones[x] = mag[x] * np.exp(1j*phase[x])
+            csi[irx,itx] = data_pilot_dc_tones
+
+    csist.csi = csi
+    csist.subc = subc
 
 
 def handle_csi_hdr(csist, csi_hdr, endian):
@@ -123,7 +153,7 @@ def handle_csi_hdr(csist, csi_hdr, endian):
     csist.ftm = int.from_bytes(csi_hdr[8:12], endian)
     csist.nrx = int(csi_hdr[46])
     csist.ntx = int(csi_hdr[47])
-    csist.ntone = int(csi_hdr[52])
+    csist.ntone = int.from_bytes(csi_hdr[52:56], endian)
     csist.rssi1 = -int(csi_hdr[60])
     csist.rssi2 = -int(csi_hdr[64])
     #csist.smac = ':'.join(csi_hdr[68:74].hex())
@@ -146,7 +176,8 @@ def get_csi_st(csi_hdr, csi_hdr_len, csi_data, csi_data_len):
     print(st.__dict__)
 
     # csi
-    handle_csi_mat(st, csi_data, endian)
+    handle_csi(st, csi_data, endian)
+    handle_csi_subcs(st)
 
     return st
 
@@ -283,7 +314,7 @@ def handle_args(wlan, savepath, callback):
     gdevidx = socket.if_nametoindex(wlan)
     csist_callback = callback
 
-    if not gfilepath:
+    if gfilepath:
         with open(gfilepath, 'wb') as f:
             f.truncate()
     if gdevidx is None:

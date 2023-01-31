@@ -8,37 +8,29 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 import axcsi
+from axcsi import CSIST
 
 
-def calib_csi(tones, chan_type_str):
-    #print(tones[axcsi.subcidxs[chan_type_str]])
-    xs = range(0,len(tones))
-    print(xs)
-    csi = np.interp(xs, xs, tones)
-    return csi
+def plot_mag(csist: CSIST):
+    #sns.lineplot(abs(csist.raw_csi[0,0,:])-10)
+    #sns.lineplot(y=abs(csist.raw_csi[0,0,:])-10, x=csist.subc.data_pilot_subcs)
+    sns.lineplot(y=abs(csist.csi[0,0,:]), x=csist.subc.data_pilot_dc_subcs)
+    plt.pause(0.01); 
+    #input('-')
+    #plt.show()
 
-
-def plot_mag(csist):
+def plot_phase(csist: CSIST):
+    raw_csi = csist.raw_csi[0,0,:]
     csi = csist.csi[0,0,:]
-    print(csi)
-    sns.lineplot(abs(csi))
-    plt.pause(0.01)
-    csi = calib_csi(csi*2, csist.chan_type_str)
-    print(csi)
-    sns.lineplot(abs(csi))
-    #plt.pause(0.01)
-    plt.show()
-
-def plot_phase(csist):
-    csi = calib_csi(csist.csi[0,0,:], csist.chan_type_str)
     phases = np.unwrap(np.angle(csi))
     sns.lineplot(phases)
     #plt.pause(0.01)
 
 
-def csist_callback(csist):
-    #plot_mag(csist)
-    plot_phase(csist)
+def csist_callback(csist: CSIST):
+    plot_mag(csist)
+    #plot_phase(csist)
+    return 0
 
     
 axcsi.run_axcsi(sys.argv[1], sys.argv[2], csist_callback)

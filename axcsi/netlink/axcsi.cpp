@@ -106,15 +106,18 @@ void handle_rate_n_flags(uint32_t rate_n_flags, p_rate_info_t p_rinfo)
 	p_rinfo->chan_width_type = rate_mcs_chan_width >> RATE_MCS_CHAN_WIDTH_POS ;
 	p_rinfo->chan_width = g_chan_width_map[rate_mcs_chan_width] ;
 
+	p_rinfo->chan_type_str = (p_rinfo->mod_type_str + std::to_string(p_rinfo->chan_width)).c_str() ;
+
 	//Bits 15-14: antenna selection
 	p_rinfo->ant_sel = (rate_n_flags & RATE_MCS_ANT_MSK) >> RATE_MCS_ANT_POS ; 
 
 	//Bits 16: LDPC enables
 	p_rinfo->ldpc = (rate_n_flags & RATE_MCS_LDPC_MSK) >> RATE_MCS_LDPC_POS ; 
 
-	flqstdout("mod_type(%u,%s) he_type(%d,%s) chan_width_type(%u,%u) ant_sel(%u) ldpc(%u)\n",
-			p_rinfo->mod_type, p_rinfo->mod_type_str, p_rinfo->he_type, p_rinfo->he_type_str, 
-			p_rinfo->chan_width_type, p_rinfo->chan_width, p_rinfo->ant_sel, p_rinfo->ldpc) ;
+	flqstdout("chan_type_str(%u,%u,%s) he_type(%d,%s) ant_sel(%u) ldpc(%u)\n",
+			p_rinfo->mod_type, p_rinfo->chan_width_type, p_rinfo->chan_type_str, 
+			p_rinfo->he_type, p_rinfo->he_type_str, 
+			p_rinfo->ant_sel, p_rinfo->ldpc) ;
 	//if (p_rinfo->chan_width_type == 2) getchar() ;
 }
 
@@ -180,7 +183,7 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 		nmsg_csi_hdr = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_HDR] ;
 	 	nmsg_csi_data = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_DATA] ;
 		if (nmsg_csi_hdr && nmsg_csi_data) {
-			flqstdout("-- (nla_type,nla_len) csi_hdr(%x,%u) csi_data(%x,%u)\n", 
+			flqstdout("-- (nla_type,nla_len) csi_hdr(%x,%u-4) csi_data(%x,%u-4)\n", 
 					nmsg_csi_hdr->nla_type, nmsg_csi_hdr->nla_len,
 					nmsg_csi_data->nla_type, nmsg_csi_data->nla_len) ;
 

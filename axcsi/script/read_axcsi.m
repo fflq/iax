@@ -1,10 +1,4 @@
 
-%HT: [1:56]-{8,22,35,49} => [-28:28]-{-21,7,0,7,21}
-%{
-NONHT20: 48/52, [-26:26]-{-21,-7,0,7,21}
-HT20: 52/56, [-28:28]-{-21,-7,0,7,21}
-HT40: 108/114, [-57,57]-{-53,-25,-11,0,11,25,53}
-%}
 function sts = read_axcsi(filename, savename)
 	if (nargin < 2)
 		savename = '' ;
@@ -36,8 +30,7 @@ function sts = read_axcsi(filename, savename)
 		st = fill_st(hdr_st, rnf_st, csi) ;  
 		sts{end+1} = st ;
 
-		%st
-		%input('-');
+		%test_st(st) ;
 	end
 	if ~isempty(savename)
 		save(savename, "sts");
@@ -46,6 +39,19 @@ function sts = read_axcsi(filename, savename)
 	fclose(f) ;	
 end
 
+
+function test_st(st)
+	st
+	subc = st.subc ;
+	raw_tones = squeeze(st.raw_csi(1,1,:)) ;
+	tones = squeeze(st.csi(1,1,:)) ;
+	tones(1:10)
+
+	title(st.chan_type_str);
+	plot(subc.subcs, abs(tones), 'LineWidth',2) ; hold on;
+	plot(subc.subcs(1:length(raw_tones)), abs(raw_tones)-10, 'LineWidth',2) ; hold on;
+	input('a') ;
+end
 
 function st = fill_st(hdr_st, rnf_st, raw_csi)
 	st = struct() ;
@@ -56,8 +62,8 @@ function st = fill_st(hdr_st, rnf_st, raw_csi)
 	%st.ftm = hdr_st.ftm ;
 
 	st.rnf = dec2hex(hdr_st.rnf) ;
-	st.mod_type_str = rnf_st.mod_type_str ;
-	st.chan_width = rnf_st.chan_width ;
+	%st.mod_type_str = rnf_st.mod_type_str ;
+	%st.chan_width = rnf_st.chan_width ;
 	st.chan_type_str = rnf_st.chan_type_str ;
 	st.ant_sel = rnf_st.ant_sel ;
 	%st.ldpc = rnf_st.ldpc ;
@@ -69,49 +75,36 @@ function st = fill_st(hdr_st, rnf_st, raw_csi)
 	st.csi_len = hdr_st.csi_len ;
 
 	st.raw_csi = raw_csi ;
-	st = calib_csi(st) ;
+	%st = calib_csi_subcs(st) ;
 end
 
 
-% assume idxs not include {1, length(cs)}
-function cs = linear_complex(cs, idxs)
-	cslen = length(cs) ;
-	idxs = sort(idxs) ;
-	for i = 1:length(idxs)
-		idx = idxs(i) ;
-		% left always exists, due to sort
-		lidx = max(idx-1, 1) ;
-		% forward right for first >0
-		ridx = min(idx+find(cs(idx+1:end)~=0, 1), cslen) ;
-		%[lidx, idx, ridx]
-		ratio = (idx-lidx)/(ridx-lidx) ;
-		% [1,0,0,4] => for idx=2, ratio=1/3, mag=1+(4-1)/3=2
-		mag = abs(cs(lidx)) + ratio*(abs(cs(ridx))-abs(cs(lidx))) ;
-		phase = angle(cs(lidx)) + ratio*(angle(cs(ridx))-angle(cs(lidx))) ;
-		cs(idx) = mag*exp(1j*phase) ;
-	end
-end
-
-
-function st = calib_csi(st)
-	st.chan_type_str
+% raw_csi only data_subcs+pilot_subcs, need add dc_subcs, then interp pilot_dc_subcs
+% eg. csi={-28:-1,1:28}, pilot{-21,-7,7,21} in csi is nan, dc{0} not in csi
+function st = calib_csi_subcs(st)
 	%if (st.chan_type_str ~= "VHT80") return ; end
-	subc = Subcarry.get_subc_info(st.chan_type_str) ;
+	subc = Subcarry.get_subc(st.chan_type_str) ;
 
-	csi = zeros(st.nrx, st.ntx, subc.subcs_len) ; % add for dc0
-	tones = zeros(1, subc.subcs_len) ;
+	csi = zeros(st.nrx, st.ntx, subc.subcs_len) ; % add for dc
+	data_pilot_dc_tones = zeros(1, subc.subcs_len) ;
 
 	for irx = 1:st.nrx; for itx = 1:st.ntx; 
-		raw_tones = squeeze(st.raw_csi(irx, itx, :)) ;
-		tones(subc.csi_subcs+subc.subcs_list_offset) = raw_tones ;
-		csi(irx, itx, :) = linear_complex(tones, subc.pilot_dc_subcs+subc.subcs_list_offset) ;
-		if (false)
-		title(st.chan_type_str);
-		plot(subc.subcs, abs(squeeze(csi(irx, itx, :))), 'LineWidth',2) ; hold on ; 
-		plot(subc.subcs, abs(tones)-10, 'LineWidth',2) ; hold on;
-		plot(subc.subcs(1:length(raw_tones)), abs(raw_tones)-20, 'LineWidth',2) ; hold on;
-		input('a') ;
-		end
+		csi_data_pilot_tones = squeeze(st.raw_csi(irx, itx, :)) ;
+		data_pilot_dc_tones(subc.idx_data_pilot_subcs) = csi_data_pilot_tones ; 
+
+		% interp complex num
+		% for raw_csi, only data_tones valid
+		x = subc.idx_data_subcs ;
+		% mag
+		F = griddedInterpolant(x, abs(data_pilot_dc_tones(x))) ;
+		mag = F(subc.idx_data_pilot_dc_subcs) ;
+		% phase
+		F = griddedInterpolant(x, angle(data_pilot_dc_tones(x))) ;
+		phase = F(subc.idx_data_pilot_dc_subcs) ;
+		% restore
+		x = subc.idx_pilot_dc_subcs ;
+		data_pilot_dc_tones(x) = mag(x).*exp(1j*phase(x)) ;
+		csi(irx,itx,:) = data_pilot_dc_tones ;
 	end; end;
 	
 	st.csi = csi ;
@@ -183,12 +176,12 @@ function hdr_st = get_csi_hdr_st(f, len)
 	hdr_st.ftm = uint32(le_uint(hdrbuf(9:12))) ;
 	hdr_st.nrx = hdrbuf(47) ;
 	hdr_st.ntx = hdrbuf(48) ;
-	hdr_st.ntone = hdrbuf(53) ;
+	hdr_st.ntone = le_uint(hdrbuf(53:56)) ;
 	hdr_st.rssi1 = -hdrbuf(61) ;
 	hdr_st.rssi2 = -hdrbuf(65) ;
 	hdr_st.smac = join(string(dec2hex(hdrbuf(69:74))),':') ;
 	hdr_st.seq = le_uint(hdrbuf(77)) ;
-	hdr_st.us = le_uint(hdrbuf(89:92)) ;
+	hdr_st.us = uint64(le_uint(hdrbuf(89:92))) ;
 	hdr_st.rnf = le_uint(hdrbuf(93:96)) ;
 end
 
@@ -208,21 +201,6 @@ function csi = get_csi(f, len, hdr_st)
 			csi(rxidx, txidx, toneidx) = real + 1j*imag ;
 			pos = pos + 4 ;
 	end; end; end
-	%csi = squeeze(csi) ;
-
-	ht20_subcidxs = [1:6, 8:20, 22:28] ;
-	ht20_subcidxs = [-ht20_subcidxs, ht20_subcidxs] ; 
-	%ht20_null_subcidxs = [-21, -7, 0, 7, 21] ;
-	ht20_subcidxs = [1:7, 9:21, 23:34, 36:48, 50:56] ;
-	ht20_null_subcidxs = [8, 22, 35, 49] ;
-	ht20_null_subcidxs = 28+[-21, -7, 35, 49] ;
-
-	%csi = csi(:,:,ht20_subcidxs) ;
-	%csi(:,ht20_null_subcidxs) = nan ;
-	%plot(abs(squeeze(csi(1,1,:))))
-	%csi = fillmissing(csi, 'linear', 2, 'EndValues', 'previous') ;
-	%input('fm')
-	%plot(abs(squeeze(csi(1,1,:))))
 end
 
 
