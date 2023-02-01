@@ -27,10 +27,10 @@ function sts = read_axcsi(filename, savename)
 		pos = pos + 4 + csi_len ;
 
 		%[hdr_len, csi_len, 111111, hdr_st.csi_len, hdr_st.ntone] 
-		st = fill_st(hdr_st, rnf_st, csi) ;  
+		st = fill_csist(hdr_st, rnf_st, csi) ;  
 		sts{end+1} = st ;
 
-		%test_st(st) ;
+		test_st(st) ;
 	end
 	if ~isempty(savename)
 		save(savename, "sts");
@@ -43,17 +43,16 @@ end
 function test_st(st)
 	st
 	subc = st.subc ;
-	raw_tones = squeeze(st.raw_csi(1,1,:)) ;
 	tones = squeeze(st.csi(1,1,:)) ;
-	tones(1:10)
+	stones = squeeze(st.scsi(1,1,:)) ;
 
 	title(st.chan_type_str);
-	plot(subc.subcs, abs(tones), 'LineWidth',2) ; hold on;
-	plot(subc.subcs(1:length(raw_tones)), abs(raw_tones)-10, 'LineWidth',2) ; hold on;
+	plot(subc.subcs, abs(stones), 'LineWidth',2) ; hold on;
+	plot(subc.subcs(1:length(tones)), abs(tones)-10, 'LineWidth',2) ; hold on;
 	input('a') ;
 end
 
-function st = fill_st(hdr_st, rnf_st, raw_csi)
+function st = fill_csist(hdr_st, rnf_st, csi)
 	st = struct() ;
 
 	st.smac = hdr_st.smac ;
@@ -74,8 +73,8 @@ function st = fill_st(hdr_st, rnf_st, raw_csi)
 	st.ntone = hdr_st.ntone ;
 	st.csi_len = hdr_st.csi_len ;
 
-	st.raw_csi = raw_csi ;
-	%st = calib_csi_subcs(st) ;
+	st.csi = csi ;
+	st = calib_csi_subcs(st) ;
 end
 
 
@@ -85,11 +84,11 @@ function st = calib_csi_subcs(st)
 	%if (st.chan_type_str ~= "VHT80") return ; end
 	subc = Subcarry.get_subc(st.chan_type_str) ;
 
-	csi = zeros(st.nrx, st.ntx, subc.subcs_len) ; % add for dc
+	scsi = zeros(st.nrx, st.ntx, subc.subcs_len) ; % add for dc
 	data_pilot_dc_tones = zeros(1, subc.subcs_len) ;
 
 	for irx = 1:st.nrx; for itx = 1:st.ntx; 
-		csi_data_pilot_tones = squeeze(st.raw_csi(irx, itx, :)) ;
+		csi_data_pilot_tones = squeeze(st.csi(irx, itx, :)) ;
 		data_pilot_dc_tones(subc.idx_data_pilot_subcs) = csi_data_pilot_tones ; 
 
 		% interp complex num
@@ -104,10 +103,10 @@ function st = calib_csi_subcs(st)
 		% restore
 		x = subc.idx_pilot_dc_subcs ;
 		data_pilot_dc_tones(x) = mag(x).*exp(1j*phase(x)) ;
-		csi(irx,itx,:) = data_pilot_dc_tones ;
+		scsi(irx,itx,:) = data_pilot_dc_tones ;
 	end; end;
 	
-	st.csi = csi ;
+	st.scsi = scsi ;
 	st.subc = subc ;
 end
 
