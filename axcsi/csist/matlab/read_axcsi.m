@@ -9,7 +9,7 @@ function sts = read_axcsi(filename, savename)
 	pos = 0; 
 	sts = {} ;
 	while pos < file_len
-		if ~mod(length(sts),1000)
+		if ~mod(length(sts),100)
 			fprintf("* read %.2f %%\n", 100*ftell(f)/file_len) ;
 		end
 
@@ -30,7 +30,7 @@ function sts = read_axcsi(filename, savename)
 		st = fill_csist(hdr_st, rnf_st, csi) ;  
 		sts{end+1} = st ;
 
-		test_st(st) ;
+		%test_st(st) ;
 	end
 	if ~isempty(savename)
 		save(savename, "sts");
@@ -78,6 +78,19 @@ function st = fill_csist(hdr_st, rnf_st, csi)
 end
 
 
+% interp complex num by (mag,phase)
+function yv = do_complex_interp(xv, x, y)
+	interp_method='linear';
+	F = griddedInterpolant(x, abs(y),interp_method) ;
+	mag = F(xv) ;
+	%no unwrap then yv-unwrap-phase will fluctuate
+	%F = griddedInterpolant(x, angle(y),interp_method) ;
+	F = griddedInterpolant(x, unwrap(angle(y)),interp_method) ;
+	phase = F(xv) ;
+	yv = mag.*exp(1j*phase) ;
+end
+
+
 % raw_csi only data_subcs+pilot_subcs, need add dc_subcs, then interp pilot_dc_subcs
 % eg. csi={-28:-1,1:28}, pilot{-21,-7,7,21} in csi is nan, dc{0} not in csi
 function st = calib_csi_subcs(st)
@@ -91,18 +104,10 @@ function st = calib_csi_subcs(st)
 		csi_data_pilot_tones = squeeze(st.csi(irx, itx, :)) ;
 		data_pilot_dc_tones(subc.idx_data_pilot_subcs) = csi_data_pilot_tones ; 
 
-		% interp complex num
 		% for raw_csi, only data_tones valid
 		x = subc.idx_data_subcs ;
-		% mag
-		F = griddedInterpolant(x, abs(data_pilot_dc_tones(x))) ;
-		mag = F(subc.idx_data_pilot_dc_subcs) ;
-		% phase
-		F = griddedInterpolant(x, angle(data_pilot_dc_tones(x))) ;
-		phase = F(subc.idx_data_pilot_dc_subcs) ;
-		% restore
-		x = subc.idx_pilot_dc_subcs ;
-		data_pilot_dc_tones(x) = mag(x).*exp(1j*phase(x)) ;
+		xv = subc.idx_pilot_dc_subcs ;
+		data_pilot_dc_tones(xv) = do_complex_interp(xv, x, data_pilot_dc_tones(x)) ;
 		scsi(irx,itx,:) = data_pilot_dc_tones ;
 	end; end;
 	

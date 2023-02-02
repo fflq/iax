@@ -36,12 +36,12 @@ mkdir -p $dst_dir/csi
 netlink_files=(axcsi.cpp axcsi.h iwl_fw_api_rs.h Makefile)
 for f in ${netlink_files[@]}
 do
-	cp -rf $src_dir/netlink/$f $dst_dir/csi/
+	cp -rf $src_dir/csist/cpp/$f $dst_dir/csi/
 done
 script_files=(read_axcsi.m)
 for f in ${script_files[@]}
 do
-	cp -rf $src_dir/script/$f $dst_dir/csi/
+	cp -rf $src_dir/csist/matlab/$f $dst_dir/csi/
 done
 
 

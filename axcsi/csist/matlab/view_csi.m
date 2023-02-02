@@ -1,6 +1,6 @@
 %clear all;
 %close all;
-%addpath('../../') ;
+%addpath('../../../libs/') ;
 
 
 function view_csi(filename, reload)
@@ -12,24 +12,67 @@ function view_csi(filename, reload)
 		if ~mod(i, 1000)
 			fprintf("- %d/%d\n", i, len) ;
 		end
-		csi_st = sts{1,i} ;
+		csist = sts{1,i} ;
 
-		csi = squeeze(csi_st.csi) ;
-		angleoffs12 = angle( csi(2,:) .* conj(csi(1,:)) ) ;  
-		phaseoff(end+1) = mean(angleoffs12) ;
-		%fprintf("- %d, %d, 12(%f)\n", i, length(phaseoff), mean(phaseoff)) ;
-		%Util.plot_realtime1(1, phaseoff) ;
-
-		%fprintf("- %s\n", csi_st.mac) ;
-		%Util.plot_realtime1(1, csi_st.csi) ;
-		%plot_csi(csi_st.csi) ;
-		%input('-') ;
-		%pause(0.001) ;
-
-		stats_macs(csi_st, false) ;
+		%plot_csi(csist.csi);
+		%plot_mag(csist) ;
+		%plot_phase(csist) ;
+		plot_phase_offset(csist) ;
+	
 	end
-	stats_macs([], true) ;
+	%stats_macs([], true) ;
 end
+
+
+function plot_phase(csist)
+	subc = csist.subc ;
+	tones = squeeze(csist.csi(1,1,:)) ;
+	stones = squeeze(csist.scsi(1,1,:)) ;
+
+	title(csist.chan_type_str);
+	%hold off;
+	hold on;
+	plot(subc.subcs, unwrap(angle(stones))-2, 'LineWidth',2) ; 
+	%plot(subc.subcs, angle(stones)+20, 'LineWidth',2) ; 
+	%plot(subc.subcs(1:length(tones)), unwrap(angle(tones))-20, 'LineWidth',2) ; 
+	%plot(subc.subcs(1:length(tones)), angle(tones)-50, 'LineWidth',2) ; 
+	input('a') ;
+end
+
+
+function plot_mag(csist)
+	subc = csist.subc ;
+	tones = squeeze(csist.csi(1,1,:)) ;
+	stones = squeeze(csist.scsi(1,1,:)) ;
+
+	title(csist.chan_type_str);
+	hold on;
+	plot(subc.subcs, abs(stones)-2, 'LineWidth',2) ; 
+	%plot(subc.subcs(1:length(tones)), abs(tones)-10, 'LineWidth',2) ; 
+	input('a') ;
+end
+
+
+function plot_phase_offset(csist)
+	persistent phaseoff
+	if isempty(phaseoff)
+		phaseoff = [] ;
+	end
+	scsi = squeeze(csist.scsi(:,1,:)) ;
+	angleoffs12 = angle( scsi(2,:) .* conj(scsi(1,:)) ) ;  
+	%phaseoff(end+1) = mean(angleoffs12) ;
+	phaseoff(end+1) = angleoffs12(1) ;
+	%fprintf("- %d, %d, 12(%f)\n", i, length(phaseoff), mean(phaseoff)) ;
+	Util.plot_realtime1(1, phaseoff) ;
+	hold on;
+	%scatter(csist.subc.subcs, angleoffs12, 'o', 'LineWidth',2) ;
+	pause(0.1) ;
+	%input('a') ;
+
+	%stats_macs(csist, false) ;
+end
+		
+
 
 function sts = load_csi(filename, reload)
 	%filename = "../netlink/ax.csi" ;
@@ -71,9 +114,10 @@ function plot_csi(csi)
 	csi_phase = unwrap(angle(csi.')) ;
 	%csi_phase = angle(csi.') ;
 	csi_mag = abs(csi.') ;
-	%plot(csi_phase) ;
-	plot(csi_mag) ;
+	plot(csi_phase) ;
+	%plot(csi_mag) ;
 	pause(0.01) ;
+	input('-') ;
 end
 
 
