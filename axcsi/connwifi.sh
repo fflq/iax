@@ -11,6 +11,7 @@ if [ $# -ge 3 ]; then
 fi
 
 sudo service network-manager stop
+sudo systemctl stop NetworkManager.service
 sudo rfkill unblock wifi ;
 sudo airmon-ng check kill ;
 

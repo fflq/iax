@@ -63,5 +63,7 @@ recv_csi
 ax.csi
 tmp
 
+__pycache__
+
 
 
