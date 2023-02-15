@@ -6,13 +6,13 @@
 function view_csi(filename, reload)
 	sts = load_csi(filename, reload) ;
 
-	phaseoffs = [] ;
 	len = length(sts) ;
 	for i = 1:len
 		if ~mod(i, 1000)
 			fprintf("- %d/%d\n", i, len) ;
 		end
 		csist = sts{1,i} ;
+		if csist.nrx < 2; continue; end
 
 		%plot_csi(csist.csi);
 		%plot_mag(csist) ;
@@ -55,9 +55,8 @@ end
 
 function plot_phase_offset(csist)
 	persistent phaseoffs
-	if isempty(phaseoffs)
-		phaseoffs = [] ;
-	end
+	if isempty(phaseoffs); phaseoffs = [] ; end
+
 	subc = csist.subc ;
 	scsi = squeeze(csist.scsi(:,1,:)) ;
 	angleoffs12 = angle( scsi(2,:) .* conj(scsi(1,:)) ) ;  
@@ -66,27 +65,22 @@ function plot_phase_offset(csist)
 	phaseoffs(end+1,:) = angleoffs12 ;
 	%fprintf("- %d, %d, 12(%f)\n", i, length(phaseoffs), mean(phaseoffs)) ;
 	%Util.plot_realtime1(1, phaseoffs) ;
-	%hold on;
-	%scatter(csist.subc.subcs, angleoffs12, 'o', 'LineWidth',2) ;
-	%pause(0.1) ;
-	%input('a') ;
+	hold on;
+	plot(csist.subc.subcs, angleoffs12, 'o', 'LineWidth',2) ;
+	%csist
+	%input('-')
+	return
 
     pof_len = length(phaseoffs) ;
-    %if ~mod(pof_len, 100)
-    if pof_len == 100
+    if ~mod(pof_len, 100)
+		csist
         grid on ;
         hold off ;
         %by tones
         %plot3(100*repmat(1:pof_len,[subc.subcs_len,1]), repmat(subc.subcs, [pof_len,1]).', phaseoffs.', 'LineWidth',2) ;
         %by num
-        plot3(100*repmat(1:pof_len,[subc.subcs_len,1]).', repmat(subc.subcs, [pof_len,1]), phaseoffs, 'LineWidth',2) ;
-        %{
-        for i = 1:length(phaseoffs)
-            plot3(ones(1,subc.subcs_len)*i*10, subc.subcs, phaseoffs(i,:)) ;
-            hold on ;
-        end
-        %}
-        input('a');
+        plot3(1*repmat(1:pof_len,[subc.subcs_len,1]).', repmat(subc.subcs, [pof_len,1]), phaseoffs, 'LineWidth',2) ;
+        %input('a');
     end
 end
 		

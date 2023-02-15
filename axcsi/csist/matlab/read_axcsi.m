@@ -75,6 +75,23 @@ function st = fill_csist(hdr_st, rnf_st, csi)
 
 	st.csi = csi ;
 	st = calib_csi_subcs(st) ;
+	st = calib_csi_perm(st) ;
+end
+
+
+function st = calib_csi_perm(st)
+	if st.nrx < 2
+		return
+	end
+	st.perm = [1,2] ;
+	pw1 = sum(abs(st.csi(1,1,:))) ;
+	pw2 = sum(abs(st.csi(2,1,:))) ;
+	if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
+		st.perm = [2,1] ;
+		for i = 1:st.ntx
+			st.scsi(:,i,:) = st.scsi(st.perm,i,:) ;
+		end
+	end
 end
 
 
