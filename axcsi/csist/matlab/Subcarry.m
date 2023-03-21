@@ -102,11 +102,11 @@ methods (Static)
 	end
 
 	function st = get_subc_he40()
-		st = Subcarry.gen_subc_common(244, [3:244], [10,36,78,104,144,170,212,238], [0,2]) ;
+		st = Subcarry.gen_subc_common(244, [3:244], [10,36,78,104,144,170,212,238], [0:2]) ;
 	end
 
 	function st = get_subc_he80()
-		st = Subcarry.gen_subc_common(500, [3:500], [24,92,158,226,266,334,400,468], [0,2]) ;
+		st = Subcarry.gen_subc_common(500, [3:500], [24,92,158,226,266,334,400,468], [0:2]) ;
 	end
 
 	function st = get_subc_he160()

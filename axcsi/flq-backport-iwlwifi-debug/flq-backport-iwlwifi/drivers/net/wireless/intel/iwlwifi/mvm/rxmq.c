@@ -273,6 +273,11 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
 		(rate_flags & RATE_MCS_ANT_AB_MSK) >> RATE_MCS_ANT_POS;
 	rx_status->chain_signal[0] = energy_a;
 	rx_status->chain_signal[1] = energy_b;
+
+	static int flqcnt = 0 ;
+	if (flqcnt++ % 100000 == 0)
+	printk("***fflq rxmq.c iwl_mvm_get_signal_strength, energyABMax(%d,%d,%d), chains(%u)\n",
+			energy_a, energy_b, max_energy, rx_status->chains);
 }
 
 static int iwl_mvm_rx_mgmt_prot(struct ieee80211_sta *sta,

@@ -28,3 +28,9 @@ X-LDPC (X | 0X10000)
 
 
 
+0xc000 ant_ab
+0x4000 ant_a
+0x8000 ant_b
+
+
+
