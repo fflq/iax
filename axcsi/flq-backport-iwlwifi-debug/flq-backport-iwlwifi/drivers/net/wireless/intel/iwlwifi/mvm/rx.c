@@ -110,8 +110,8 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
 	int energy_a, energy_b, max_energy;
 	u32 val;
 
-	val =
-	    le32_to_cpu(phy_info->non_cfg_phy[IWL_RX_INFO_ENERGY_ANT_ABC_IDX]);
+	//fflqkey rssi negate reasons
+	val = le32_to_cpu(phy_info->non_cfg_phy[IWL_RX_INFO_ENERGY_ANT_ABC_IDX]);
 	energy_a = (val & IWL_RX_INFO_ENERGY_ANT_A_MSK) >>
 						IWL_RX_INFO_ENERGY_ANT_A_POS;
 	energy_a = energy_a ? -energy_a : S8_MIN;
@@ -129,6 +129,11 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
 					>> RX_RES_PHY_FLAGS_ANTENNA_POS;
 	rx_status->chain_signal[0] = energy_a;
 	rx_status->chain_signal[1] = energy_b;
+
+	static int flqcnt = 0 ;
+	if (flqcnt++ % 10000 == 0)
+	printk("***fflq rx.c iwl_mvm_get_signal_strength, energyABMax(%d,%d,%d), chains(%u)\n",
+			energy_a, energy_b, max_energy, rx_status->chains);
 }
 
 /*

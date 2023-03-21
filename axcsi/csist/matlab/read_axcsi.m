@@ -62,7 +62,7 @@ function st = fill_csist(hdr_st, rnf_st, csi)
 
 	st.rnf = dec2hex(hdr_st.rnf) ;
 	%st.mod_type_str = rnf_st.mod_type_str ;
-	%st.chan_width = rnf_st.chan_width ;
+	st.chan_width = rnf_st.chan_width ;
 	st.chan_type_str = rnf_st.chan_type_str ;
 	st.ant_sel = rnf_st.ant_sel ;
 	%st.ldpc = rnf_st.ldpc ;

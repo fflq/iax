@@ -24,6 +24,6 @@ echo 1 | sudo tee /sys/kernel/debug/iwlwifi/0000:08:00.0/iwlmvm/csi_enabled ;
 #sudo cat /sys/kernel/debug/iwlwifi/0000:08:00.0/iwlmvm/mem ;
 
 
-#sudo ./reinstall_mod.sh iwlwifi
+sudo ./reins_iwlwifi.sh 
 
 

@@ -60,8 +60,14 @@ if [ "$chtype" != "" ]; then
 		exit -1 ;
 	fi
 	rnf=${rnf_map[$chtype]}
-fi
 
+	rnf=$((rnf - 0xc000)) ;
+	ant_a=$((1<<14)) ;
+	ant_b=$((1<<15)) ;
+	rnf=$((rnf | ant_a)) ;
+	rnf=$((rnf | ant_b)) ;
+	printf "%#x" $rnf ;
+fi
 
 
 #[function activate]

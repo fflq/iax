@@ -4,6 +4,9 @@
 
 
 function view_csi(filename, reload)
+	if (nargin < 2)
+		reload = true ;
+	end
 	sts = load_csi(filename, reload) ;
 
 	len = length(sts) ;
@@ -17,10 +20,27 @@ function view_csi(filename, reload)
 		%plot_csi(csist.csi);
 		%plot_mag(csist) ;
 		%plot_phase(csist) ;
-		plot_phase_offset(csist) ;
+		%plot_phase_offset(csist) ;
+		plot_cir(csist) ;
 	
+		input('a') ;
 	end
 	%stats_macs([], true) ;
+end
+
+
+function plot_cir(csist)
+	csist
+	cfr = squeeze(csist.csi(1,1,:)) ;
+	cir = ifft(cfr) ;
+	cir = cir(1:10) ;
+	dt = 1 / (csist.chan_width * 1e6) ;
+	dt = dt * 1e9 ; %ns
+	xs = (0:length(cir)-1)*dt ; 
+	[v, i] = max(real(cir)) ;
+	[xs(i), xs(i)*0.3]
+	hold on ;
+	plot(xs, real(cir), ':o', 'LineWidth', 2) ;
 end
 
 
@@ -36,7 +56,6 @@ function plot_phase(csist)
 	%plot(subc.subcs, angle(stones)+20, 'LineWidth',2) ; 
 	%plot(subc.subcs(1:length(tones)), unwrap(angle(tones))-20, 'LineWidth',2) ; 
 	%plot(subc.subcs(1:length(tones)), angle(tones)-50, 'LineWidth',2) ; 
-	input('a') ;
 end
 
 
