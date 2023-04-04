@@ -1,12 +1,15 @@
 %clear all;
 %close all;
-%addpath('../../../libs/') ;
+addpath('spotfi/') ;
 
+%view_csi_func('/flqtmp/data/ax210_air_10cm_40ht20.csi');
+%view_csi_func('../../data/ax210_split_40ht20.csi') ;
+view_csi_func('/tmp/a');
 
-function view_csi(filename, reload)
-	if (nargin < 2)
-		reload = true ;
-	end
+function view_csi_func(filename, reload)
+%addpath('spotfi/') ;
+
+	if (nargin < 2); reload = true ; end
 	sts = load_csi(filename, reload) ;
 
 	len = length(sts) ;
@@ -15,19 +18,89 @@ function view_csi(filename, reload)
 			fprintf("- %d/%d\n", i, len) ;
 		end
 		csist = sts{1,i} ;
-		if csist.nrx < 2; continue; end
+		if ~csi_filter(csist); continue; end
 
+		csist 
+		%csist = preprocess(csist) ;
+		%plot_attack(csist) ;
 		%plot_csi(csist.csi);
 		%plot_mag(csist) ;
 		%plot_phase(csist) ;
 		%plot_phase_offset(csist) ;
-		plot_cir(csist) ;
+		%plot_cir(csist) ;
+		do_spotfi(csist) ;
 	
 		input('a') ;
 	end
 	%stats_macs([], true) ;
 end
 
+function plot_attack(csist)
+	persistent aks;
+	if isempty(aks); aks = []; end 
+	aks(end+1) = abs(csist.scsi(1,1,10)) ;
+	range = max(length(aks)-2,1):length(aks) ;
+	hold on; plot(range, aks(range)) ;
+end
+
+function do_spotfi(csist)
+	envs = gs().envs ;
+	envs.nant_rx = csist.nrx ;
+	envs.nant_tx = csist.ntx ;
+	envs.ntone = csist.ntone ;
+	envs.ntone_sm = floor(envs.ntone/2) ;
+	envs.subc_idxs = csist.subc.subcs ;
+	[aoas, tofs] = spotfi(squeeze(csist.scsi(:,1,:)), envs, -1) ;
+	[aoas, tofs]
+end
+
+function [k, b, tones] = fit_csi(tones)
+	tones = squeeze(tones) ;
+	mag = abs(tones) ;
+    uwphase = unwrap(angle(tones)) ;
+	xs = 1:length(tones) ;
+    z = polyfit(xs, uwphase, 1) ;
+    k = z(1) ;
+	b = z(2) ;
+    fprintf("* k(%f) b(%f)\n", k, b) ;
+    pha = uwphase - k*xs;
+    pha = uwphase - k*xs - b;
+    pha = uwphase - b;
+    %sns.lineplot(x=xs, y=pha)
+    tones = mag.*exp(1j*pha);
+end
+
+function csist = calib_scsi_by_phaoff12(csist, phaoff12)
+	csist.scsi(2,1,:) = csist.scsi(2,1,:) * exp(-1j*phaoff12) ;
+end
+
+function csist = preprocess(csist)
+    csi = csist.scsi;
+    subcs = csist.subc.subcs;
+
+    [k2, b2, tone2] = fit_csi(csi(2,1,:));
+    [k1, b1, tone1] = fit_csi(csi(1,1,:));
+    pha12 = unwrap(angle(tone2 .* conj(tone1)));
+	figure(1); plot(subcs, pha12, '-o') ;
+    deltab = mod(b2-b1, 2*pi) ;
+	if(deltab > pi); deltab = deltab-2*pi; end
+    fprintf("* deltab %f\n", deltab);
+	deltab=1.6
+    csist = calib_scsi_by_phaoff12(csist, deltab);
+	hold on; plot(subcs, unwrap(angle(squeeze(csist.scsi(:,1,:))), [], 2)) ;
+	%csist.scsi(:,1,:) = [tone1.'; tone2.'] ;
+end
+
+function r = csi_filter(csist)
+	r = false;
+	if (csist.nrx < 2); return; end
+
+    pw1 = sum(abs(csist.csi(1,1,:)).^2)/1e4;
+    pw2 = sum(abs(csist.csi(2,1,:)).^2)/1e4;
+    if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
+
+	r = true ;
+end
 
 function plot_cir(csist)
 	csist
