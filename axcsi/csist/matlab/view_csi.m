@@ -1,22 +1,18 @@
 %clear all;
 %close all;
-addpath('spotfi/') ;
+addpath('/home/flq/ws/git/SpotFi')
 
-%view_csi_func('/flqtmp/data/ax210_air_10cm_40ht20.csi');
+view_csi_func('/flqtmp/data/ax210_air_10cm_40ht20.csi');
 %view_csi_func('../../data/ax210_split_40ht20.csi') ;
-view_csi_func('/tmp/a');
+%view_csi_func('/tmp/a');
 
 function view_csi_func(filename, reload)
-%addpath('spotfi/') ;
-
 	if (nargin < 2); reload = true ; end
 	sts = load_csi(filename, reload) ;
 
 	len = length(sts) ;
 	for i = 1:len
-		if ~mod(i, 1000)
-			fprintf("- %d/%d\n", i, len) ;
-		end
+		if ~mod(i, 1000); fprintf("- %d/%d\n", i, len) ; end
 		csist = sts{1,i} ;
 		if ~csi_filter(csist); continue; end
 
@@ -44,14 +40,13 @@ function plot_attack(csist)
 end
 
 function do_spotfi(csist)
-	envs = gs().envs ;
+	envs = spotfi_envs() ;
 	envs.nant_rx = csist.nrx ;
 	envs.nant_tx = csist.ntx ;
 	envs.ntone = csist.ntone ;
 	envs.ntone_sm = floor(envs.ntone/2) ;
 	envs.subc_idxs = csist.subc.subcs ;
-	[aoas, tofs] = spotfi(squeeze(csist.scsi(:,1,:)), envs, -1) ;
-	[aoas, tofs]
+	[aoa, aoatofs] = spotfi(squeeze(csist.scsi(:,1,:)), envs, -1) 
 end
 
 function [k, b, tones] = fit_csi(tones)
