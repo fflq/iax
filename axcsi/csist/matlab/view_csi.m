@@ -46,6 +46,7 @@ function do_spotfi(csist)
 	envs.ntone = csist.ntone ;
 	envs.ntone_sm = floor(envs.ntone/2) ;
 	envs.subc_idxs = csist.subc.subcs ;
+	envs.en = true ;
 	[aoa, aoatofs] = spotfi(squeeze(csist.scsi(:,1,:)), envs, -1) 
 end
 
