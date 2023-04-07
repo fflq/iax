@@ -1,84 +1,44 @@
 
-function sts = read_axcsi(inputname, savename)
+function sts = read_axcsi(filename, savename)
 	if (nargin < 2)
 		savename = '' ;
 	end
-
-	if isnumeric(inputname)
-		sts = read_axcsi_net(inputname) ;
-	else
-		sts = read_axcsi_file(inputname) ;
-	end
-
-	if ~isempty(savename)
-		save(savename, "sts");
-	end
-
-end
-
-
-function sts = read_axcsi_file(filename)
 	f = fopen(filename, 'rb') ;
 	file_len = get_file_len(f) ;
-	pos = 0; 
 
+	pos = 0; 
 	sts = {} ;
 	while pos < file_len
 		if ~mod(length(sts),100)
-			fprintf("* read %.2f %%\n", 100*pos/file_len) ;
+			fprintf("* read %.2f %%\n", 100*ftell(f)/file_len) ;
 		end
 
-		msg_len = fread(f, 1, 'int32', 'b') ;
-		msg = fread(f, msg_len, 'uint8') ;
-		pos = pos + 4 + msg_len ;
+		hdr_len = fread(f, 1, 'uint32', 'b') ;
+		if (hdr_len ~= 272)
+			fprintf("*err hdr_len %d!=272\n", hdr_len) ;
+			break ;
+		end
+		hdr_st = get_csi_hdr_st(f, hdr_len) ; 
+		rnf_st = get_rnf_st(hdr_st.rnf) ;
+		pos = pos + 4 + hdr_len ;
 
-		st = read_axcsi_st(msg) ;
-		if isempty(st); break; end
+		csi_len = fread(f, 1, 'uint32', 'b') ;
+		csi = get_csi(f, csi_len, hdr_st) ;
+		pos = pos + 4 + csi_len ;
+
+		%[hdr_len, csi_len, 111111, hdr_st.csi_len, hdr_st.ntone] 
+		st = fill_csist(hdr_st, rnf_st, csi) ;  
 		sts{end+1} = st ;
+
 		%test_st(st) ;
+	end
+	if ~isempty(savename)
+		save(savename, "sts");
 	end
 
 	fclose(f) ;	
 end
 
-
-function sts = read_axcsi_net(port)
-	sts = {} ;
-	cfd = tcpclient('localhost', 7120) ;
-	while true
-		msg_len = be_uintn(double(read(cfd, 4, 'uint8'))) ;
-		msg = double(read(cfd, msg_len, 'uint8')) ;
-		st = read_axcsi_st(msg) ;
-		sts{end+1} = st ;
-		st
-	end
-end
-
-
-function st = read_axcsi_st(buf)
-	pos = 1 ;
-	st = [] ;
-
-	hdr_len = be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
-	if (hdr_len ~= 272)
-		fprintf("*err hdr_len %d!=272\n", hdr_len) ;
-		return ;
-	end
-	hdr_buf = buf(pos:pos+hdr_len-1); pos = pos + hdr_len ;
-	hdr_st = get_csi_hdr_st(hdr_buf) ; 
-	rnf_st = get_rnf_st(hdr_st.rnf) ;
-
-	csi_len = be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
-	csi_buf = buf(pos:pos+csi_len-1); pos = pos + csi_len ;
-	if length(buf) ~= pos-1
-		fprintf("* buf len err: %d %d-1\n", length(buf), pos) ;
-		pause ;
-	end
-	csi = get_csi(csi_buf, hdr_st) ;
-
-	%[hdr_len, csi_len, 111111, hdr_st.csi_len, hdr_st.ntone] 
-	st = fill_csist(hdr_st, rnf_st, csi) ;  
-end
 
 function test_st(st)
 	st
@@ -229,8 +189,9 @@ function r = le_int(s)
 end
 
 
-function hdr_st = get_csi_hdr_st(hdrbuf) 
+function hdr_st = get_csi_hdr_st(f, len) 
 	hdr_st = struct() ;
+	hdrbuf = fread(f, len) ;
 
 	hdr_st.csi_len = le_uint(hdrbuf(1:4)) ; 
 	hdr_st.ftm = uint32(le_uint(hdrbuf(9:12))) ;
@@ -247,8 +208,9 @@ end
 
 
 %从f中提取4*nrx*ntx*ntone字节到csi矩阵
-function csi = get_csi(csibuf, hdr_st)
+function csi = get_csi(f, len, hdr_st)
 	%nsymbol = 16 ;
+	csibuf = fread(f, len) ;
 	pos = 1 ;
 
 	csi = zeros(hdr_st.nrx, hdr_st.ntx, hdr_st.ntone) ;
@@ -269,42 +231,5 @@ function r = get_file_len(f)
 	fseek(f, 0, 'bof') ;
 end
 
-
-%need s(nitem, comp), be=big-endian
-function r = to_uintn(s, be)
-	persistent lews ;
-	if isempty(lews)
-		pows = 0:16-1 ;
-		lews = 256 .^ pows ;
-	end
-	if (size(s,2) == 1)
-		s = s.' ;
-	end
-
-	ws = lews(1:size(s,2)) ;
-	if be; ws = flip(ws); end 
-	r = sum(s.*ws, 2) ;
-end
-
-function r = uintn_to_intn(s, nbits)
-	uintn = bitshift(1, nbits-1) ;
-	r = s - 2*uintn .* (s>=uintn);
-end
-
-function r = le_uintn(s)
-	r = to_uintn(s, false) ;
-end
-
-function r = le_intn(s, nbits)
-	r = uintn_to_intn(le_uintn(s), nbits) ;
-end
-
-function r = be_uintn(s)
-	r = to_uintn(s, true) ;
-end
-
-function r = be_intn(s, nbits)
-	r = uintn_to_intn(be_uintn(s), nbits) ;
-end
 
 

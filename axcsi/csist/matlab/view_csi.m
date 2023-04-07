@@ -2,9 +2,10 @@
 %close all;
 addpath('/home/flq/ws/git/SpotFi')
 
-view_csi_func('/flqtmp/data/ax210_air_10cm_40ht20.csi');
-%view_csi_func('../../data/ax210_split_40ht20.csi') ;
-%view_csi_func('/tmp/a');
+filename='/flqtmp/data/ax210_air_10cm_40ht20.csi';
+filename='../../data/ax210_split_40ht20.csi' ;
+filename='/tmp/a';
+view_csi_func(filename) ;
 
 function view_csi_func(filename, reload)
 	if (nargin < 2); reload = true ; end
