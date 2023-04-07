@@ -1,4 +1,60 @@
 
+classdef axcsi < handle
+
+properties (Access='public')
+	%file
+	filename = "" ;
+	fd = -1 ;
+	file_len = -1 ;
+	pos = 0 ;
+	is_net = false ;
+	%net
+	sfd = -1 ;
+	port = 0 ;
+end
+	
+methods (Access='public')
+	function self = axcsi(inputname)
+		if isnumeric(inputname)
+			self.is_net = true ;
+			self.port = inputname ;
+			self.sfd = tcpclient('localhost', self.port) ;
+		else
+			self.is_net = false ;
+			self.fd = fopen(inputname, 'rb') ;
+			self.file_len = axcsi.get_file_len(self.fd) ;
+			self.pos = 0; 
+		end
+	end
+
+	function st = read(self)
+		if (self.is_net)
+			st = self.read_net() ;
+		else 
+			st = self.read_file() ;
+		end
+		st
+		pause
+	end
+
+	function st = read_file(self)
+		msg_len = fread(self.fd, 1, 'int32', 'b') ;
+		msg = fread(self.fd, msg_len, 'uint8') ;
+		%pos = pos + 4 + msg_len ;
+
+		st = axcsi.read_axcsi_st(msg) ;
+	end
+
+	function st = read_net(self)
+		msg_len = axcsi.be_uintn(double(read(self.sfd, 4, 'uint8'))) ;
+		msg = double(read(self.sfd, msg_len, 'uint8')) ;
+		st = axcsi.read_axcsi_st(msg) ;
+	end
+end
+
+methods (Static)
+
+
 function sts = read_axcsi(inputname, savename)
 	if (nargin < 2)
 		savename = '' ;
@@ -32,7 +88,7 @@ function sts = read_axcsi_file(filename)
 		msg = fread(f, msg_len, 'uint8') ;
 		pos = pos + 4 + msg_len ;
 
-		st = read_axcsi_st(msg) ;
+		st = axcsi.read_axcsi_st(msg) ;
 		if isempty(st); break; end
 		sts{end+1} = st ;
 		%test_st(st) ;
@@ -46,11 +102,10 @@ function sts = read_axcsi_net(port)
 	sts = {} ;
 	cfd = tcpclient('localhost', 7120) ;
 	while true
-		msg_len = be_uintn(double(read(cfd, 4, 'uint8'))) ;
+		msg_len = axcsi.be_uintn(double(read(cfd, 4, 'uint8'))) ;
 		msg = double(read(cfd, msg_len, 'uint8')) ;
-		st = read_axcsi_st(msg) ;
+		st = axcsi.read_axcsi_st(msg) ;
 		sts{end+1} = st ;
-		st
 	end
 end
 
@@ -59,25 +114,25 @@ function st = read_axcsi_st(buf)
 	pos = 1 ;
 	st = [] ;
 
-	hdr_len = be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
+	hdr_len = axcsi.be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
 	if (hdr_len ~= 272)
 		fprintf("*err hdr_len %d!=272\n", hdr_len) ;
 		return ;
 	end
 	hdr_buf = buf(pos:pos+hdr_len-1); pos = pos + hdr_len ;
-	hdr_st = get_csi_hdr_st(hdr_buf) ; 
-	rnf_st = get_rnf_st(hdr_st.rnf) ;
+	hdr_st = axcsi.get_csi_hdr_st(hdr_buf) ; 
+	rnf_st = axcsi.get_rnf_st(hdr_st.rnf) ;
 
-	csi_len = be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
+	csi_len = axcsi.be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
 	csi_buf = buf(pos:pos+csi_len-1); pos = pos + csi_len ;
 	if length(buf) ~= pos-1
 		fprintf("* buf len err: %d %d-1\n", length(buf), pos) ;
 		pause ;
 	end
-	csi = get_csi(csi_buf, hdr_st) ;
+	csi = axcsi.get_csi(csi_buf, hdr_st) ;
 
 	%[hdr_len, csi_len, 111111, hdr_st.csi_len, hdr_st.ntone] 
-	st = fill_csist(hdr_st, rnf_st, csi) ;  
+	st = axcsi.fill_csist(hdr_st, rnf_st, csi) ;  
 end
 
 function test_st(st)
@@ -114,8 +169,8 @@ function st = fill_csist(hdr_st, rnf_st, csi)
 	st.csi_len = hdr_st.csi_len ;
 
 	st.csi = csi ;
-	st = calib_csi_subcs(st) ;
-	st = calib_csi_perm(st) ;
+	st = axcsi.calib_csi_subcs(st) ;
+	st = axcsi.calib_csi_perm(st) ;
 end
 
 
@@ -164,7 +219,7 @@ function st = calib_csi_subcs(st)
 		% for raw_csi, only data_tones valid
 		x = subc.idx_data_subcs ;
 		xv = subc.idx_pilot_dc_subcs ;
-		data_pilot_dc_tones(xv) = do_complex_interp(xv, x, data_pilot_dc_tones(x)) ;
+		data_pilot_dc_tones(xv) = axcsi.do_complex_interp(xv, x, data_pilot_dc_tones(x)) ;
 		scsi(irx,itx,:) = data_pilot_dc_tones ;
 	end; end;
 	
@@ -186,23 +241,23 @@ function rnf_st = get_rnf_st(rnf)
 
 	%Bits 10-8: mod type
 	mod_type_strs = ["CCK", "NOHT", "HT", "VHT", "HE", "EH"] ;
-	[mod_type, rnf_st.mod_type_str] = get_rate_mcs_fmt_val(8, 7, mod_type_strs, rnf) ;  
+	[mod_type, rnf_st.mod_type_str] = axcsi.get_rate_mcs_fmt_val(8, 7, mod_type_strs, rnf) ;  
 
 	%Bits 24-23: HE type
 	if (mod_type == 4+1) 
 		he_type_strs = ["HE-SU", "HE-EXT-SU", "HE-MU", "HE-TRIG"] ;
-		[~, rnf_st.mod_type_str] = get_rate_mcs_fmt_val(23, 3, he_type_strs, rnf) ;
+		[~, rnf_st.mod_type_str] = axcsi.get_rate_mcs_fmt_val(23, 3, he_type_strs, rnf) ;
 	end
 
 	%Bits 13-11: chan width
 	chan_width_vals = [20, 40, 80, 160, 320] ;
-	[~, rnf_st.chan_width] = get_rate_mcs_fmt_val(11, 7, chan_width_vals, rnf) ;
+	[~, rnf_st.chan_width] = axcsi.get_rate_mcs_fmt_val(11, 7, chan_width_vals, rnf) ;
 
 	rnf_st.chan_type_str = strcat(rnf_st.mod_type_str, num2str(rnf_st.chan_width)) ;
 
 	%Bits 15-14: ant sel
 	ant_sel_vals = 0:3 ;
-	rnf_st.ant_sel = get_rate_mcs_fmt_val(14, 3, ant_sel_vals, rnf) ;
+	rnf_st.ant_sel = axcsi.get_rate_mcs_fmt_val(14, 3, ant_sel_vals, rnf) ;
 
 	%Bits 16
 	rnf_st.ldpc = rnf & bitshift(1, 16) ;
@@ -220,7 +275,7 @@ end
 
 
 function r = le_int(s)
-	r = le_uint(s) ;
+	r = axcsi.le_uint(s) ;
 	nbit = length(s)*8 ;
 	highest_bit = bitshift(1, nbit-1) ;
 	if bitand(r, highest_bit)
@@ -232,17 +287,17 @@ end
 function hdr_st = get_csi_hdr_st(hdrbuf) 
 	hdr_st = struct() ;
 
-	hdr_st.csi_len = le_uint(hdrbuf(1:4)) ; 
-	hdr_st.ftm = uint32(le_uint(hdrbuf(9:12))) ;
+	hdr_st.csi_len = axcsi.le_uint(hdrbuf(1:4)) ; 
+	hdr_st.ftm = uint32(axcsi.le_uint(hdrbuf(9:12))) ;
 	hdr_st.nrx = hdrbuf(47) ;
 	hdr_st.ntx = hdrbuf(48) ;
-	hdr_st.ntone = le_uint(hdrbuf(53:56)) ;
+	hdr_st.ntone = axcsi.le_uint(hdrbuf(53:56)) ;
 	hdr_st.rssi1 = -hdrbuf(61) ;
 	hdr_st.rssi2 = -hdrbuf(65) ;
 	hdr_st.smac = join(string(dec2hex(hdrbuf(69:74))),':') ;
-	hdr_st.seq = le_uint(hdrbuf(77)) ;
-	hdr_st.us = uint64(le_uint(hdrbuf(89:92))) ;
-	hdr_st.rnf = le_uint(hdrbuf(93:96)) ;
+	hdr_st.seq = axcsi.le_uint(hdrbuf(77)) ;
+	hdr_st.us = uint64(axcsi.le_uint(hdrbuf(89:92))) ;
+	hdr_st.rnf = axcsi.le_uint(hdrbuf(93:96)) ;
 end
 
 
@@ -255,8 +310,8 @@ function csi = get_csi(csibuf, hdr_st)
 	for rxidx = 1:hdr_st.nrx; for txidx = 1:hdr_st.ntx; for toneidx = 1:hdr_st.ntone
 			%imag = fread(f, 1, 'int16', 'l') ;
 			%real = fread(f, 1, 'int16', 'l') ;
-			imag = le_int(csibuf(pos:pos+1)) ;
-			real = le_int(csibuf(pos+2:pos+3)) ;
+			imag = axcsi.le_int(csibuf(pos:pos+1)) ;
+			real = axcsi.le_int(csibuf(pos+2:pos+3)) ;
 			csi(rxidx, txidx, toneidx) = real + 1j*imag ;
 			pos = pos + 4 ;
 	end; end; end
@@ -292,19 +347,21 @@ function r = uintn_to_intn(s, nbits)
 end
 
 function r = le_uintn(s)
-	r = to_uintn(s, false) ;
+	r = axcsi.to_uintn(s, false) ;
 end
 
 function r = le_intn(s, nbits)
-	r = uintn_to_intn(le_uintn(s), nbits) ;
+	r = axcsi.uintn_to_intn(axcsi.le_uintn(s), nbits) ;
 end
 
 function r = be_uintn(s)
-	r = to_uintn(s, true) ;
+	r = axcsi.to_uintn(s, true) ;
 end
 
 function r = be_intn(s, nbits)
-	r = uintn_to_intn(be_uintn(s), nbits) ;
+	r = axcsi.uintn_to_intn(axcsi.be_uintn(s), nbits) ;
 end
 
+end
 
+end
