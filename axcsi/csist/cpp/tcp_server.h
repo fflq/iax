@@ -38,6 +38,12 @@ tcp_server::tcp_server(int listen_port)
         throw "socket() failed";
     }
 
+	int optval = 1;
+	if (setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval)) == -1) {
+		perror("setsockopt");
+		exit(EXIT_FAILURE);
+	}
+
     memset(&myserver, 0, sizeof(myserver));
     myserver.sin_family = AF_INET;
     myserver.sin_addr.s_addr = htonl(INADDR_ANY);

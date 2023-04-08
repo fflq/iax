@@ -1,36 +1,59 @@
 %clear all;
 %close all;
 addpath('/home/flq/ws/git/SpotFi')
+addpath('/home/flq/ws/git/CSI/algorithm/iaa')
 
-filename='/flqtmp/data/ax210_air_10cm_40ht20.csi';
-filename='../../data/ax210_split_40ht20.csi' ;
-filename='/tmp/a';
-view_csi_func(filename) ;
+inputname='/flqtmp/data/ax210_air_10cm_40ht20.csi';
+inputname='../../data/ax210_split_40ht20.csi' ;
+inputname='/tmp/a';
+inputname=7120;
 
-function view_csi_func(filename, reload)
+ax = axcsi(inputname) ;
+while true
+	try
+		st = ax.read() ;
+	catch
+		if ax.is_net
+			fprintf("* net reconn\n");
+			pause(1) ;
+			ax = axcsi(inputname);
+			continue;
+		end
+	end
+	if isempty(st); break ; end
+	handle_csist_func(st) ;
+end
+
+
+function handle_csist_func(csist)
+	%csist 
+	if ~csi_filter(csist); return; end
+
+	%csist = preprocess(csist) ;
+	%plot_attack(csist) ;
+	%plot_csi(csist.csi);
+	%plot_mag(csist) ;
+	%plot_phase(csist) ;
+	%plot_phase_offset(csist) ;
+	%plot_cir(csist) ;
+	do_spotfi(csist) ;
+	%do_iaa(csist) ;
+end
+
+
+function old_view_csi_func(filename, reload)
 	if (nargin < 2); reload = true ; end
 	sts = load_csi(filename, reload) ;
 
 	len = length(sts) ;
 	for i = 1:len
 		if ~mod(i, 1000); fprintf("- %d/%d\n", i, len) ; end
-		csist = sts{1,i} ;
-		if ~csi_filter(csist); continue; end
-
-		csist 
-		%csist = preprocess(csist) ;
-		%plot_attack(csist) ;
-		%plot_csi(csist.csi);
-		%plot_mag(csist) ;
-		%plot_phase(csist) ;
-		%plot_phase_offset(csist) ;
-		%plot_cir(csist) ;
-		do_spotfi(csist) ;
-	
-		input('a') ;
+		handle_csist_func(sts{1,i}) ;
+		pause
 	end
 	%stats_macs([], true) ;
 end
+
 
 function plot_attack(csist)
 	persistent aks;
@@ -40,15 +63,41 @@ function plot_attack(csist)
 	hold on; plot(range, aks(range)) ;
 end
 
+function do_iaa(csist)
+	envs.nrx = csist.nrx ;
+	envs.ntone = csist.nstone ;
+	envs.subcs = csist.subc.subcs ;
+	envs.fc = 5.2e9 ;
+	envs.d = 0.013 ;
+	envs.d = 0.026 ;
+	envs.f_space = 312.5e3 ;
+	envs.fc_space = envs.f_space ;
+	csi = squeeze(csist.scsi(:,1,:)) ;
+	%csi(2,:) = csi(1,:) ;
+	aoa = iaa(csi, envs)
+	plot_aoa(aoa);
+end
+
 function do_spotfi(csist)
 	envs = spotfi_envs() ;
-	envs.nant_rx = csist.nrx ;
-	envs.nant_tx = csist.ntx ;
+	envs.nrx = csist.nrx ;
+	envs.ntx = csist.ntx ;
 	envs.ntone = csist.ntone ;
 	envs.ntone_sm = floor(envs.ntone/2) ;
 	envs.subc_idxs = csist.subc.subcs ;
-	envs.en = true ;
-	[aoa, aoatofs] = spotfi(squeeze(csist.scsi(:,1,:)), envs, -1) 
+	csi = squeeze(csist.scsi(:,1,:)) ;
+	%csi(2,:) = csi(1,:)*exp(1j*np.pi/6) ;
+	csi(2,:) = csi(1,:) ;
+	[aoa, aoatofs] = spotfi(csi, envs, -1) 
+	plot_aoa(aoa);
+end
+
+function plot_aoa(aoa)
+	figaoa = 90 - aoa ;
+	figure(9) ;
+	c = compass(cosd(figaoa), sind(figaoa)) ;
+	c.LineWidth = 6 ;
+	axis([-1, 1, 0, 1]) ;
 end
 
 function [k, b, tones] = fit_csi(tones)
@@ -121,7 +170,7 @@ function plot_phase(csist)
 
 	title(csist.chan_type_str);
 	%hold off;
-	hold on;
+	figure(1); hold on;
 	plot(subc.subcs, unwrap(angle(stones))-2, 'LineWidth',2) ; 
 	%plot(subc.subcs, angle(stones)+20, 'LineWidth',2) ; 
 	%plot(subc.subcs(1:length(tones)), unwrap(angle(tones))-20, 'LineWidth',2) ; 
@@ -131,14 +180,13 @@ end
 
 function plot_mag(csist)
 	subc = csist.subc ;
-	tones = squeeze(csist.csi(1,1,:)) ;
-	stones = squeeze(csist.scsi(1,1,:)) ;
+	tones = squeeze(csist.csi(:,1,:)) ;
+	stones = squeeze(csist.scsi(:,1,:)) ;
 
 	title(csist.chan_type_str);
-	hold on;
-	plot(subc.subcs, abs(stones)-2, 'LineWidth',2) ; 
+	figure(1); hold on;
+	plot(subc.subcs, abs(stones).', 'LineWidth',2) ; 
 	%plot(subc.subcs(1:length(tones)), abs(tones)-10, 'LineWidth',2) ; 
-	input('a') ;
 end
 
 
