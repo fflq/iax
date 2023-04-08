@@ -49,7 +49,7 @@ static map<uint32_t, int> g_chan_width_map = {
 */
 
 //little endian
-struct csi_hdr_t {
+struct __attribute__((packed)) csi_hdr_t {
 	uint32_t csi_len ; // 0
 	uint8_t v4_7[4] ; // 4
 	uint32_t ftm ; // 8
@@ -71,7 +71,7 @@ struct csi_hdr_t {
 	uint32_t us ; // 88
 	uint32_t rate_n_flags ; // 92
 	uint8_t v96_271[0] ; // 96
-} __attribute__ ((packet)) ;
+} ;
 typedef struct csi_hdr_t csi_hdr_t, *p_csi_hdr_t ; 
 
 

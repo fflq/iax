@@ -170,6 +170,7 @@ function st = calib_csi_subcs(st)
 	
 	st.scsi = scsi ;
 	st.subc = subc ;
+	st.nstone = length(subc.subcs) ;
 end
 
 

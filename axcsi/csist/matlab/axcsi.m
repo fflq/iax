@@ -13,6 +13,7 @@ properties (Access='public')
 	port = 0 ;
 end
 	
+
 methods (Access='public')
 	function self = axcsi(inputname)
 		if isnumeric(inputname)
@@ -33,12 +34,14 @@ methods (Access='public')
 		else 
 			st = self.read_file() ;
 		end
-		st
-		pause
 	end
 
 	function st = read_file(self)
 		msg_len = fread(self.fd, 1, 'int32', 'b') ;
+		if isempty(msg_len)
+			st = [] ;
+			return ;
+		end
 		msg = fread(self.fd, msg_len, 'uint8') ;
 		%pos = pos + 4 + msg_len ;
 
@@ -52,8 +55,8 @@ methods (Access='public')
 	end
 end
 
-methods (Static)
 
+methods (Static)
 
 function sts = read_axcsi(inputname, savename)
 	if (nargin < 2)
@@ -75,7 +78,7 @@ end
 
 function sts = read_axcsi_file(filename)
 	f = fopen(filename, 'rb') ;
-	file_len = get_file_len(f) ;
+	file_len = axcsi.get_file_len(f) ;
 	pos = 0; 
 
 	sts = {} ;
@@ -225,6 +228,7 @@ function st = calib_csi_subcs(st)
 	
 	st.scsi = scsi ;
 	st.subc = subc ;
+	st.nstone = length(subc.subcs) ;
 end
 
 
