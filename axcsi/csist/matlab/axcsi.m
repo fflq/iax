@@ -19,7 +19,7 @@ methods (Access='public')
 		if isnumeric(inputname)
 			self.is_net = true ;
 			self.port = inputname ;
-			self.sfd = tcpclient('localhost', self.port) ;
+			self.sfd = tcpclient('localhost', self.port, "Timeout",30) ;
 		else
 			self.is_net = false ;
 			self.fd = fopen(inputname, 'rb') ;
@@ -187,7 +187,7 @@ function st = calib_csi_perm(st)
 	if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
 		st.perm = [2,1] ;
 		for i = 1:st.ntx
-			st.scsi(:,i,:) = st.scsi(st.perm,i,:) ;
+			%st.scsi(:,i,:) = st.scsi(st.perm,i,:) ;
 		end
 	end
 end
