@@ -21,12 +21,13 @@ while true
 	end
 	if isempty(st); break ; end
 	handle_csist_func(st) ;
+	%input('')
 end
 
 
 function handle_csist_func(csist)
 	%csist 
-	if ~csi_filter(csist); return; end
+	if ~csi_filter(csist); fprintf("*** pass\n"); return; end
 
 	csist = preprocess(csist) ;
 	%plot_attack(csist) ;
@@ -37,7 +38,7 @@ function handle_csist_func(csist)
 	plot_phase_offset(csist) ;
 	%plot_cir(csist) ;
 	do_spotfi(csist) ;
-	%do_iaa(csist) ;
+	do_iaa(csist) ;
 end
 
 
@@ -98,9 +99,6 @@ function do_iaa(csist)
 	%csi(2,1) = csi(2,1) * exp(-1j*1.5) ;
 	iaoa = iaa(csi, envs)
 	plot_aoa(iaoa, 12);
-	csi(2,1) = csi(2,1) * exp(-1j*(pi)) ;
-	iaoa2 = iaa(csi, envs)
-	plot_aoa(iaoa2, 14);
 end
 
 function do_spotfi(csist)
@@ -117,13 +115,18 @@ function do_spotfi(csist)
 
 	%csist = simu_aoa(-pi/3, csist, envs) ;
 	csi = squeeze(csist.scsi(:,1,:)) ;
-	csi(2,1) = csi(2,1) * exp(-1j*2.2) ;
+	%csi(2,1) = csi(2,1) * exp(-1j*2.2) ;
 	saoa = spotfi(csi, envs, -1) 
 	plot_aoa(saoa, 11);
 
-	csi(2,1) = csi(2,1) * exp(-1j*(pi)) ;
-	saoa = spotfi(csi, envs, -1) 
-	%plot_aoa(saoa, 13);
+	persistent first;
+	%if isempty(first); first = false ; saoa = -1 ; end
+	global gdeltab goffs;
+	goffs = 0;
+	%(gdeltab > 0) ~= (saoa > 0), means right, nonedd goffs
+	if abs(saoa) > 10 && (gdeltab > 0) == (saoa > 0)
+		goffs = pi;
+	end
 end
 
 function plot_aoa(aoa, fid)
@@ -134,11 +137,11 @@ function plot_aoa(aoa, fid)
 	axis([-1, 1, 0, 1]) ;
 end
 
-function [k, b, tones] = fit_csi(tones)
+function [k, b, tones] = fit_csi(tones, xs)
 	tones = squeeze(tones) ;
 	mag = abs(tones) ;
     uwphase = unwrap(angle(tones)) ;
-	xs = 1:length(tones) ;
+	%xs = 1:length(tones) ;
     z = polyfit(xs, uwphase, 1) ;
     k = z(1) ;
 	b = z(2) ;
@@ -190,29 +193,43 @@ function csist = calib_scsi_by_delta(csist, deltak, deltab)
 end
 
 
+function csist = calib_by_last_delta_kb(csist, calib_phaoff)
+	persistent last_deltab;
+	offs = 0;
+	[dk, deltab, tones] = fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
+	if last_deltab == 0; last_deltab = deltab; end
+	fprintf("*** last_deltab(%f) deltab(%f) %f\n", last_deltab, deltab, angle_mod(last_deltab-deltab));
+	if ~ (abs(angle_mod(last_deltab - deltab)) < pi/3)
+		fprintf("* last_deltab(%f) - deltab(%f) > x\n", last_deltab, deltab);
+		deltab = deltab - pi;
+		%calib_phaoff = calib_phaoff - pi
+		offs = pi;
+	end
+	last_deltab = deltab;
+	global gdeltab goffs;
+	if isempty(goffs); goffs = 0; end
+    csist = calib_scsi_by_phaoff12(csist, calib_phaoff, offs+goffs) ; 
+	%use deltab after calib
+	[~, gdeltab, ~] = fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
+	[gdeltab, goffs, offs]
+end
+
+
 function csist = preprocess(csist)
-    csi = csist.scsi;
+    scsi = csist.scsi;
     subcs = csist.subc.subcs;
 
-    [k1, b1, tone1] = fit_csi(csi(1,1,:));
-    [k2, b2, tone2] = fit_csi(csi(2,1,:));
-    pha12 = unwrap(angle(tone2 .* conj(tone1)));
-	%figure(21); hold on; plot(subcs, pha12, ':o') ;
-    %deltab = mod(b2-b1, 2*pi) ;
-	deltak = k2 - k1 ;
-	deltab = b2 - b1 ;
-	calib_phaoff = deltab ;
-	calib_phaoff = deltab + deltak*length(subcs)/2;
-	if(calib_phaoff <= 0); calib_phaoff = calib_phaoff+2*pi; end
-    fprintf("* calib_phaoff %f\n", calib_phaoff);
-	%calib_phaoff = 2;
-    %csist = calib_scsi_by_first_phaoff12(csist, calib_phaoff);
-    %csist = calib_scsi_by_delta(csist, deltak, deltab);
-	%hold on; plot(subcs, unwrap(angle(squeeze(csist.scsi(:,1,:))), [], 2)) ;
-	%csist.scsi(:,1,:) = [tone1.'; tone2.'] ;
+	phaoff12 = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
+	fprintf("* prep phaoff12 %f\n", mean(phaoff12))
 
-	calib_phaoff = 0.5 ;
-	offs = 0;
+	%csist = calib_by_last_delta_kb(csist, 3.5) ;
+	csist = calib_by_last_delta_kb(csist, 1.5) ;
+	%csist = calib_by_last_delta_kb(csist, 0.2) ;
+
+	phaoff12 = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
+	fprintf("* prep phaoff12 %f\n", mean(phaoff12))
+	return 
+
 	%new
     persistent last_deltab;
 	if isempty(last_deltab); last_deltab = deltab; end
@@ -225,6 +242,7 @@ function csist = preprocess(csist)
 	end
     last_deltab = deltab ;
 
+	%% calib by file
     csist = calib_scsi_by_phaoff12(csist, calib_phaoff, offs) ; return ;
 	init_phaoff12_file = ('/tmp/init_phaoff12.mat') ;
 	if exist(init_phaoff12_file)
@@ -236,9 +254,9 @@ end
 %once change is less than
 function r = angle_mod(ang)
 	r = mod(ang, 2*pi) ;
-	if (r > pi)
-		r = r - 2*pi ;
-	end
+	%if (r > pi); r = r - 2*pi ; end
+    while r > pi; r = r - 2*pi; end
+    while r < -pi; r = r + 2*pi; end
 end
 
 
@@ -246,9 +264,21 @@ function r = csi_filter(csist)
 	r = false;
 	if (csist.nrx < 2); return; end
 
+	persistent pw1_sum pw2_sum ;
+	if isempty(pw1_sum)
+		pw1_sum = 0; pw2_sum = 0; 
+	end
     pw1 = sum(abs(csist.csi(1,1,:)).^2)/1e4;
     pw2 = sum(abs(csist.csi(2,1,:)).^2)/1e4;
-    if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
+	%pw1_sum = pw1_sum + pw1 ; pw2_sum = pw2_sum + pw2 ;
+	%[pw1_sum, pw2_sum]
+    %if (abs(pw1-pw2)/pw1 < 0.2); return; end
+    %if abs(csist.rssi(1)-csist.rssi(2)) < 5; return; end 
+    %if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
+
+	[dk, deltab, tones] = fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
+    if abs(dk) > 0.1; return ; end
+    if abs(dk) > 0.05; return ; end
 
 	r = true ;
 end
@@ -276,7 +306,7 @@ function plot_phase(csist)
 
 	title(csist.chan_type_str);
 	%hold off;
-	figure(1); hold on;
+	figure(2); hold on;
 	plot(subc.subcs, unwrap(angle(csi.')), 'LineWidth',2) ; 
 	%plot(subc.subcs, angle(stones)+20, 'LineWidth',2) ; 
 	%plot(subc.subcs(1:length(tones)), unwrap(angle(tones))-20, 'LineWidth',2) ; 
@@ -306,6 +336,7 @@ function plot_phase_offset(csist, adjust)
 	subc = csist.subc ;
 	scsi = squeeze(csist.scsi(:,1,:)) ;
 	phaoff12 = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
+	fprintf("* phaoff12 %f\n", mean(phaoff12))
 	if (adjust)
 	save("/tmp/init_phaoff12.mat", "phaoff12");
 	end
@@ -314,7 +345,7 @@ function plot_phase_offset(csist, adjust)
 	phaseoffs(end+1,:) = phaoff12 ;
 	%fprintf("- %d, %d, 12(%f)\n", i, length(phaseoffs), mean(phaseoffs)) ;
 	%Util.plot_realtime1(1, phaseoffs) ;
-	figure(2); hold on;
+	figure(3); hold on;
 	plot(csist.subc.subcs, phaoff12, 'LineWidth',2) ;
 	%csist
 	%input('-')
