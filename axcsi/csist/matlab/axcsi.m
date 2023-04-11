@@ -19,7 +19,7 @@ methods (Access='public')
 		if isnumeric(inputname)
 			self.is_net = true ;
 			self.port = inputname ;
-			self.sfd = tcpclient('localhost', self.port, "Timeout",30) ;
+			self.sfd = tcpclient('localhost', self.port, "Timeout",10) ;
 		else
 			self.is_net = false ;
 			self.fd = fopen(inputname, 'rb') ;
@@ -177,6 +177,23 @@ function st = fill_csist(hdr_st, rnf_st, csi)
 end
 
 
+function [k, b, tones] = fit_csi(tones, xs)
+	tones = squeeze(tones) ;
+	mag = abs(tones) ;
+    uwphase = unwrap(angle(tones)) ;
+	%xs = 1:length(tones) ;
+    z = polyfit(xs, uwphase, 1) ;
+    k = z(1) ;
+	b = z(2) ;
+    fprintf("* k(%f) b(%f)\n", k, b) ;
+    pha = uwphase - k*xs;
+    pha = uwphase - k*xs - b;
+    pha = uwphase - b;
+    %sns.lineplot(x=xs, y=pha)
+    tones = mag.*exp(1j*pha);
+end
+
+
 function st = calib_csi_perm(st)
 	if st.nrx < 2
 		return
@@ -184,10 +201,13 @@ function st = calib_csi_perm(st)
 	st.perm = [1,2] ;
 	pw1 = sum(abs(st.csi(1,1,:))) ;
 	pw2 = sum(abs(st.csi(2,1,:))) ;
-	if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
+	[dk, deltab, tones] = axcsi.fit_csi(st.scsi(2,1,:) .* conj(st.scsi(1,1,:)), st.subc.subcs);
+	%if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
+	if dk > 0
 		st.perm = [2,1] ;
+		st.perm
 		for i = 1:st.ntx
-			%st.scsi(:,i,:) = st.scsi(st.perm,i,:) ;
+			st.scsi(:,i,:) = st.scsi(st.perm,i,:) ;
 		end
 	end
 end
