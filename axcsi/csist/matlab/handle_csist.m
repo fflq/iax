@@ -5,10 +5,12 @@ addpath('/home/flq/ws/git/CSI/algorithm/iaa')
 
 inputname='/flqtmp/data/ax210_air_10cm_40ht20.csi';
 inputname='../../data/ax210_split_40ht20.csi' ;
+inputname='/tmp/ax210_40ht20_k_0.csi';
 inputname='/tmp/a';
 inputname=7120;
 
 ax = axcsi(inputname) ;
+gn = 1 ;
 while true
 	try
 		st = ax.read() ;
@@ -22,6 +24,11 @@ while true
 	if isempty(st); break ; end
 	handle_csist_func(st) ;
 	%input('')
+	if ~mod(gn, 50)
+		fprintf("******* gn %d\n", gn) ;
+		figure(3); close 3;
+	end
+	gn = gn + 1;
 end
 
 
@@ -34,11 +41,155 @@ function handle_csist_func(csist)
 	%plot_csi(csist.csi);
 	%plot_mag(csist) ;
 	%plot_phase(csist) ;
-	%plot_phase_offset(csist, true) ;
-	plot_phase_offset(csist) ;
+	%plot_phase_offset(csist) ;
 	%plot_cir(csist) ;
-	do_spotfi(csist) ;
-	do_iaa(csist) ;
+	%save_calib(csist);
+	do_aoa(csist) ;
+end
+
+function save_calib(csist)
+	persistent phaoffs;
+	if isempty(phaoffs)
+	end
+		scsi = squeeze(csist.scsi(:,1,:)) ;
+		po = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
+		if (mean(po) > 0)
+			phaoffs = po;
+			save("/flqtmp/phaoffs.mat", "phaoffs");
+		end
+		input("ok?")
+end
+
+function do_aoa(csist)
+	persistent aoas;
+	calc_aoa = @do_spotfi ;
+	calc_aoa = @do_iaa ;
+
+    %csist = calib_scsi_by_delta(csist, 0.012, pi) ; 
+    %csist = calib_scsi_by_delta(csist, -0.001, 3) ; 
+    csist = calib_scsi_by_file(csist) ;
+	plot_phase_offset(csist) ;
+	aoa1 = calc_aoa(csist) ;
+    csist = calib_scsi_by_phaoff12(csist, pi) ; 
+	aoa2 = calc_aoa(csist) ;
+	plot_aoa(aoa1, 11, false); plot_aoa(aoa2, 11, true); 
+
+	truthaoa = -30 ;
+	aoas(end+1) = min(abs(aoa1-truthaoa), abs(aoa2-truthaoa));
+	if ~ mod(length(aoas), 20)
+		figure(99); p=cdfplot(abs(aoas(20:end))); p.LineWidth=2;
+		save(['/flqtmp/aoas', num2str(truthaoa),'.mat'], "aoas");
+		pause(0.1)
+	end
+
+	return;
+
+    %csist = calib_scsi_by_phaoff12(csist, 0.4) ; 
+    %csist = calib_scsi_by_delta(csist, -0.012, 1.0) ; 
+    csist = calib_scsi_by_delta(csist, -0.001, 3) ; 
+	plot_phase_offset(csist) ;
+	aoa = calc_aoa(csist) ;
+	if (aoa < -20) || (aoa > 75) 
+		maoa = aoa ;
+    	csist = calib_scsi_by_phaoff12(csist, pi) ; 
+		aoa = calc_aoa(csist) ;
+		fprintf("***** maoa(%f) => aoa(%f)\n", maoa, aoa);
+		%input("")
+	end
+	plot_aoa(aoa, 11); return;
+	aoas(end+1) = aoa;
+	if length(aoas) > 20
+		figure(99); cdfplot(abs(aoas(20:end)))
+		pause(0.1)
+	end
+end
+
+function csist = simu_aoa(aoa, csist, envs)
+	lambda = 3e8 / envs.fc;
+	addpha = envs.d*sin(aoa)*2*pi/lambda ;
+	csist.scsi(2,:) = csist.scsi(1,:)*exp(-1j*addpha);
+end
+
+function aoa = do_iaa(csist)
+	envs.nrx = csist.nrx ;
+	envs.ntone = csist.nstone ;
+	envs.subcs = csist.subc.subcs ;
+	envs.fc = 5.2e9 ;
+	envs.d = 0.013 ;
+	envs.d = 0.026 ;
+	envs.d = 0.03 ;
+	envs.f_space = 312.5e3 ;
+	envs.fc_space = envs.f_space ;
+
+	%csist = simu_aoa(-pi/3, csist, envs) ;
+	aoa = iaa(squeeze(csist.scsi(:,1,:)), envs)
+	return ;
+	%{
+	%}
+	persistent iaacsis ;
+	if size(iaacsis,2) < 5
+		fprintf("* iaacsis size2 %d\n", size(iaacsis,2)) ;
+		iaacsis(:,end+1) = csi(:) ;
+		return;
+	else
+		aoa = iaa(iaacsis, envs)
+		iaacsis = [];
+		%plot_aoa(iaoa, 12);
+		return;
+	end
+
+	%csi(2,1) = csi(2,1) * exp(-1j*1.5) ;
+	aoa = iaa(csi, envs)
+	%plot_aoa(iaoa, 12);
+end
+
+function aoa = do_spotfi(csist)
+	envs = spotfi_envs() ;
+	envs.fc = 5.2e9 ;
+	envs.lambda = envs.c / envs.fc ;
+	envs.d = 0.013 ;
+	envs.d = 0.026 ;
+	envs.d = 0.03 ;
+	envs.nrx = csist.nrx ;
+	envs.ntx = csist.ntx ;
+	envs.ntone = csist.ntone ;
+	envs.ntone_sm = floor(envs.ntone/2) ;
+	envs.subc_idxs = csist.subc.subcs ;
+
+	aoa = spotfi(squeeze(csist.scsi(:,1,:)), envs, -1) 
+	return ;
+
+	%csist = simu_aoa(-pi/3, csist, envs) ;
+	%csist = calib_by_last_delta_kb(csist, 1.7) ;
+	csi = squeeze(csist.scsi(:,1,:)) ;
+	saoa = spotfi(csi, envs, -1) 
+	plot_aoa(saoa, 11);
+	%csist = calib_by_last_delta_kb(csist, pi) ;
+	%csi = squeeze(csist.scsi(:,1,:)) ;
+	%saoa = spotfi(csi, envs, -1) 
+	%plot_aoa(saoa, 21);
+
+	persistent first;
+	%if isempty(first); first = false ; saoa = -1 ; end
+	global gdeltab goffs;
+	goffs = 0;
+	%(gdeltab > 0) ~= (saoa > 0), means right, nonedd goffs
+	if (abs(gdeltab)>0.2) && ((gdeltab > 0) == (saoa > 0))
+		goffs = pi;
+	end
+	if (abs(saoa)>80) 
+		goffs = pi - goffs;
+	end
+end
+
+function plot_aoa(aoa, fid, holdon)
+	if nargin < 3; holdon = false; end
+	figaoa = 90 - aoa ;
+	figure(fid) ;
+	if holdon; hold on; else; hold off; end
+	c = compass(cosd(figaoa), sind(figaoa)) ;
+	c.LineWidth = 6 ;
+	axis([-1, 1, 0, 1]) ;
 end
 
 
@@ -62,79 +213,6 @@ function plot_attack(csist)
 	aks(end+1) = abs(csist.scsi(1,1,10)) ;
 	range = max(length(aks)-2,1):length(aks) ;
 	hold on; plot(range, aks(range)) ;
-end
-
-function csist = simu_aoa(aoa, csist, envs)
-	lambda = 3e8 / envs.fc;
-	addpha = envs.d*sin(aoa)*2*pi/lambda ;
-	csist.scsi(2,:) = csist.scsi(1,:)*exp(-1j*addpha);
-end
-
-function do_iaa(csist)
-	envs.nrx = csist.nrx ;
-	envs.ntone = csist.nstone ;
-	envs.subcs = csist.subc.subcs ;
-	envs.fc = 5.2e9 ;
-	envs.d = 0.013 ;
-	envs.d = 0.026 ;
-	envs.f_space = 312.5e3 ;
-	envs.fc_space = envs.f_space ;
-
-	%csist = simu_aoa(-pi/3, csist, envs) ;
-	csi = squeeze(csist.scsi(:,1,:)) ;
-	%{
-	%}
-	persistent iaacsis ;
-	if size(iaacsis,2) < 5
-		fprintf("* iaacsis size2 %d\n", size(iaacsis,2)) ;
-		iaacsis(:,end+1) = csi(:) ;
-		return;
-	else
-		iaoa = iaa(iaacsis, envs)
-		iaacsis = [];
-		plot_aoa(iaoa, 12);
-		return;
-	end
-
-	%csi(2,1) = csi(2,1) * exp(-1j*1.5) ;
-	iaoa = iaa(csi, envs)
-	plot_aoa(iaoa, 12);
-end
-
-function do_spotfi(csist)
-	envs = spotfi_envs() ;
-	envs.fc = 5.2e9 ;
-	envs.lambda = envs.c / envs.fc ;
-	envs.d = 0.013 ;
-	envs.d = 0.026 ;
-	envs.nrx = csist.nrx ;
-	envs.ntx = csist.ntx ;
-	envs.ntone = csist.ntone ;
-	envs.ntone_sm = floor(envs.ntone/2) ;
-	envs.subc_idxs = csist.subc.subcs ;
-
-	%csist = simu_aoa(-pi/3, csist, envs) ;
-	csi = squeeze(csist.scsi(:,1,:)) ;
-	%csi(2,1) = csi(2,1) * exp(-1j*2.2) ;
-	saoa = spotfi(csi, envs, -1) 
-	plot_aoa(saoa, 11);
-
-	persistent first;
-	%if isempty(first); first = false ; saoa = -1 ; end
-	global gdeltab goffs;
-	goffs = 0;
-	%(gdeltab > 0) ~= (saoa > 0), means right, nonedd goffs
-	if abs(saoa) > 10 && (gdeltab > 0) == (saoa > 0)
-		goffs = pi;
-	end
-end
-
-function plot_aoa(aoa, fid)
-	figaoa = 90 - aoa ;
-	figure(fid) ;
-	c = compass(cosd(figaoa), sind(figaoa)) ;
-	c.LineWidth = 6 ;
-	axis([-1, 1, 0, 1]) ;
 end
 
 function [k, b, tones] = fit_csi(tones, xs)
@@ -161,10 +239,24 @@ function csist = calib_scsi_by_phaoff12(csist, first_phaoff, offs)
 	end
 end
 
-function csist = calib_scsi_by_phaoff12_tones(csist, first_phaoff, offs)
+function csist = calib_scsi_by_file(csist)
+	persistent phaoffs;
+	if isempty(phaoffs)
+		phaoffs = load('/flqtmp/phaoffs.mat').phaoffs.';
+	end
+    csist = calib_scsi_by_phaoff12_tones(csist, phaoffs);
+end
+
+function csist = calib_scsi_by_delta(csist, deltak, deltab)
+	tones = csist.subc.subcs*deltak + deltab;
+	csist = calib_scsi_by_phaoff12_tones(csist, tones.', 0);
+	%csist.scsi(2,1,:) =  squeeze(csist.scsi(2,1,:)) .* exp(-1j*delta.') ;
+end
+
+function csist = calib_scsi_by_phaoff12_tones(csist, tones, offs)
 	if nargin < 3; offs = 0; end
 	for i = 1:csist.ntx
-		csist.scsi(2,i,:) = squeeze(csist.scsi(2,i,:)) .* exp(-1j*(first_phaoff+offs));
+		csist.scsi(2,i,:) = squeeze(csist.scsi(2,i,:)) .* exp(-1j*(tones+offs));
 	end
 end
 
@@ -184,12 +276,6 @@ function csist = calib_scsi_by_first_phaoff12(csist, first_phaoff)
 	for i = 1:csist.ntx
 		csist.scsi(2,i,:) = csist.scsi(2,i,:) * exp(-1j*first_phaoff);
 	end
-end
-
-
-function csist = calib_scsi_by_delta(csist, deltak, deltab)
-	delta = csist.subc.subcs*deltak + deltab;
-	csist.scsi(2,1,:) =  squeeze(csist.scsi(2,1,:)) .* exp(-1j*delta.') ;
 end
 
 
@@ -223,8 +309,8 @@ function csist = preprocess(csist)
 	fprintf("* prep phaoff12 %f\n", mean(phaoff12))
 
 	%csist = calib_by_last_delta_kb(csist, 3.5) ;
-	csist = calib_by_last_delta_kb(csist, 1.5) ;
-	%csist = calib_by_last_delta_kb(csist, 0.2) ;
+	%csist = calib_by_last_delta_kb(csist, 2.7) ;
+	%csist = calib_by_last_delta_kb(csist, pi) ;
 
 	phaoff12 = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
 	fprintf("* prep phaoff12 %f\n", mean(phaoff12))
@@ -272,13 +358,13 @@ function r = csi_filter(csist)
     pw2 = sum(abs(csist.csi(2,1,:)).^2)/1e4;
 	%pw1_sum = pw1_sum + pw1 ; pw2_sum = pw2_sum + pw2 ;
 	%[pw1_sum, pw2_sum]
-    %if (abs(pw1-pw2)/pw1 < 0.2); return; end
-    %if abs(csist.rssi(1)-csist.rssi(2)) < 5; return; end 
-    %if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
+    if (abs(pw1-pw2)/pw1 < 0.2); return; end
+    if abs(csist.rssi(1)-csist.rssi(2)) < 3; return; end 
+    if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
 
-	[dk, deltab, tones] = fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
-    if abs(dk) > 0.1; return ; end
-    if abs(dk) > 0.05; return ; end
+	[deltabk, deltab] = fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs)
+    %if abs(dk) > 0.1; return ; end
+    %if abs(dk) > 0.05; return ; end
 
 	r = true ;
 end

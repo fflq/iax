@@ -202,8 +202,8 @@ function st = calib_csi_perm(st)
 	pw1 = sum(abs(st.csi(1,1,:))) ;
 	pw2 = sum(abs(st.csi(2,1,:))) ;
 	[dk, deltab, tones] = axcsi.fit_csi(st.scsi(2,1,:) .* conj(st.scsi(1,1,:)), st.subc.subcs);
-	%if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
-	if dk > 0
+	if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
+	%if dk > 0
 		st.perm = [2,1] ;
 		st.perm
 		for i = 1:st.ntx
