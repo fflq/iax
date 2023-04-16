@@ -55,9 +55,9 @@ function save_calib(csist)
 		po = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
 		if (mean(po) > 0)
 			phaoffs = po;
-			save("/flqtmp/phaoffs.mat", "phaoffs");
+			save("/flqtmp/phaoffs12.mat", "phaoffs");
+			input("ok?")
 		end
-		input("ok?")
 end
 
 function do_aoa(csist)
@@ -74,10 +74,10 @@ function do_aoa(csist)
 	aoa2 = calc_aoa(csist) ;
 	plot_aoa(aoa1, 11, false); plot_aoa(aoa2, 11, true); 
 
-	truthaoa = -30 ;
+	truthaoa = 30 ;
 	aoas(end+1) = min(abs(aoa1-truthaoa), abs(aoa2-truthaoa));
-	if ~ mod(length(aoas), 20)
-		figure(99); p=cdfplot(abs(aoas(20:end))); p.LineWidth=2;
+	if ~ mod(length(aoas), 50)
+		figure(99); p=cdfplot(abs(aoas(end-49:end))); p.LineWidth=2;
 		save(['/flqtmp/aoas', num2str(truthaoa),'.mat'], "aoas");
 		pause(0.1)
 	end
@@ -116,13 +116,16 @@ function aoa = do_iaa(csist)
 	envs.subcs = csist.subc.subcs ;
 	envs.fc = 5.2e9 ;
 	envs.d = 0.013 ;
+	envs.d = 0.056 ;
 	envs.d = 0.026 ;
-	envs.d = 0.03 ;
 	envs.f_space = 312.5e3 ;
-	envs.fc_space = envs.f_space ;
+	envs.fc_space = 4*envs.f_space ;
 
 	%csist = simu_aoa(-pi/3, csist, envs) ;
-	aoa = iaa(squeeze(csist.scsi(:,1,:)), envs)
+	csi = squeeze(csist.scsi(:,1,:));
+	csi = csi(:,1:4:end);
+	envs.ntone = size(csi,2);
+	aoa = iaa(csi, envs)
 	return ;
 	%{
 	%}
@@ -148,8 +151,8 @@ function aoa = do_spotfi(csist)
 	envs.fc = 5.2e9 ;
 	envs.lambda = envs.c / envs.fc ;
 	envs.d = 0.013 ;
+	envs.d = 0.056 ;
 	envs.d = 0.026 ;
-	envs.d = 0.03 ;
 	envs.nrx = csist.nrx ;
 	envs.ntx = csist.ntx ;
 	envs.ntone = csist.ntone ;
@@ -189,6 +192,7 @@ function plot_aoa(aoa, fid, holdon)
 	if holdon; hold on; else; hold off; end
 	c = compass(cosd(figaoa), sind(figaoa)) ;
 	c.LineWidth = 6 ;
+	if holdon; c.LineWidth=3; end
 	axis([-1, 1, 0, 1]) ;
 end
 
@@ -242,21 +246,22 @@ end
 function csist = calib_scsi_by_file(csist)
 	persistent phaoffs;
 	if isempty(phaoffs)
-		phaoffs = load('/flqtmp/phaoffs.mat').phaoffs.';
+		fprintf("***** load\n"); pause;
+		phaoffs = load('/flqtmp/phaoffs12.mat').phaoffs.';
 	end
-    csist = calib_scsi_by_phaoff12_tones(csist, phaoffs);
+    csist = calib_scsi_by_phaoffs(csist, phaoffs);
 end
 
 function csist = calib_scsi_by_delta(csist, deltak, deltab)
-	tones = csist.subc.subcs*deltak + deltab;
-	csist = calib_scsi_by_phaoff12_tones(csist, tones.', 0);
+	phaoffs = csist.subc.subcs*deltak + deltab;
+	csist = calib_scsi_by_phaoffs(csist, phaoffs.', 0);
 	%csist.scsi(2,1,:) =  squeeze(csist.scsi(2,1,:)) .* exp(-1j*delta.') ;
 end
 
-function csist = calib_scsi_by_phaoff12_tones(csist, tones, offs)
+function csist = calib_scsi_by_phaoffs(csist, phaoffs, offs)
 	if nargin < 3; offs = 0; end
 	for i = 1:csist.ntx
-		csist.scsi(2,i,:) = squeeze(csist.scsi(2,i,:)) .* exp(-1j*(tones+offs));
+		csist.scsi(2,i,:) = squeeze(csist.scsi(2,i,:)) .* exp(-1j*(phaoffs+offs));
 	end
 end
 
@@ -333,7 +338,7 @@ function csist = preprocess(csist)
 	init_phaoff12_file = ('/tmp/init_phaoff12.mat') ;
 	if exist(init_phaoff12_file)
 		phaoff12 = load(init_phaoff12_file).phaoff12 ;
-		csist = calib_scsi_by_phaoff12_tones(csist, phaoff12.', offs) ; return ;
+		csist = calib_scsi_by_phaoffs(csist, phaoff12.', offs) ; return ;
 	end
 end
 
