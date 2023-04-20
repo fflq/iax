@@ -246,8 +246,8 @@ end
 function csist = calib_scsi_by_file(csist)
 	persistent phaoffs;
 	if isempty(phaoffs)
-		fprintf("***** load\n"); pause;
 		phaoffs = load('/flqtmp/phaoffs12.mat').phaoffs.';
+		fprintf("***** load phaoffs %f\n", mean(phaoffs)); pause;
 	end
     csist = calib_scsi_by_phaoffs(csist, phaoffs);
 end
