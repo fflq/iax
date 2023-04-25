@@ -10,11 +10,27 @@ properties (Access='public')
 	is_net = false ;
 	%net
 	sfd = -1 ;
+<<<<<<< HEAD
+	ip = "" ;
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	port = 0 ;
 end
 	
 
 methods (Access='public')
+<<<<<<< HEAD
+	function self = axcsi(inputname, is_net)
+		if nargin < 2; is_net = false; end
+		self.is_net = is_net;
+		%if isnumeric(inputname)
+		if self.is_net
+			addr = strsplit(inputname,":") ;
+			self.ip = addr{1};
+			self.port = str2num(addr{2}) ;
+			self.sfd = tcpclient(self.ip, self.port, "Timeout",30) ;
+		else
+=======
 	function self = axcsi(inputname)
 		if isnumeric(inputname)
 			self.is_net = true ;
@@ -22,6 +38,7 @@ methods (Access='public')
 			self.sfd = tcpclient('localhost', self.port, "Timeout",10) ;
 		else
 			self.is_net = false ;
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 			self.fd = fopen(inputname, 'rb') ;
 			self.file_len = axcsi.get_file_len(self.fd) ;
 			self.pos = 0; 
@@ -229,14 +246,31 @@ end
 % raw_csi only data_subcs+pilot_subcs, need add dc_subcs, then interp pilot_dc_subcs
 % eg. csi={-28:-1,1:28}, pilot{-21,-7,7,21} in csi is nan, dc{0} not in csi
 function st = calib_csi_subcs(st)
+<<<<<<< HEAD
+	% handle special
+	csi = st.csi;
+	if strcmp(st.chan_type_str, "VHT160") 
+		csi = csi(:,:,subcarry.get_vht160_noextra_subc(st.ntone));
+	elseif strcmp(st.chan_type_str, "HE160")
+		csi = csi(:,:,subcarry.get_he160_noextra_subc(st.ntone));
+	end
+
+
+	subc = subcarry.get_subc(st.chan_type_str) ;
+=======
 	%if (st.chan_type_str ~= "VHT80") return ; end
 	subc = Subcarry.get_subc(st.chan_type_str) ;
 
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	scsi = zeros(st.nrx, st.ntx, subc.subcs_len) ; % add for dc
 	data_pilot_dc_tones = zeros(1, subc.subcs_len) ;
 
 	for irx = 1:st.nrx; for itx = 1:st.ntx; 
+<<<<<<< HEAD
+		csi_data_pilot_tones = squeeze(csi(irx, itx, :)) ;
+=======
 		csi_data_pilot_tones = squeeze(st.csi(irx, itx, :)) ;
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 		data_pilot_dc_tones(subc.idx_data_pilot_subcs) = csi_data_pilot_tones ; 
 
 		% for raw_csi, only data_tones valid

@@ -3,6 +3,34 @@
 addpath('/home/flq/ws/git/SpotFi')
 addpath('/home/flq/ws/git/CSI/algorithm/iaa')
 
+<<<<<<< HEAD
+filename='/flqtmp/data/ax210_air_10cm_40ht20.csi';
+filename='../../data/ax210_split_40ht20.csi' ;
+filename='/tmp/ax210_40ht20_k_0.csi';
+filename='/tmp/a';
+addr='127.0.0.1:7120';
+
+use_net = false;
+use_net = true;
+if use_net
+ax = axcsi(addr, true) ;
+else
+ax = axcsi(filename) ;
+end
+gn = 1 ;
+while true
+		st = ax.read() 
+	try
+	catch ME
+		ME.identifier
+		if ax.is_net
+			fprintf("* net reconn\n"); pause(2) ;
+			%ax = axcsi(inputname);
+			continue;
+		end
+	end
+	if isempty(st); continue ; end
+=======
 inputname='/flqtmp/data/ax210_air_10cm_40ht20.csi';
 inputname='../../data/ax210_split_40ht20.csi' ;
 inputname='/tmp/ax210_40ht20_k_0.csi';
@@ -22,6 +50,7 @@ while true
 		end
 	end
 	if isempty(st); break ; end
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	handle_csist_func(st) ;
 	%input('')
 	if ~mod(gn, 50)
@@ -39,12 +68,20 @@ function handle_csist_func(csist)
 	csist = preprocess(csist) ;
 	%plot_attack(csist) ;
 	%plot_csi(csist.csi);
+<<<<<<< HEAD
+	plot_mag(csist) ;
+=======
 	%plot_mag(csist) ;
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	%plot_phase(csist) ;
 	%plot_phase_offset(csist) ;
 	%plot_cir(csist) ;
 	%save_calib(csist);
+<<<<<<< HEAD
+	%do_aoa(csist) ;
+=======
 	do_aoa(csist) ;
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 end
 
 function save_calib(csist)
@@ -62,11 +99,18 @@ end
 
 function do_aoa(csist)
 	persistent aoas;
+<<<<<<< HEAD
+	calc_aoa = @do_iaa ;
+	calc_aoa = @do_spotfi ;
+
+    %csist = calib_scsi_by_delta(csist, 0.01, pi) ; 
+=======
 	calc_aoa = @do_spotfi ;
 	calc_aoa = @do_iaa ;
 
     %csist = calib_scsi_by_delta(csist, 0.012, pi) ; 
     %csist = calib_scsi_by_delta(csist, -0.001, 3) ; 
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
     csist = calib_scsi_by_file(csist) ;
 	plot_phase_offset(csist) ;
 	aoa1 = calc_aoa(csist) ;
@@ -74,7 +118,11 @@ function do_aoa(csist)
 	aoa2 = calc_aoa(csist) ;
 	plot_aoa(aoa1, 11, false); plot_aoa(aoa2, 11, true); 
 
+<<<<<<< HEAD
+	truthaoa = 0 ;
+=======
 	truthaoa = 30 ;
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	aoas(end+1) = min(abs(aoa1-truthaoa), abs(aoa2-truthaoa));
 	if ~ mod(length(aoas), 50)
 		figure(99); p=cdfplot(abs(aoas(end-49:end))); p.LineWidth=2;
@@ -119,12 +167,24 @@ function aoa = do_iaa(csist)
 	envs.d = 0.056 ;
 	envs.d = 0.026 ;
 	envs.f_space = 312.5e3 ;
+<<<<<<< HEAD
+	envs.fc_space = envs.f_space ;
+
+	%csist = simu_aoa(-pi/3, csist, envs) ;
+	csi = squeeze(csist.scsi(:,1,:));
+	if false
+	csi = csi(:,1:4:end);
+	envs.ntone = size(csi,2);
+	envs.fc_space = 4*envs.f_space ;
+	end
+=======
 	envs.fc_space = 4*envs.f_space ;
 
 	%csist = simu_aoa(-pi/3, csist, envs) ;
 	csi = squeeze(csist.scsi(:,1,:));
 	csi = csi(:,1:4:end);
 	envs.ntone = size(csi,2);
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	aoa = iaa(csi, envs)
 	return ;
 	%{
@@ -158,6 +218,11 @@ function aoa = do_spotfi(csist)
 	envs.ntone = csist.ntone ;
 	envs.ntone_sm = floor(envs.ntone/2) ;
 	envs.subc_idxs = csist.subc.subcs ;
+<<<<<<< HEAD
+	envs.pmufig = true;
+	envs.niter = 1 ;
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 
 	aoa = spotfi(squeeze(csist.scsi(:,1,:)), envs, -1) 
 	return ;
@@ -361,9 +426,16 @@ function r = csi_filter(csist)
 	end
     pw1 = sum(abs(csist.csi(1,1,:)).^2)/1e4;
     pw2 = sum(abs(csist.csi(2,1,:)).^2)/1e4;
+<<<<<<< HEAD
+	[pw1, pw2]
+	%pw1_sum = pw1_sum + pw1 ; pw2_sum = pw2_sum + pw2 ;
+	%[pw1_sum, pw2_sum]
+    if (abs(pw1-pw2)/pw2 < 0.2); return; end
+=======
 	%pw1_sum = pw1_sum + pw1 ; pw2_sum = pw2_sum + pw2 ;
 	%[pw1_sum, pw2_sum]
     if (abs(pw1-pw2)/pw1 < 0.2); return; end
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
     if abs(csist.rssi(1)-csist.rssi(2)) < 3; return; end 
     if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
 
@@ -412,6 +484,12 @@ function plot_mag(csist)
 
 	title(csist.chan_type_str);
 	figure(1); hold off;
+<<<<<<< HEAD
+	ss = stones.';
+	plot(1:2*csist.nstone, abs(ss(:)), 'LineWidth',2) ; 
+	return;
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	plot(subc.subcs, abs(stones(1,:)).', 'LineWidth',2) ; 
 	figure(1); hold on;
 	plot(subc.subcs, abs(stones(2,:)).', ':o', 'LineWidth',2) ; 
@@ -427,6 +505,14 @@ function plot_phase_offset(csist, adjust)
 	subc = csist.subc ;
 	scsi = squeeze(csist.scsi(:,1,:)) ;
 	phaoff12 = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
+<<<<<<< HEAD
+	avg_phaoff12 = mean(phaoff12);
+    while avg_phaoff12 < -pi/2
+        avg_phaoff12 = avg_phaoff12 + 2*pi;
+        phaoff12 = phaoff12 + 2*pi;
+	end
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	fprintf("* phaoff12 %f\n", mean(phaoff12))
 	if (adjust)
 	save("/tmp/init_phaoff12.mat", "phaoff12");

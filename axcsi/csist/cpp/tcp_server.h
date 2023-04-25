@@ -85,6 +85,16 @@ void tcp_server::wait_conn()
 
 void tcp_server::broadcast(uint8_t *buf, size_t size) 
 {
+<<<<<<< HEAD
+	int r ;
+    if (this->clientfds.empty())    return ;
+    for (auto &sfd : this->clientfds) {
+        if (sfd < 0)    continue ;
+        //printf("************ send sfd%d sz%d\n", sfd, size) ;
+        try {
+            if ((r = send(sfd, buf, size, 0)) < 0) {
+                //printf("############# err send sfd%d sz%d\n", sfd, size) ;
+=======
     if (this->clientfds.empty())    return ;
     for (auto &sfd : this->clientfds) {
         if (sfd < 0)    continue ;
@@ -92,6 +102,7 @@ void tcp_server::broadcast(uint8_t *buf, size_t size)
         try {
             if (send(sfd, buf, size, 0) < 0) {
                 //printf("*err send sfd%d sz%d\n", sfd, size) ;
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
                 std::cerr << "Error sending message to server" << std::endl;
                 close(sfd) ;
                 sfd = -1 ;
