@@ -2130,6 +2130,23 @@ void iwl_mvm_rx_csi_header(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 	iwl_mvm_csi_steal(mvm, 0, rxb);
 }
 
+<<<<<<< HEAD
+void flq_calib_csi_hdr(struct iwl_mvm *mvm, void *csi_hdr)
+{
+	u8 *mac, *fmac = mvm->flq_src_mac, *hmac = csi_hdr+68;
+	if ((hmac[5] != 0xde) && (fmac[5] != hmac[5])) {
+		mac = fmac;
+		printk(KERN_ERR "***fflq %s, flq_mac %x:%x:%x:%x:%x:%x\n", __func__, 
+				mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		mac = hmac;
+		printk(KERN_ERR "***fflq %s, csi_hdr %x:%x:%x:%x:%x:%x\n", __func__, 
+				mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	}
+	//memcpy(hmac, fmac, ETH_ALEN) ;
+}
+
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 static void iwl_mvm_csi_complete(struct iwl_mvm *mvm)
 {
 	struct iwl_rx_packet *hdr_pkt;
@@ -2180,6 +2197,11 @@ static void iwl_mvm_csi_complete(struct iwl_mvm *mvm)
 		len[i - 1] = le32_to_cpu(chunk->size);
 	}
 
+<<<<<<< HEAD
+	flq_calib_csi_hdr(mvm, csi_hdr);
+		
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	iwl_mvm_send_csi_event(mvm, csi_hdr, csi_hdr_len, data, len);
 
  free:
@@ -2210,6 +2232,10 @@ void iwl_mvm_rx_csi_chunk(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 		WARN_ON(1);
 		return;
 	}
+<<<<<<< HEAD
+	//printk("***fflq %s, idx/num, %d/%d\n", __func__, idx, num) ;
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 
 	/* -1 to account for the header we also store there */
 	if (WARN_ON_ONCE(idx >= ARRAY_SIZE(mvm->csi_data_entries) - 1))

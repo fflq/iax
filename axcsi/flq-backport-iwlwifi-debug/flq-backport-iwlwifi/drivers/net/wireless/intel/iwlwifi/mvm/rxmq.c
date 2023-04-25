@@ -2247,6 +2247,50 @@ static bool iwl_mvm_is_valid_packet_channel(struct ieee80211_rx_status *rx_statu
 	return true;
 }
 
+<<<<<<< HEAD
+
+/* 
+ * can see that consistent during csi-hdr/chunk, and csi'mac is invalid
+[36800.967908] ****fflq flq_record_macs, cc:2d:21:d4:7:91
+[36800.991893] ****fflq flq_record_macs, 20:82:1a:28:3:10
+[36800.991960] ****fflq iwl_mvm_rx_csi_header, 0:0:fe:0:0:8
+[36800.991972] ****fflq iwl_mvm_rx_csi_chunk, fb:ff:5a:ff:d6:ff
+[36800.991982] ****fflq iwl_mvm_rx_csi_chunk, idx/num, 1/2
+[36800.991990] ****fflq iwl_mvm_rx_csi_chunk, 37:0:b6:ff:20:0
+[36800.991999] ****fflq iwl_mvm_rx_csi_chunk, idx/num, 2/2
+[36800.995844] ****fflq flq_record_macs, 66:5c:8:cd:18:11
+[36800.995892] ****fflq flq_record_macs, 60:2f:33:c:3:10
+ * can see it works
+[37296.943687] ****fflq iwl_mvm_csi_complete, flq_mac 66:5c:8:cd:18:11
+[37296.943699] ****fflq iwl_mvm_csi_complete, csi_hdr 66:5c:8:cd:18:11
+[37297.060271] ****fflq iwl_mvm_csi_complete, flq_mac 20:82:1a:28:3:10
+[37297.060284] ****fflq iwl_mvm_csi_complete, csi_hdr ef:be:ad:de:ad:de
+[37297.201618] ****fflq iwl_mvm_csi_complete, flq_mac 66:5c:8:cd:18:11
+[37297.201631] ****fflq iwl_mvm_csi_complete, csi_hdr ef:be:ad:de:ad:de
+ */
+//fflqkey record_macs
+void flq_record_macs(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
+{
+	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+	struct iwl_rx_mpdu_desc *desc = (void *)pkt->data;
+	struct ieee80211_hdr *hdr;
+	size_t desc_size;
+
+	if (mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
+		desc_size = sizeof(*desc);
+	else
+		desc_size = IWL_RX_DESC_SIZE_V1;
+
+	hdr = (void *)(pkt->data + desc_size);
+	u8 *dst_mac = hdr->addr1, *src_mac = hdr->addr2 ; //fflq key, get mac
+	memcpy(mvm->flq_src_mac, src_mac, ETH_ALEN);
+	memcpy(mvm->flq_dst_mac, dst_mac, ETH_ALEN);
+	u8 *mac = mvm->flq_src_mac;
+	//printk("****fflq %s, %x:%x:%x:%x:%x:%x\n", __func__, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+}
+
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 			struct iwl_rx_cmd_buffer *rxb, int queue)
 {
@@ -2269,6 +2313,14 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 	if (flqcnt++ % 10000 == 0)
 		printk(KERN_ERR "***fflq iwl_mvm_rx_mpdu_mq, (%x,%x)\n", pkt->hdr.group_id, pkt->hdr.cmd) ;
 		*/
+<<<<<<< HEAD
+	//u8 *mac = mvm->time_sync.peer_addr; //000
+	//printk("****fflq %s, %x:%x:%x\n", __func__, mac[0], mac[1], mac[2]);
+	//mac = mvm->addresses[0].addr; //ifconfig mac
+	//printk("****fflq %s, %x:%x:%x\n", __func__, mac[0], mac[1], mac[2]);
+	//u8 *mac = mvm->last_phy_info.non_cfg_phy;
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 
 	if (unlikely(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
 		return;
@@ -2330,6 +2382,16 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 	phy_data.phy_info = le16_to_cpu(desc->phy_info);
 	phy_data.d4 = desc->phy_data4;
 
+<<<<<<< HEAD
+	/*
+	printk("***fflq %s, energy(%d,%d) d(%d,%d,%d,%d) cfg_phy_cnt(%d) non_cfg_phy_cnt(%d)\n",
+		   	__func__, phy_data.energy_a, phy_data.energy_b,
+			phy_data.d0, phy_data.d1, phy_data.d2, phy_data.d3,
+			mvm->last_phy_info.cfg_phy_cnt, mvm->last_phy_info.non_cfg_phy_cnt);
+			*/
+
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	hdr = (void *)(pkt->data + desc_size);
 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
 	 * ieee80211_hdr pulled.
@@ -2340,6 +2402,11 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 		return;
 	}
 
+<<<<<<< HEAD
+	u8 *dst_mac = hdr->addr1, *src_mac = hdr->addr2 ; //fflq key, get mac
+
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	if (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_PAD) {
 		/*
 		 * If the device inserted padding it means that (it thought)
@@ -2569,6 +2636,11 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 	   )
 		iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, queue, sta,
 						link_sta);
+<<<<<<< HEAD
+
+	flq_record_macs(mvm, rxb);
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 out:
 	rcu_read_unlock();
 }

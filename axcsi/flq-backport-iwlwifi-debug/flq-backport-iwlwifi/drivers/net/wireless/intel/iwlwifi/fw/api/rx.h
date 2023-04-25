@@ -22,6 +22,10 @@ enum iwl_mac_context_info {
 	MAC_CONTEXT_INFO_GSCAN,
 };
 
+<<<<<<< HEAD
+//fflq keykey may has perm/antenna_sel, no
+=======
+>>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 /**
  * struct iwl_rx_phy_info - phy info
  * (REPLY_RX_PHY_CMD = 0xc0)
