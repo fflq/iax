@@ -754,7 +754,7 @@ static void iwl_mvm_set_flq_monitor_tx_rate(struct iwl_mvm *mvm, struct sk_buff 
 			!mvm->flq_monitor_tx_rate) 
 		return ;
 
-	if (flqcnt++ % 1000 == 0)
+	if (flqcnt++ % 10000 == 0)
 		printk(KERN_ERR "***fflq %s, rate_n_flags=monitor_tx_rate=%08x\n", 
 				__func__, mvm->flq_monitor_tx_rate) ;
 
