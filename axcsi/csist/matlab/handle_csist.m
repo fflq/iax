@@ -3,18 +3,17 @@
 addpath('/home/flq/ws/git/SpotFi')
 addpath('/home/flq/ws/git/CSI/algorithm/iaa')
 
-filename='/flqtmp/data/ax210_air_10cm_40ht20.csi';
-filename='../../data/ax210_split_40ht20.csi' ;
-filename='/tmp/ax210_40ht20_k_0.csi';
-filename='/tmp/a';
-addr='127.0.0.1:7120';
+inputname='/flqtmp/data/ax210_air_10cm_40ht20.csi';
+inputname='../../data/ax210_split_40ht20.csi' ;
+inputname='/tmp/ax210_40ht20_k_0.csi';
+inputname='127.0.0.1:7120'; use_net = true;
+inputname='/tmp/a'; use_net = false;
+inputname='/flqtmp/attack_5m_20spm_130-3400.csi'; use_net = false;
 
-use_net = false;
-use_net = true;
 if use_net
-ax = axcsi(addr, true) ;
+ax = axcsi(inputname, true) ;
 else
-ax = axcsi(filename) ;
+ax = axcsi(inputname) ;
 end
 gn = 1 ;
 while true
@@ -28,7 +27,7 @@ while true
 			continue;
 		end
 	end
-	if isempty(st); continue ; end
+	if isempty(st); break ; end
 	handle_csist_func(st) ;
 	%input('')
 	if ~mod(gn, 50)
@@ -41,12 +40,12 @@ end
 
 function handle_csist_func(csist)
 	%csist 
-	if ~csi_filter(csist); fprintf("*** pass\n"); return; end
+	%if ~csi_filter(csist); fprintf("*** pass\n"); return; end
 
 	csist = preprocess(csist) ;
-	%plot_attack(csist) ;
+	plot_attack(csist) ;
 	%plot_csi(csist.csi);
-	plot_mag(csist) ;
+	%plot_mag(csist) ;
 	%plot_phase(csist) ;
 	%plot_phase_offset(csist) ;
 	%plot_cir(csist) ;
@@ -225,9 +224,16 @@ end
 function plot_attack(csist)
 	persistent aks;
 	if isempty(aks); aks = []; end 
-	aks(end+1) = abs(csist.scsi(1,1,10)) ;
-	range = max(length(aks)-2,1):length(aks) ;
-	hold on; plot(range, aks(range)) ;
+	%aks(end+1,:) = abs(csist.scsi(:,1,10)) ;
+	aks(end+1,:) = mean(abs(csist.scsi(:,1,10))) ;
+	sz = size(aks,1);
+	range = max(sz-5,1):sz ;
+	hold on; plot(range, aks(range,:), 'LineWidth',2) ;
+	xlabel('Packet index');
+	ylabel('Magnitude');
+	%set(gca,'FontName','Times New Roman','FontSize',10,'LineWidth',2)
+	%set(gca,'LineWidth',2)
+	pause(0.01)
 end
 
 function [k, b, tones] = fit_csi(tones, xs)
