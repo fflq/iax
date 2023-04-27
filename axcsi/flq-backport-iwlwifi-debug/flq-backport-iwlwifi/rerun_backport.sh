@@ -11,10 +11,7 @@ depmod ;
 modprobe -r iwlwifi 
 modprobe -r ath9k ;
 modprobe -r cfg80211 ;
-<<<<<<< HEAD
 modprobe -r rt2800usb ;
-=======
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 #modprobe iwlwifi amsdu_size=3 bt_coex_active=0
 modprobe iwlwifi 
 

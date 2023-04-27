@@ -1765,11 +1765,7 @@ static void iwl_mvm_rx_common(struct iwl_mvm *mvm,
 	 */
 	iwl_notification_wait_notify(&mvm->notif_wait, pkt);
 
-<<<<<<< HEAD
 	for (i = 0; i < ARRAY_SIZE(iwl_mvm_rx_handlers); i++) { //fflqkey fflqkey, call csi_chunk
-=======
-	for (i = 0; i < ARRAY_SIZE(iwl_mvm_rx_handlers); i++) { //fflq key fflq key, call csi_chunk
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 		const struct iwl_rx_handlers *rx_h = &iwl_mvm_rx_handlers[i];
 		struct iwl_async_handler_entry *entry;
 
@@ -1802,7 +1798,7 @@ static void iwl_mvm_rx_common(struct iwl_mvm *mvm,
 	}
 }
 
-//fflq key iwl_mvm_rx from fw?
+//fflq key iwl_mvm_rx from fw? no here, in rx_mq
 static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
 		       struct napi_struct *napi,
 		       struct iwl_rx_cmd_buffer *rxb)
@@ -1811,6 +1807,7 @@ static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
 	u16 cmd = WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd);
 
+	//printk("***fflq %s, mq_rx_supported=%d\n", __func__, mvm->trans->trans_cfg->mq_rx_supported);
 #ifdef CPTCFG_IWLWIFI_DEVICE_TESTMODE
 	/*
 	 * RX data may be forwarded to userspace in case the user
@@ -1821,19 +1818,22 @@ static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
 	iwl_tm_gnl_send_rx(mvm->trans, rxb);
 #endif
 
-	if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD)))
-		iwl_mvm_rx_rx_mpdu(mvm, napi, rxb);
-	else if (cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_PHY_CMD))
-		iwl_mvm_rx_rx_phy_cmd(mvm, rxb);
-	else
+	static int flqcnt = 0 ; ++flqcnt;
+	if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD))) {
+		printk(KERN_ERR "***fflq %s, call iwl_mvm_rx_rx_mpdu\n", __func__);
+		iwl_mvm_rx_rx_mpdu(mvm, napi, rxb); //fflqkey rx_mpdu
+	}
+	else if (cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_PHY_CMD)) {
+		printk(KERN_ERR "***fflq %s, call iwl_mvm_rx_rx_phy_cmd\n", __func__);
+		iwl_mvm_rx_rx_phy_cmd(mvm, rxb);	//fflqkey rx_phy
+	}
+	else {
+		printk(KERN_ERR "***fflq %s, call iwl_mvm_rx_common\n", __func__);
 		iwl_mvm_rx_common(mvm, rxb, pkt); //fflq
+	}
 }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
-//fflq, inject recv from iwl_mvm_rx_mq
+//fflq, sta & inject recv from iwl_mvm_rx_mq
 void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
 		   struct napi_struct *napi,
 		   struct iwl_rx_cmd_buffer *rxb)
@@ -1842,6 +1842,7 @@ void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
 	u16 cmd = WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd);
 
+	//printk("***fflq %s, mq_rx_supported=%d\n", __func__, mvm->trans->trans_cfg->mq_rx_supported);
 #ifdef CPTCFG_IWLWIFI_DEVICE_TESTMODE
 	/*
 	 * RX data may be forwarded to userspace in case the user
@@ -1851,28 +1852,17 @@ void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
 	 */
 	iwl_tm_gnl_send_rx(mvm->trans, rxb);
 #endif
-<<<<<<< HEAD
 	//static int flqcnt = 0 ; ++flqcnt;
 	/*
-=======
-	/*
-	static int flqcnt = 0 ;
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	if (flqcnt++ % 10000 == 0)
 		printk(KERN_ERR "***fflq %s judge, (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
 		*/
 
-<<<<<<< HEAD
 	if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD))){
 		//printk("***fflq, mpdu_mq %d\n", flqcnt);
 		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, 0); //fflq, here recv injections 
 	}
-=======
-	if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD)))
-		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, 0); //fflq, here recv injections 
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
-	else if (unlikely(cmd == WIDE_ID(DATA_PATH_GROUP,
-					 RX_QUEUES_NOTIFICATION)))
+	else if (unlikely(cmd == WIDE_ID(DATA_PATH_GROUP, RX_QUEUES_NOTIFICATION)))
 		iwl_mvm_rx_queue_notif(mvm, napi, rxb, 0);
 	else if (cmd == WIDE_ID(LEGACY_GROUP, FRAME_RELEASE))
 		iwl_mvm_rx_frame_release(mvm, napi, rxb, 0);
@@ -1880,15 +1870,10 @@ void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
 		iwl_mvm_rx_bar_frame_release(mvm, napi, rxb, 0);
 	else if (cmd == WIDE_ID(DATA_PATH_GROUP, RX_NO_DATA_NOTIF))
 		iwl_mvm_rx_monitor_no_data(mvm, napi, rxb, 0); //fflq no here
-<<<<<<< HEAD
 	else{
 		//printk("***fflq, com %d\n", flqcnt);
 		iwl_mvm_rx_common(mvm, rxb, pkt); //fflq
 	}
-=======
-	else
-		iwl_mvm_rx_common(mvm, rxb, pkt); //fflq
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 }
 
 static void iwl_mvm_async_cb(struct iwl_op_mode *op_mode,

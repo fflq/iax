@@ -18,11 +18,7 @@ fi
 
 #[function handle args]
 interval_us=10000
-<<<<<<< HEAD
 chtype=NOHT
-=======
-#chtype=NOHT
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 #macs=00:16:ea:12:34:56
 
 if [ $# -ge 1 ]; then
@@ -86,14 +82,8 @@ if [ "$rnf" != "" ]; then
 fi
 
 # filter macs
-<<<<<<< HEAD
 #if [ "$macs" != "" ]; then; fi
 echo $macs | sudo tee $mvm_dbgfs_dir/csi_addresses > /dev/null ;
-=======
-if [ "$macs" != "" ]; then
-	echo $macs | sudo tee $mvm_dbgfs_dir/csi_addresses > /dev/null ;
-fi
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 
 # csi enable
 echo 1 | sudo tee $mvm_dbgfs_dir/csi_enabled > /dev/null ;
