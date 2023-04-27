@@ -1543,6 +1543,8 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		iwl_trans->cfg = cfg;
 	}
 
+	//fflqkey disable rx_mq_supported
+
 	/* if we don't have a name yet, copy name from the old cfg */
 	if (!iwl_trans->name)
 		iwl_trans->name = iwl_trans->cfg->name;

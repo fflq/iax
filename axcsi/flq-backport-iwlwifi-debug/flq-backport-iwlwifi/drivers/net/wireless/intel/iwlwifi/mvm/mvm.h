@@ -1216,10 +1216,7 @@ struct iwl_mvm {
 
 	//fflq_add
 	u32 flq_monitor_tx_rate ;
-<<<<<<< HEAD
 	u8 flq_src_mac[ETH_ALEN], flq_dst_mac[ETH_ALEN] ;
-=======
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 
 	struct ieee80211_vif *nan_vif;
 	struct iwl_mvm_baid_data __rcu *baid_map[IWL_MAX_BAID];

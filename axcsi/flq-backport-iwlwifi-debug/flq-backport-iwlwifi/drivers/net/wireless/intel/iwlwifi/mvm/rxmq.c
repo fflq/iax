@@ -2247,7 +2247,6 @@ static bool iwl_mvm_is_valid_packet_channel(struct ieee80211_rx_status *rx_statu
 	return true;
 }
 
-<<<<<<< HEAD
 
 /* 
  * can see that consistent during csi-hdr/chunk, and csi'mac is invalid
@@ -2289,8 +2288,6 @@ void flq_record_macs(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 	//printk("****fflq %s, %x:%x:%x:%x:%x:%x\n", __func__, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
-=======
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 			struct iwl_rx_cmd_buffer *rxb, int queue)
 {
@@ -2313,14 +2310,11 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 	if (flqcnt++ % 10000 == 0)
 		printk(KERN_ERR "***fflq iwl_mvm_rx_mpdu_mq, (%x,%x)\n", pkt->hdr.group_id, pkt->hdr.cmd) ;
 		*/
-<<<<<<< HEAD
 	//u8 *mac = mvm->time_sync.peer_addr; //000
 	//printk("****fflq %s, %x:%x:%x\n", __func__, mac[0], mac[1], mac[2]);
 	//mac = mvm->addresses[0].addr; //ifconfig mac
 	//printk("****fflq %s, %x:%x:%x\n", __func__, mac[0], mac[1], mac[2]);
 	//u8 *mac = mvm->last_phy_info.non_cfg_phy;
-=======
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 
 	if (unlikely(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
 		return;
@@ -2382,7 +2376,6 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 	phy_data.phy_info = le16_to_cpu(desc->phy_info);
 	phy_data.d4 = desc->phy_data4;
 
-<<<<<<< HEAD
 	/*
 	printk("***fflq %s, energy(%d,%d) d(%d,%d,%d,%d) cfg_phy_cnt(%d) non_cfg_phy_cnt(%d)\n",
 		   	__func__, phy_data.energy_a, phy_data.energy_b,
@@ -2390,8 +2383,6 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 			mvm->last_phy_info.cfg_phy_cnt, mvm->last_phy_info.non_cfg_phy_cnt);
 			*/
 
-=======
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	hdr = (void *)(pkt->data + desc_size);
 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
 	 * ieee80211_hdr pulled.
@@ -2402,11 +2393,8 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 		return;
 	}
 
-<<<<<<< HEAD
-	u8 *dst_mac = hdr->addr1, *src_mac = hdr->addr2 ; //fflq key, get mac
+	//u8 *dst_mac = hdr->addr1, *src_mac = hdr->addr2 ; //fflq key, get mac
 
-=======
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
 	if (desc->mac_flags2 & IWL_RX_MPDU_MFLG2_PAD) {
 		/*
 		 * If the device inserted padding it means that (it thought)
@@ -2636,11 +2624,9 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 	   )
 		iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, queue, sta,
 						link_sta);
-<<<<<<< HEAD
 
 	flq_record_macs(mvm, rxb);
-=======
->>>>>>> 2821d0cf5b07413cdf4972d79128ca68625859f9
+
 out:
 	rcu_read_unlock();
 }
