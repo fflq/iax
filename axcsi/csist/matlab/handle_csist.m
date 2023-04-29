@@ -3,29 +3,29 @@
 addpath('/home/flq/ws/git/SpotFi')
 addpath('/home/flq/ws/git/CSI/algorithm/iaa')
 
-inputname='/flqtmp/data/ax210_air_10cm_40ht20.csi';
 inputname='../../data/ax210_split_40ht20.csi' ;
 inputname='/tmp/ax210_40ht20_k_0.csi';
-inputname='127.0.0.1:7120'; use_net = true;
 inputname='/tmp/a'; use_net = false;
 inputname='/flqtmp/attack_5m_20spm_130-3400.csi'; use_net = false;
+inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
+inputname='/flqtmp/data/ax210_40ht20_air_10cm_same_rx.csi'; use_net = false;
+inputname='/flqtmp/paper/ax210_40vht160_cir.csi'; use_net=false;
+inputname='127.0.0.1:7120'; use_net = true;
 
-if use_net
-ax = axcsi(inputname, true) ;
-else
-ax = axcsi(inputname) ;
-end
 gn = 1 ;
+ax = [] ;
 while true
-		st = ax.read() 
 	try
+		if isempty(ax)
+			if use_net; ax = axcsi(inputname, true) ;
+			else; ax = axcsi(inputname) ; end
+		end
+		st = ax.read() 
 	catch ME
 		ME.identifier
-		if ax.is_net
-			fprintf("* net reconn\n"); pause(2) ;
-			%ax = axcsi(inputname);
-			continue;
-		end
+		ax = [] ;
+		fprintf("* ax reconn\n"); 
+		pause(5); continue;
 	end
 	if isempty(st); break ; end
 	handle_csist_func(st) ;
@@ -40,15 +40,15 @@ end
 
 function handle_csist_func(csist)
 	%csist 
-	%if ~csi_filter(csist); fprintf("*** pass\n"); return; end
+	if ~csi_filter(csist); fprintf("*** pass\n"); return; end
 
 	csist = preprocess(csist) ;
-	plot_attack(csist) ;
+	%plot_attack(csist) ;
 	%plot_csi(csist.csi);
 	%plot_mag(csist) ;
 	%plot_phase(csist) ;
 	%plot_phase_offset(csist) ;
-	%plot_cir(csist) ;
+	plot_cir(csist) ;
 	%save_calib(csist);
 	%do_aoa(csist) ;
 end
@@ -394,16 +394,18 @@ end
 
 function plot_cir(csist)
 	csist
-	cfr = squeeze(csist.csi(1,1,:)) ;
-	cir = ifft(cfr) ;
-	cir = cir(1:10) ;
-	dt = 1 / (csist.chan_width * 1e6) ;
-	dt = dt * 1e9 ; %ns
-	xs = (0:length(cir)-1)*dt ; 
-	[v, i] = max(real(cir)) ;
+	cfr = squeeze(csist.scsi(:,1,:)) ;
+	cir = ifft(cfr, [], 2) ;
+	cir = cir(:, 1:100) ;
+	dt = 1e9 / (csist.chan_width * 1e6) ; %ns
+	xs = (0:size(cir,2)-1)*dt ; 
+	[v, i] = max(abs(cir(1,:))) ;
 	[xs(i), xs(i)*0.3]
-	hold on ;
-	plot(xs, real(cir), ':o', 'LineWidth', 2) ;
+	%hold on ; plot(xs, abs(cir), ':o', 'LineWidth', 2) ;
+	hold off ; plot(xs, abs(cir(1,:)), ':o', 'LineWidth', 2) ;
+	hold on ; plot(xs, 20+abs(cir(2,:)), ':o', 'LineWidth', 2) ;
+	xlabel('Time(ns)');
+	ylabel('Magnitude');
 end
 
 
