@@ -49,7 +49,7 @@ function handle_csist_func(csist)
 	%plot_mag(csist) ;
 	%plot_phase(csist) ;
 	plot_phase_offset(csist) ;
-	plot_cir(csist) ;
+	%plot_cir(csist) ;
 	%save_calib(csist);
 	%do_aoa(csist) ;
 end
@@ -240,23 +240,6 @@ function plot_attack(csist)
 	pause(0.01)
 end
 
-function [k, b, tones] = fit_csi(tones, xs)
-	tones = squeeze(tones) ;
-	mag = abs(tones) ;
-    uwphase = unwrap(angle(tones)) ;
-	%xs = 1:length(tones) ;
-    z = polyfit(xs, uwphase, 1) ;
-    k = z(1) ;
-	b = z(2) ;
-    fprintf("* k(%f) b(%f)\n", k, b) ;
-    pha = uwphase - k*xs;
-    pha = uwphase - k*xs - b;
-    pha = uwphase - b;
-    %sns.lineplot(x=xs, y=pha)
-    tones = mag.*exp(1j*pha);
-end
-
-
 function csist = calib_scsi_by_phaoff12(csist, first_phaoff, offs)
 	if nargin < 3; offs = 0; end
 	for i = 1:csist.ntx
@@ -310,7 +293,7 @@ end
 function csist = calib_by_last_delta_kb(csist, calib_phaoff)
 	persistent last_deltab;
 	offs = 0;
-	[dk, deltab, tones] = fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
+	[dk, deltab, tones] = axcsi.fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
 	if last_deltab == 0; last_deltab = deltab; end
 	fprintf("*** last_deltab(%f) deltab(%f) %f\n", last_deltab, deltab, angle_mod(last_deltab-deltab));
 	if ~ (abs(angle_mod(last_deltab - deltab)) < pi/3)
@@ -324,7 +307,7 @@ function csist = calib_by_last_delta_kb(csist, calib_phaoff)
 	if isempty(goffs); goffs = 0; end
     csist = calib_scsi_by_phaoff12(csist, calib_phaoff, offs+goffs) ; 
 	%use deltab after calib
-	[~, gdeltab, ~] = fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
+	[~, gdeltab, ~] = axcsi.fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
 	[gdeltab, goffs, offs]
 end
 
@@ -388,10 +371,10 @@ function r = csi_filter(csist)
 	%pw1_sum = pw1_sum + pw1 ; pw2_sum = pw2_sum + pw2 ;
 	%[pw1_sum, pw2_sum]
     if (abs(pw1-pw2)/pw2 < 0.2); return; end
-    if abs(csist.rssi(1)-csist.rssi(2)) < 5; return; end 
-    %if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
+    if abs(csist.rssi(1)-csist.rssi(2)) < 3; return; end 
+    if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
 
-	[deltabk, deltab] = fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
+	[deltabk, deltab] = axcsi.fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
     %if abs(deltabk) > 0.1; return ; end
     %if abs(deltabk) > 0.05; return ; end
 

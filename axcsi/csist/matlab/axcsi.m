@@ -182,7 +182,8 @@ end
 
 
 function [k, b, tones] = fit_csi(tones, xs)
-	tones = squeeze(tones) ;
+	tones = tones(:) ;
+	xs = xs(:) ;
 	mag = abs(tones) ;
     uwphase = unwrap(angle(tones)) ;
 	%xs = 1:length(tones) ;
