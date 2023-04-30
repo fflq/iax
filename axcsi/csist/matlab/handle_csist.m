@@ -10,6 +10,7 @@ inputname='/flqtmp/attack_5m_20spm_130-3400.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
 inputname='/flqtmp/data/ax210_40ht20_air_10cm_same_rx.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40vht160_cir.csi'; use_net=false;
+inputname='192.168.1.10:7120'; use_net = true;
 inputname='127.0.0.1:7120'; use_net = true;
 
 gn = 1 ;
@@ -42,12 +43,12 @@ function handle_csist_func(csist)
 	%csist 
 	if ~csi_filter(csist); fprintf("*** pass\n"); return; end
 
-	csist = preprocess(csist) ;
+	%csist = preprocess(csist) ;
 	%plot_attack(csist) ;
 	%plot_csi(csist.csi);
 	%plot_mag(csist) ;
 	%plot_phase(csist) ;
-	%plot_phase_offset(csist) ;
+	plot_phase_offset(csist) ;
 	plot_cir(csist) ;
 	%save_calib(csist);
 	%do_aoa(csist) ;
@@ -61,15 +62,17 @@ function save_calib(csist)
 		po = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
 		if (mean(po) > 0)
 			phaoffs = po;
-			save("/flqtmp/phaoffs12.mat", "phaoffs");
+			savename = join(['/flqtmp/', csist.chan_type_str, 'phaoffs12.mat'], '')
+			%save("/flqtmp/phaoffs12.mat", "phaoffs");
+			save(savename, "phaoffs");
 			input("ok?")
 		end
 end
 
 function do_aoa(csist)
 	persistent aoas;
-	calc_aoa = @do_iaa ;
 	calc_aoa = @do_spotfi ;
+	calc_aoa = @do_iaa ;
 
     %csist = calib_scsi_by_delta(csist, 0.01, pi) ; 
     csist = calib_scsi_by_file(csist) ;
@@ -116,6 +119,7 @@ function csist = simu_aoa(aoa, csist, envs)
 end
 
 function aoa = do_iaa(csist)
+	envs = iaa_envs() ;
 	envs.nrx = csist.nrx ;
 	envs.ntone = csist.nstone ;
 	envs.subcs = csist.subc.subcs ;
@@ -166,7 +170,7 @@ function aoa = do_spotfi(csist)
 	envs.ntone = csist.ntone ;
 	envs.ntone_sm = floor(envs.ntone/2) ;
 	envs.subc_idxs = csist.subc.subcs ;
-	envs.pmufig = true;
+	%envs.pmufig = true;
 	envs.niter = 1 ;
 
 	aoa = spotfi(squeeze(csist.scsi(:,1,:)), envs, -1) 
@@ -263,7 +267,9 @@ end
 function csist = calib_scsi_by_file(csist)
 	persistent phaoffs;
 	if isempty(phaoffs)
-		phaoffs = load('/flqtmp/phaoffs12.mat').phaoffs.';
+		savename = join(['/flqtmp/', csist.chan_type_str, 'phaoffs12.mat'], '')
+		phaoffs = load(savename).phaoffs.';
+		figure(29); plot(phaoffs);
 		fprintf("***** load phaoffs %f\n", mean(phaoffs)); pause;
 	end
     csist = calib_scsi_by_phaoffs(csist, phaoffs);
@@ -382,26 +388,26 @@ function r = csi_filter(csist)
 	%pw1_sum = pw1_sum + pw1 ; pw2_sum = pw2_sum + pw2 ;
 	%[pw1_sum, pw2_sum]
     if (abs(pw1-pw2)/pw2 < 0.2); return; end
-    if abs(csist.rssi(1)-csist.rssi(2)) < 3; return; end 
-    if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
+    if abs(csist.rssi(1)-csist.rssi(2)) < 5; return; end 
+    %if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
 
-	[deltabk, deltab] = fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs)
-    %if abs(dk) > 0.1; return ; end
-    %if abs(dk) > 0.05; return ; end
+	[deltabk, deltab] = fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
+    %if abs(deltabk) > 0.1; return ; end
+    %if abs(deltabk) > 0.05; return ; end
 
 	r = true ;
 end
 
 function plot_cir(csist)
-	csist
 	cfr = squeeze(csist.scsi(:,1,:)) ;
 	cir = ifft(cfr, [], 2) ;
-	cir = cir(:, 1:100) ;
+	%cir = cir(:, 1:100) ;
 	dt = 1e9 / (csist.chan_width * 1e6) ; %ns
 	xs = (0:size(cir,2)-1)*dt ; 
 	[v, i] = max(abs(cir(1,:))) ;
-	[xs(i), xs(i)*0.3]
+	[111, xs(i), xs(i)*0.3]
 	%hold on ; plot(xs, abs(cir), ':o', 'LineWidth', 2) ;
+	figure(15);
 	hold off ; plot(xs, abs(cir(1,:)), ':o', 'LineWidth', 2) ;
 	hold on ; plot(xs, 20+abs(cir(2,:)), ':o', 'LineWidth', 2) ;
 	xlabel('Time(ns)');
@@ -432,9 +438,10 @@ function plot_mag(csist)
 
 	title(csist.chan_type_str);
 	figure(1); hold off;
-	ss = stones.';
-	plot(1:2*csist.nstone, abs(ss(:)), 'LineWidth',2) ; 
+	ss = tones.';
+	plot(1:2*length(ss), abs(ss(:)), 'LineWidth',2) ; 
 	return;
+
 	plot(subc.subcs, abs(stones(1,:)).', 'LineWidth',2) ; 
 	figure(1); hold on;
 	plot(subc.subcs, abs(stones(2,:)).', ':o', 'LineWidth',2) ; 
@@ -442,8 +449,7 @@ function plot_mag(csist)
 end
 
 
-function plot_phase_offset(csist, adjust)
-	if nargin < 2; adjust = false; end
+function plot_phase_offset(csist)
 	persistent phaseoffs
 	if isempty(phaseoffs); phaseoffs = [] ; end
 
@@ -453,12 +459,9 @@ function plot_phase_offset(csist, adjust)
 	avg_phaoff12 = mean(phaoff12);
     while avg_phaoff12 < -pi/2
         avg_phaoff12 = avg_phaoff12 + 2*pi;
-        phaoff12 = phaoff12 + 2*pi;
+        %phaoff12 = phaoff12 + 2*pi;
 	end
 	fprintf("* phaoff12 %f\n", mean(phaoff12))
-	if (adjust)
-	save("/tmp/init_phaoff12.mat", "phaoff12");
-	end
 	%phaseoffs(end+1) = mean(phaoff12) ;
 	%phaseoffs(end+1) = phaoff12(1) ;
 	phaseoffs(end+1,:) = phaoff12 ;
