@@ -33,7 +33,7 @@ make clean -C $dst_dir/injection/lorcon-old
 
 
 mkdir -p $dst_dir/csi
-netlink_files=(axcsi.cpp axcsi.h iwl_fw_api_rs.h Makefile)
+netlink_files=(axcsi.cpp axcsi.h iwl_fw_api_rs.h tcp_server.h Makefile)
 for f in ${netlink_files[@]}
 do
 	cp -rf $src_dir/csist/cpp/$f $dst_dir/csi/

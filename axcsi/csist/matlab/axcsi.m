@@ -24,7 +24,7 @@ methods (Access='public')
 			addr = strsplit(inputname,":") ;
 			self.ip = addr{1};
 			self.port = str2num(addr{2}) ;
-			self.sfd = tcpclient(self.ip, self.port, "Timeout",30) ;
+			self.sfd = tcpclient(self.ip, self.port, "Timeout",10) ;
 		else
 			self.fd = fopen(inputname, 'rb') ;
 			self.file_len = axcsi.get_file_len(self.fd) ;
@@ -207,9 +207,7 @@ function st = calib_csi_perm(st)
 	pw2 = sum(abs(st.csi(2,1,:))) ;
 	[dk, deltab, tones] = axcsi.fit_csi(st.scsi(2,1,:) .* conj(st.scsi(1,1,:)), st.subc.subcs);
 	if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
-	%if dk > 0
 		st.perm = [2,1] ;
-		st.perm
 		for i = 1:st.ntx
 			st.scsi(:,i,:) = st.scsi(st.perm,i,:) ;
 		end

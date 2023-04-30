@@ -3,9 +3,11 @@
 #define _TCP_SERVER_H_
 
 #include <unistd.h>
-#include <iostream>
 #include <sys/socket.h>
 #include <arpa/inet.h>
+#include <signal.h>
+
+#include <iostream>
 #include <cstring>
 #include <vector>
 #include <thread>
@@ -18,7 +20,7 @@ private:
     int socket_fd, accept_fd;
     sockaddr_in myserver;
     sockaddr_in remote_addr;
-    std::vector<int> clientfds ;
+    std::vector<int> clientfds, clientfds_adds ;
     std::thread wait_conn_thread ;
 
 public:
@@ -28,11 +30,25 @@ public:
 
 private:
     void wait_conn();
+
+    static bool sig_pipe_err;
+    static void sig_pipe(int signo)
+    {
+        tcp_server::sig_pipe_err = true;
+    }
+    static bool consume_sig_pipe_err() 
+    {
+        return sig_pipe_err ? (sig_pipe_err = false, true) : false;
+    }
 };
 
+bool tcp_server::sig_pipe_err = false;
 
 tcp_server::tcp_server(int listen_port)
 {
+    //signal(SIGPIPE, SIG_IGN);
+    signal(SIGPIPE, tcp_server::sig_pipe);
+
     if ((socket_fd = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
         throw "socket() failed";
@@ -76,8 +92,9 @@ void tcp_server::wait_conn()
                 throw "Accept error!";
                 continue;
             }
-            printf("Received a connection from %s\n", (char *)inet_ntoa(remote_addr.sin_addr));
-            this->clientfds.push_back(cfd) ;
+            printf("Received a connection from %s, sfd %d\n", 
+                (char *)inet_ntoa(remote_addr.sin_addr), cfd);
+            this->clientfds_adds.push_back(cfd) ;
         }
     }) ;
     //t.join() ;
@@ -85,22 +102,27 @@ void tcp_server::wait_conn()
 
 void tcp_server::broadcast(uint8_t *buf, size_t size) 
 {
-	int r ;
-    if (this->clientfds.empty())    return ;
-    for (auto &sfd : this->clientfds) {
-        if (sfd < 0)    continue ;
-        //printf("************ send sfd%d sz%d\n", sfd, size) ;
+    for (auto it = clientfds.begin(); it != clientfds.end();){
+        auto &sfd = *it ;
+        if (sfd < 0) continue ;
         try {
-            if ((r = send(sfd, buf, size, 0)) < 0) {
-                //printf("############# err send sfd%d sz%d\n", sfd, size) ;
-                std::cerr << "Error sending message to server" << std::endl;
+            if ((send(sfd, buf, size, 0) < 0) || tcp_server::consume_sig_pipe_err()) {
+                std::cerr << "* send msg err, sfd " << sfd << std::endl;
                 close(sfd) ;
-                sfd = -1 ;
+                sfd = -1;
+                it = clientfds.erase(it) ;
+                //getchar();
             }      
+            else ++ it ;
         }
         catch(const std::exception& e) {
             std::cerr << e.what() << '\n';
         }
+    }
+
+    if (!clientfds_adds.empty()) {
+        clientfds.insert(clientfds.end(), clientfds_adds.begin(), clientfds_adds.end());
+        clientfds_adds.clear(); 
     }
 }
 
