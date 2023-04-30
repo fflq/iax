@@ -65,7 +65,7 @@ if [ "$chtype" != "" ]; then
 	ant_a=$((1<<14)) ;
 	ant_b=$((1<<15)) ;
 	rnf=$((rnf | ant_a)) ;
-	rnf=$((rnf | ant_b)) ;
+	#rnf=$((rnf | ant_b)) ;
 	printf "%#x" $rnf ;
 fi
 
