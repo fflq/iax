@@ -3,6 +3,8 @@
 addpath('/home/flq/ws/git/SpotFi')
 addpath('/home/flq/ws/git/CSI/algorithm/iaa')
 
+handle_aoa_cdf(); return;
+
 inputname='../../data/ax210_split_40ht20.csi' ;
 inputname='/tmp/ax210_40ht20_k_0.csi';
 inputname='/tmp/a'; use_net = false;
@@ -11,6 +13,7 @@ inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
 inputname='/flqtmp/data/ax210_40ht20_air_10cm_same_rx.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40vht160_cir.csi'; use_net=false;
 inputname='192.168.1.10:7120'; use_net = true;
+inputname='/flqtmp/ax210_40ht20_-60.csi'; use_net=false;
 inputname='127.0.0.1:7120'; use_net = true;
 
 gn = 1 ;
@@ -48,10 +51,59 @@ function handle_csist_func(csist)
 	%plot_csi(csist.csi);
 	%plot_mag(csist) ;
 	%plot_phase(csist) ;
-	plot_phase_offset(csist) ;
+	%plot_phase_offset(csist) ;
 	%plot_cir(csist) ;
 	%save_calib(csist);
-	%do_aoa(csist) ;
+	do_aoa(csist) ;
+end
+
+function handle_aoa_cdf()
+	taoas = [0, 15, 30, 45, 60] ;
+	taoas = union(-taoas, taoas) ;
+	aoas = [] ;
+	ss = [] ;
+	calc_aoa = @do_iaa ;
+	calc_aoa = @do_spotfi ;
+
+	for i = 1:length(taoas)
+		taoa = taoas(i) ;
+		csi_file = ['/flqtmp/paper/aoa/ax210_40ht20_', num2str(taoa), '.csi']
+		sts = axcsi.read_axcsi_file(csi_file);
+		size(sts)
+		%ss = sts{1,100:end} 
+		%continue;
+
+		n = 0;
+		for j = 50:length(sts)-20
+			csist = sts{j} ;
+			if ~csi_filter(csist); fprintf("*** pass\n"); continue; end
+
+			csist = calib_scsi_by_file(csist) ;
+			%plot_phase_offset(csist) ;
+			aoa1 = calc_aoa(csist) ;
+			csist = calib_scsi_by_phaoff12(csist, pi) ; 
+			aoa2 = calc_aoa(csist) ;
+			%plot_aoa(aoa1, 11, false); plot_aoa(aoa2, 11, true); 
+			aoa = min(abs(aoa1-taoa), abs(aoa2-taoa));
+			if aoa > 60 %deg60has
+				[aoa1, aoa2, aoa]
+				csist
+				%continue;
+				%input('')
+			end
+			aoas(end+1) = aoa; 
+			n = n + 1;
+			if (n >= 100); break; end
+		end
+		ss(end+1) = n ;
+		figure(99); p=cdfplot(aoas); p.LineWidth=2;
+		xlim([0, 45]);
+
+		%input('')
+	end
+	save('/flqtmp/paper/aoa/aoa_cdf.mat', 'aoas');
+	ss
+
 end
 
 function save_calib(csist)
@@ -69,12 +121,12 @@ function save_calib(csist)
 		end
 end
 
-function do_aoa(csist)
+function [aoa1, aoa2] = do_aoa(csist)
 	persistent aoas;
 	calc_aoa = @do_spotfi ;
 	calc_aoa = @do_iaa ;
 
-    %csist = calib_scsi_by_delta(csist, 0.01, pi) ; 
+    %csist = calib_scsi_by_delta(csist, 0.0, 0.32) ; 
     csist = calib_scsi_by_file(csist) ;
 	plot_phase_offset(csist) ;
 	aoa1 = calc_aoa(csist) ;
@@ -82,7 +134,7 @@ function do_aoa(csist)
 	aoa2 = calc_aoa(csist) ;
 	plot_aoa(aoa1, 11, false); plot_aoa(aoa2, 11, true); 
 
-	truthaoa = 0 ;
+	truthaoa = -60 ;
 	aoas(end+1) = min(abs(aoa1-truthaoa), abs(aoa2-truthaoa));
 	if ~ mod(length(aoas), 50)
 		figure(99); p=cdfplot(abs(aoas(end-49:end))); p.LineWidth=2;
@@ -253,7 +305,7 @@ function csist = calib_scsi_by_file(csist)
 		savename = join(['/flqtmp/', csist.chan_type_str, 'phaoffs12.mat'], '')
 		phaoffs = load(savename).phaoffs.';
 		figure(29); plot(phaoffs);
-		fprintf("***** load phaoffs %f\n", mean(phaoffs)); pause;
+		fprintf("***** load phaoffs %f\n", mean(phaoffs)); %pause;
 	end
     csist = calib_scsi_by_phaoffs(csist, phaoffs);
 end

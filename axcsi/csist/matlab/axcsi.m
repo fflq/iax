@@ -190,7 +190,7 @@ function [k, b, tones] = fit_csi(tones, xs)
     z = polyfit(xs, uwphase, 1) ;
     k = z(1) ;
 	b = z(2) ;
-    fprintf("* k(%f) b(%f)\n", k, b) ;
+    %fprintf("* k(%f) b(%f)\n", k, b) ;
     pha = uwphase - k*xs;
     pha = uwphase - k*xs - b;
     pha = uwphase - b;
