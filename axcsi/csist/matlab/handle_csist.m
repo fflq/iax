@@ -3,18 +3,20 @@
 addpath('/home/flq/ws/git/SpotFi')
 addpath('/home/flq/ws/git/CSI/algorithm/iaa')
 
-handle_aoa_cdf(); return;
+%handle_aoa_cdf(); return;
 
-inputname='../../data/ax210_split_40ht20.csi' ;
-inputname='/tmp/ax210_40ht20_k_0.csi';
-inputname='/tmp/a'; use_net = false;
 inputname='/flqtmp/attack_5m_20spm_130-3400.csi'; use_net = false;
-inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
 inputname='/flqtmp/data/ax210_40ht20_air_10cm_same_rx.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40vht160_cir.csi'; use_net=false;
 inputname='192.168.1.10:7120'; use_net = true;
 inputname='/flqtmp/ax210_40ht20_-60.csi'; use_net=false;
 inputname='127.0.0.1:7120'; use_net = true;
+inputname='/flqtmp/paper/ax210_40he160_split.csi'; use_net = false;
+inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
+inputname='/tmp/a'; use_net = false;
+inputname='/flqtmp/mon2.csi'; use_net = false;
+inputname='/flqtmp/paper/ax210_40vht80_split.csi'; use_net = false;
+inputname='/flqtmp/paper/ax210_40ht40_split.csi'; use_net = false;
 
 gn = 1 ;
 ax = [] ;
@@ -24,19 +26,22 @@ while true
 			if use_net; ax = axcsi(inputname, true) ;
 			else; ax = axcsi(inputname) ; end
 		end
-		st = ax.read() 
+		st = ax.read() ;
 	catch ME
 		ME.identifier
 		ax = [] ;
 		fprintf("* ax reconn\n"); 
 		pause(5); continue;
 	end
-	if isempty(st); break ; end
+	if isempty(st); 
+		%stats_macs(st, true) ;
+		break ; 
+	end
 	handle_csist_func(st) ;
 	%input('')
 	if ~mod(gn, 50)
 		fprintf("******* gn %d\n", gn) ;
-		figure(3); close 3;
+		%figure(3); close 3;
 	end
 	gn = gn + 1;
 end
@@ -44,18 +49,20 @@ end
 
 function handle_csist_func(csist)
 	%csist 
-	if ~csi_filter(csist); fprintf("*** pass\n"); return; end
+	%if ~csi_filter(csist); fprintf("*** pass\n"); return; end
 
 	%csist = preprocess(csist) ;
 	%plot_attack(csist) ;
 	%plot_csi(csist.csi);
 	%plot_mag(csist) ;
 	%plot_phase(csist) ;
-	%plot_phase_offset(csist) ;
+	plot_phase_offset(csist) ;
 	%plot_cir(csist) ;
 	%save_calib(csist);
-	do_aoa(csist) ;
+	%do_aoa(csist) ;
+	%stats_macs(csist, false) ;
 end
+
 
 function handle_aoa_cdf()
 	taoas = [0, 15, 30, 45, 60] ;
@@ -472,9 +479,11 @@ function plot_mag(csist)
 	stones = squeeze(csist.scsi(:,1,:)) ;
 
 	title(csist.chan_type_str);
-	figure(1); hold off;
-	ss = tones.';
-	plot(1:2*length(ss), abs(ss(:)), 'LineWidth',2) ; 
+	figure(1); hold on;
+	ss = stones.';
+	plot(subc.subcs, abs(stones(1,:)).', 'LineWidth',2) ; 
+	%plot(1:length(ss(:)), abs(ss(:)), 'LineWidth',2) ; 
+	input('')
 	return;
 
 	plot(subc.subcs, abs(stones(1,:)).', 'LineWidth',2) ; 
@@ -494,7 +503,7 @@ function plot_phase_offset(csist)
 	avg_phaoff12 = mean(phaoff12);
     while avg_phaoff12 < -pi/2
         avg_phaoff12 = avg_phaoff12 + 2*pi;
-        %phaoff12 = phaoff12 + 2*pi;
+        phaoff12 = phaoff12 + 2*pi;
 	end
 	fprintf("* phaoff12 %f\n", mean(phaoff12))
 	%phaseoffs(end+1) = mean(phaoff12) ;
@@ -549,7 +558,7 @@ function stats_macs(st, print)
 		return ;
 	end
 
-	key = st.mac ;
+	key = st.smac ;
 	if any(strcmp(keys(map),key))
 		map(key) = map(key) + 1 ;
 	else
