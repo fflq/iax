@@ -21,10 +21,6 @@ methods (Static)
 	function r = get_noextra_subc(ntone, ntone_data_plot)
 		half_extra = int32((ntone - ntone_data_plot) / 2) ;
 		half = int32(ntone / 2);
-		ntone
-		ntone_data_plot
-		half
-		half_extra
 		r = union(1:half-half_extra, half+half_extra+1:ntone);
 	end
 
@@ -113,6 +109,7 @@ methods (Static)
 	function st = get_subc_vht160()
 		st = subcarry.gen_subc_common(250, [6:126, 130:250], ...
 			[25, 53, 89, 117, 139, 167, 203, 231], [0:5, 127:129]) ;
+			%[25, 53, 89, 117, 139, 167, 203, 231], [0:5]) ;
 	end
 
 
@@ -136,9 +133,9 @@ methods (Static)
 		%add extra zero mags
 		pilot_subcs = union(pilot_subcs, 12:16);
 
+		%[0:11,510:514]
 		st = subcarry.gen_subc_common(1012, [12:1012], pilot_subcs, [0:11]);
-			%[44,112,178,246,286,354,420,488,536,604,670,738,778,846,912,980], [1:11]) ;
-			st
+			%[44,112,178,246,286,354,420,488, 536,604,670,738,778,846,912,980], [1:11]) ;
 	end
 
 
