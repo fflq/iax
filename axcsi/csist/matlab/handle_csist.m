@@ -2,8 +2,12 @@
 %close all;
 addpath('/home/flq/ws/git/SpotFi')
 addpath('/home/flq/ws/git/CSI/algorithm/iaa')
+addpath('E:\GitCodes\CSI\algorithm\music')
+addpath('E:\GitCodes\SpotFi')
+addpath('E:\GitCodes\paper')
+addpath('E:\GitCodes\paper\aoa')
 
-%handle_aoa_cdf(); return;
+handle_aoa_cdf(); return;
 
 inputname='/flqtmp/attack_5m_20spm_130-3400.csi'; use_net = false;
 inputname='/flqtmp/data/ax210_40ht20_air_10cm_same_rx.csi'; use_net = false;
@@ -71,10 +75,11 @@ function handle_aoa_cdf()
 	ss = [] ;
 	calc_aoa = @do_iaa ;
 	calc_aoa = @do_spotfi ;
+	calc_aoa = @do_music ;
 
 	for i = 1:length(taoas)
 		taoa = taoas(i) ;
-		csi_file = ['/flqtmp/paper/aoa/ax210_40ht20_', num2str(taoa), '.csi']
+		csi_file = ['ax210_40ht20_', num2str(taoa), '.csi']
 		sts = axcsi.read_axcsi_file(csi_file);
 		size(sts)
 		%ss = sts{1,100:end} 
@@ -108,7 +113,8 @@ function handle_aoa_cdf()
 
 		%input('')
 	end
-	save('/flqtmp/paper/aoa/aoa_cdf.mat', 'aoas');
+	%save('/flqtmp/paper/aoa/aoa_cdf.mat', 'aoas');
+	save('aoa_cdf.mat', 'aoas');
 	ss
 
 end
@@ -217,7 +223,23 @@ function aoa = do_iaa(csist)
 	%plot_aoa(iaoa, 12);
 end
 
-function aoa = do_spotfi(csist)
+
+function aoa = do_music(csist)
+	aoa = do_spotfi(csist, true);
+	return;
+	envs = music_envs(2) ;
+	envs.nrx = csist.nrx ;
+	envs.ntx = csist.ntx ;
+	envs.ntone = csist.ntone ;
+	envs.subcs = csist.subc.subcs ;
+
+	aoa = music(squeeze(csist.scsi(:,1,:)), envs) 
+	return ;
+end
+
+
+function aoa = do_spotfi(csist, music)
+	if nargin < 2; music = false; end
 	envs = spotfi_envs() ;
 	envs.fc = 5.2e9 ;
 	envs.lambda = envs.c / envs.fc ;
@@ -226,11 +248,12 @@ function aoa = do_spotfi(csist)
 	envs.d = 0.026 ;
 	envs.nrx = csist.nrx ;
 	envs.ntx = csist.ntx ;
-	envs.ntone = csist.ntone ;
+	envs.ntone = csist.nstone ;
 	envs.ntone_sm = floor(envs.ntone/2) ;
 	envs.subc_idxs = csist.subc.subcs ;
 	%envs.pmufig = true;
 	envs.niter = 1 ;
+	envs.music = music ;
 
 	aoa = spotfi(squeeze(csist.scsi(:,1,:)), envs, -1) 
 	return ;
@@ -309,7 +332,8 @@ end
 function csist = calib_scsi_by_file(csist)
 	persistent phaoffs;
 	if isempty(phaoffs)
-		savename = join(['/flqtmp/', csist.chan_type_str, 'phaoffs12.mat'], '')
+		%savename = join(['/flqtmp/', csist.chan_type_str, 'phaoffs12.mat'], '')
+		savename = join([csist.chan_type_str, 'phaoffs12.mat'], '')
 		phaoffs = load(savename).phaoffs.';
 		figure(29); plot(phaoffs);
 		fprintf("***** load phaoffs %f\n", mean(phaoffs)); %pause;
