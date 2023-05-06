@@ -246,8 +246,10 @@ function st = calib_csi_subcs(st)
 	data_pilot_dc_tones = zeros(1, subc.subcs_len) ;
 
 	for irx = 1:st.nrx; for itx = 1:st.ntx; 
+		data_pilot_dc_tones = 0;
 		csi_data_pilot_tones = squeeze(csi(irx, itx, :)) ;
 		data_pilot_dc_tones(subc.idx_data_pilot_subcs) = csi_data_pilot_tones ; 
+		%figure(51);hold on; plot(subc.subcs, abs(data_pilot_dc_tones), '-o');
 
 		% for raw_csi, only data_tones valid
 		x = subc.idx_data_subcs ;

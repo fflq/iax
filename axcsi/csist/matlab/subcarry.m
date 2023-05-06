@@ -9,12 +9,14 @@ end
 	
 methods (Static)
 
+	%data+pilot should 484, but csi get 498
 	function r = get_vht160_noextra_subc(ntone)
 		r = subcarry.get_noextra_subc(ntone, 484);
 	end
 
+	%data+pilot should 1992, but csi get 2020
 	function r = get_he160_noextra_subc(ntone)
-		r = subcarry.get_noextra_subc(ntone, 2002);
+		r = subcarry.get_noextra_subc(ntone, 1992);
 	end
 
 	% extra subc is part dc
@@ -47,27 +49,27 @@ methods (Static)
 
 	% for st.data_pilot_dc_subcs = [-st.subcs_radius:st.subcs_radius] ;
 	% not csi_tones, it hasnt dc_tones
-	function st = gen_subc_common(subcs_radius, data_pilot_subcs, pilot_subcs, dc_subcs)
+	%function st = gen_subc_common(subcs_radius, data_pilot_subcs, pilot_subcs, dc_subcs)
+	function st = gen_subc_common(subcs_radius, pos_data_pilot_subcs, pos_pilot_subcs)
 		% __init__
 		st = struct() ;
-		st.subcs_radius = subcs_radius ;
-		st.data_pilot_subcs = data_pilot_subcs ;
-		st.pilot_subcs = pilot_subcs ;
-		st.dc_subcs = dc_subcs ;
-
-		st.subcs = [-st.subcs_radius:st.subcs_radius+subcarry.range_end] ;
-		st.subcs_len = length(st.subcs) ;
+		%st.subcs_radius = subcs_radius ;
+		%st.data_pilot_subcs = data_pilot_subcs ;
+		%st.pilot_subcs = pilot_subcs ;
+		%st.dc_subcs = dc_subcs ;
 
 		% preproc
-		st.data_pilot_subcs = union(-st.data_pilot_subcs, st.data_pilot_subcs) ;
+		st.subcs = [-subcs_radius:subcs_radius+subcarry.range_end] ;
+		st.data_pilot_subcs = union(-pos_data_pilot_subcs, pos_data_pilot_subcs) ;
 		st.csi_subcs = st.data_pilot_subcs ;
-		st.pilot_subcs = union(-st.pilot_subcs, st.pilot_subcs) ;
-		st.dc_subcs = union(-st.dc_subcs, st.dc_subcs) ;
+		st.pilot_subcs = union(-pos_pilot_subcs, pos_pilot_subcs) ;
 
+		st.dc_subcs = setdiff(st.subcs, st.data_pilot_subcs);
 		st.data_subcs = setdiff(st.data_pilot_subcs, st.pilot_subcs) ;
 		st.pilot_dc_subcs = union(st.pilot_subcs, st.dc_subcs) ;
 		st.data_pilot_dc_subcs = union(st.pilot_dc_subcs, st.data_subcs) ;
 
+		st.subcs_len = length(st.subcs) ;
 		st.subcs_nums = [length(st.dc_subcs), length(st.pilot_subcs), length(st.data_subcs), ... 
 			length(st.csi_subcs), length(st.data_pilot_dc_subcs)] ;
 
@@ -76,7 +78,7 @@ methods (Static)
 		end
 
 		% add offset
-		st.subcs_list_offset = st.subcs_radius + 1 ;
+		st.subcs_list_offset = subcs_radius + 1 ;
 		st.idx_data_subcs = st.data_subcs + st.subcs_list_offset ;
 		st.idx_data_pilot_subcs = st.data_pilot_subcs + st.subcs_list_offset ;
 		st.idx_pilot_dc_subcs = st.pilot_dc_subcs + st.subcs_list_offset ;
@@ -87,55 +89,50 @@ methods (Static)
 	% NOHT
 	function st = get_subc_noht20()
 		%st = subcarry.gen_subc_common(26, [1:26+subcarry.range_end], [7,21], [0]) ;
-		st = subcarry.gen_subc_common(26, [1:26], [7,21], [0]) ;
+		st = subcarry.gen_subc_common(26, [1:26], [7,21]) ;
 	end
 
 
 	% HT
 	function st = get_subc_ht20()
-		st = subcarry.gen_subc_common(28, [1:28], [7,21], [0]) ;
+		st = subcarry.gen_subc_common(28, [1:28], [7,21]) ;
 	end
 
 	function st = get_subc_ht40()
-		st = subcarry.gen_subc_common(58, [2:58], [11,25,53], [0,1]) ;
+		st = subcarry.gen_subc_common(58, [2:58], [11,25,53]) ;
 	end
 
 
 	% VHT
 	function st = get_subc_vht80()
-		st = subcarry.gen_subc_common(122, [2:122], [11,39,75,103], [0,1]) ;
+		st = subcarry.gen_subc_common(122, [2:122], [11,39,75,103]) ;
 	end
 
 	function st = get_subc_vht160()
-		st = subcarry.gen_subc_common(250, [6:126, 130:250], ...
-			[25, 53, 89, 117, 139, 167, 203, 231], [0:5, 127:129]) ;
-			%[25, 53, 89, 117, 139, 167, 203, 231], [0:5]) ;
+		pilot_subcs = [25, 53, 89, 117, 139, 167, 203, 231];
+		pilot_subcs = union(pilot_subcs, [190:194]); %self add
+		st = subcarry.gen_subc_common(250, [6:126, 130:250], pilot_subcs);
 	end
 
 
 	% HE
 	function st = get_subc_he20()
-		st = subcarry.gen_subc_common(122, [2:122], [22,48,90,116], [0,1]) ;
+		st = subcarry.gen_subc_common(122, [2:122], [22,48,90,116]) ;
 	end
 
 	function st = get_subc_he40()
-		st = subcarry.gen_subc_common(244, [3:244], [10,36,78,104,144,170,212,238], [0:2]) ;
+		st = subcarry.gen_subc_common(244, [3:244], [10,36,78,104,144,170,212,238]) ;
 	end
 
 	function st = get_subc_he80()
-		st = subcarry.gen_subc_common(500, [3:500], [24,92,158,226,266,334,400,468], [0:2]) ;
+		st = subcarry.gen_subc_common(500, [3:500], [24,92,158,226,266,334,400,468]) ;
 	end
 
 	function st = get_subc_he160()
+		%pilot_subcs = [44,112,178,246,286,354,420,488, 536,604,670,738,778,846,912,980];
 		pilot_subcs = subcarry.get_subc_he80().pilot_subcs + 512; % from 80211ax doc
-		%from mag pic
-		pilot_subcs(1:8) = pilot_subcs(1:8) + 5;
-		%add extra zero mags
-		pilot_subcs = union(pilot_subcs, 12:16);
-
-		%[0:11,510:514]
-		st = subcarry.gen_subc_common(1012, [12:1012], pilot_subcs, [0:11]);
-			%[44,112,178,246,286,354,420,488, 536,604,670,738,778,846,912,980], [1:11]) ;
+		pilot_subcs = union(pilot_subcs, [766:770]); %self add
+		st = subcarry.gen_subc_common(1012, [12:509, 515:1012], pilot_subcs);
 	end
 
 
