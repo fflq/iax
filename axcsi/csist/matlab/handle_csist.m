@@ -7,30 +7,31 @@ addpath('E:\GitCodes\SpotFi')
 addpath('E:\GitCodes\paper')
 addpath('E:\GitCodes\paper\aoa')
 
-handle_aoa_cdf(); return;
 
 inputname='/flqtmp/attack_5m_20spm_130-3400.csi'; use_net = false;
 inputname='/flqtmp/data/ax210_40ht20_air_10cm_same_rx.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40vht160_cir.csi'; use_net=false;
 inputname='192.168.1.10:7120'; use_net = true;
 inputname='/flqtmp/ax210_40ht20_-60.csi'; use_net=false;
-inputname='127.0.0.1:7120'; use_net = true;
-inputname='/flqtmp/paper/ax210_40he160_split.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
 inputname='/tmp/a'; use_net = false;
 inputname='/flqtmp/mon2.csi'; use_net = false;
-inputname='/flqtmp/paper/ax210_40vht80_split.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40ht40_split.csi'; use_net = false;
+inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
+inputname='/flqtmp/paper/ax210_40he160_split.csi'; use_net = false;
+inputname='127.0.0.1:7120'; use_net = true;
+
+%handle_aoa_cdf(); return;
 
 gn = 1 ;
 ax = [] ;
 while true
-	try
 		if isempty(ax)
 			if use_net; ax = axcsi(inputname, true) ;
 			else; ax = axcsi(inputname) ; end
 		end
 		st = ax.read() ;
+	try
 	catch ME
 		ME.identifier
 		ax = [] ;
@@ -58,9 +59,9 @@ function handle_csist_func(csist)
 	%csist = preprocess(csist) ;
 	%plot_attack(csist) ;
 	%plot_csi(csist.csi);
-	%plot_mag(csist) ;
+	plot_mag(csist) ;
 	%plot_phase(csist) ;
-	plot_phase_offset(csist) ;
+	%plot_phase_offset(csist) ;
 	%plot_cir(csist) ;
 	%save_calib(csist);
 	%do_aoa(csist) ;
@@ -504,10 +505,9 @@ function plot_mag(csist)
 
 	title(csist.chan_type_str);
 	figure(1); hold on;
-	ss = stones.';
-	plot(subc.subcs, abs(stones(1,:)).', 'LineWidth',2) ; 
-	%plot(1:length(ss(:)), abs(ss(:)), 'LineWidth',2) ; 
-	input('')
+	%plot((1:csist.ntone)-csist.ntone/2, abs(tones.')-100, '-o', 'LineWidth',2) ; 
+	plot(subc.subcs, abs(stones.'), '-o', 'LineWidth',2) ; 
+	%input('')
 	return;
 
 	plot(subc.subcs, abs(stones(1,:)).', 'LineWidth',2) ; 
