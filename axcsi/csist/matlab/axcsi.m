@@ -195,10 +195,11 @@ methods (Static)
 		k = z(1) ;
 		b = z(2) ;
 		%fprintf("* k(%f) b(%f)\n", k, b) ;
-		pha = uwphase - k*xs;
-		pha = uwphase - k*xs - b;
-		pha = uwphase - b;
-		%sns.lineplot(x=xs, y=pha)
+		%pha = uwphase - k*xs - b;
+		%pha = uwphase - b;
+		pha = uwphase - k*xs*0.2;
+		%plot(xs, pha); hold on;
+		%plot(xs, uwphase, ':o'); hold on;
 		tones = mag.*exp(1j*pha);
 	end
 
@@ -210,8 +211,11 @@ methods (Static)
 		st.perm = [1,2] ;
 		pw1 = sum(abs(st.csi(1,1,:))) ;
 		pw2 = sum(abs(st.csi(2,1,:))) ;
+		[a,b,st.scsi(1,1,:)] = axcsi.fit_csi(st.scsi(1,1,:), st.subc.subcs) ;
+		[a,b,st.scsi(2,1,:)] = axcsi.fit_csi(st.scsi(2,1,:), st.subc.subcs) ;
 		[dk, deltab, tones] = axcsi.fit_csi(st.scsi(2,1,:) .* conj(st.scsi(1,1,:)), st.subc.subcs);
-		if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
+		%if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
+		if mod(st.us, 3)
 			st.perm = [2,1] ;
 			for i = 1:st.ntx
 				st.scsi(:,i,:) = st.scsi(st.perm,i,:) ;
