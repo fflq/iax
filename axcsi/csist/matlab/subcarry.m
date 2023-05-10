@@ -28,6 +28,7 @@ methods (Static)
 
 
 	function subc = get_subc(chan_type_str)
+		chan_type_str = upper(chan_type_str);
 		switch(chan_type_str)
 			case "NOHT20"; subc = subcarry.get_subc_noht20() ;
 
