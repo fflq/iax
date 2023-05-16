@@ -214,8 +214,8 @@ methods (Static)
 		[a,b,st.scsi(1,1,:)] = axcsi.fit_csi(st.scsi(1,1,:), st.subc.subcs) ;
 		[a,b,st.scsi(2,1,:)] = axcsi.fit_csi(st.scsi(2,1,:), st.subc.subcs) ;
 		[dk, deltab, tones] = axcsi.fit_csi(st.scsi(2,1,:) .* conj(st.scsi(1,1,:)), st.subc.subcs);
-		%if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
-		if mod(st.us, 3)
+		if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
+		%if mod(st.us, 3)
 			st.perm = [2,1] ;
 			for i = 1:st.ntx
 				st.scsi(:,i,:) = st.scsi(st.perm,i,:) ;
