@@ -22,7 +22,7 @@ methods (Access='public')
 			addr = strsplit(inputname,":") ;
 			self.ip = addr{1};
 			self.port = str2num(addr{2}) ;
-			self.sfd = tcpclient(self.ip, self.port, "Timeout",10) ;
+			self.sfd = tcpclient(self.ip, self.port, "Timeout",5) ;
 		else
 			self.is_net = false;
 			self.fd = fopen(inputname, 'rb') ;
@@ -37,6 +37,18 @@ methods (Access='public')
 		else 
 			st = axcsi.read_file_once(self.fd) ;
 		end
+	end
+
+	function r = test(self)
+		r = true ;
+		if (self.is_net)
+			try
+				write(self.sfd, [0]) ;
+			catch ME
+				r = false ;
+			end
+		end
+
 	end
 
 end
