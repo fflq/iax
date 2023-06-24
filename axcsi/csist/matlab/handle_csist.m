@@ -1,5 +1,6 @@
-%clear all;
-%close all;
+clear all;
+close all;
+
 addpath('/home/flq/ws/git/SpotFi')
 addpath('/home/flq/ws/git/CSI/algorithm/iaa')
 addpath('E:\GitCodes\CSI\algorithm\music')
@@ -26,26 +27,22 @@ inputname='127.0.0.1:7120'; use_net = true;
 gn = 1 ;
 ax = [] ;
 while true
-		if isempty(ax)
-			if use_net; ax = axcsi(inputname, true) ;
-			else; ax = axcsi(inputname) ; end
-		end
-		st = ax.read() ;
 	try
+		if isempty(ax); ax = axcsi(inputname) ; end
+		st = ax.read() ;
 	catch ME
 		ME.identifier
-		ax = [] ;
-		fprintf("* ax reconn\n"); 
-		pause(5); continue;
+		if isempty(ax) || ax.test()
+			fprintf("* wait conn/read\n") ;
+		else
+			fprintf("* reconn\n"); ax = [] ;
+		end
+		pause(3); continue;
 	end
-	if isempty(st); 
-		%stats_macs(st, true) ;
-		break ; 
-	end
+
 	handle_csist_func(st) ;
-	%input('')
-	if ~mod(gn, 50)
-		fprintf("******* gn %d\n", gn) ;
+	if ~mod(gn, 100)
+		fprintf("*** gn %d\n", gn) ;
 		%figure(3); close 3;
 	end
 	gn = gn + 1;
@@ -59,13 +56,35 @@ function handle_csist_func(csist)
 	%csist = preprocess(csist) ;
 	%plot_attack(csist) ;
 	%plot_csi(csist.csi);
-	plot_mag(csist) ;
+	%plot_mag(csist) ;
 	%plot_phase(csist) ;
 	%plot_phase_offset(csist) ;
 	%plot_cir(csist) ;
 	%save_calib(csist);
 	%do_aoa(csist) ;
 	%stats_macs(csist, false) ;
+	plot_breath(csist) ;
+end
+
+
+function plot_breath(csist)
+	persistent h x;
+	if isempty(h)
+		h = animatedline ;
+		h.LineWidth = 2;
+		h.LineStyle = '-' ;
+		h.Color = '#0072BD'	;
+		h.Marker = 'o' ;
+		x = 0;
+	end
+
+	s = mean(abs(squeeze(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:))))) ;
+	addpoints(h, x, s) ;
+	x = x + 1;
+	xlim([x-180, x+20]);
+	ylim([1, 4]*1e4);
+	%ylim([-1, 5]*1e4);
+	pause(0.01) ;
 end
 
 
@@ -454,7 +473,7 @@ function r = csi_filter(csist)
 	[pw1, pw2]
 	%pw1_sum = pw1_sum + pw1 ; pw2_sum = pw2_sum + pw2 ;
 	%[pw1_sum, pw2_sum]
-    if (abs(pw1-pw2)/pw2 < 0.2); return; end
+    if (abs(pw1-pw2)/min(pw1,pw2) < 0.2); return; end
     if abs(csist.rssi(1)-csist.rssi(2)) < 3; return; end 
     if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
 
