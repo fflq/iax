@@ -26,6 +26,10 @@
 #include "calib.h"
 #include "agn.h"
 
+//fflqb_csi_53
+#include "connector.h"
+//fflqe_csi_53
+
 /******************************************************************************
  *
  * Generic RX handler implementations
@@ -551,6 +555,13 @@ static void iwlagn_rx_reply_rx_phy(struct iwl_priv *priv,
 	priv->ampdu_ref++;
 	memcpy(&priv->last_phy_res, pkt->data,
 	       sizeof(struct iwl_rx_phy_res));
+
+	//fflqb_csi_53
+	//printk(KERN_ERR "********** %s %d", __func__, __LINE__) ;
+	struct iwl_rx_phy_res *rx_phy_res = (void *)pkt->data;
+	memcpy(&priv->last_cfg_phy_buf, rx_phy_res->cfg_phy_buf,
+			rx_phy_res->cfg_phy_cnt * sizeof(u32));
+	//fflqe_csi_53
 }
 
 /*
@@ -814,11 +825,26 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv,
 	ampdu_status = iwlagn_translate_rx_status(priv,
 						  le32_to_cpu(rx_pkt_status));
 
+	//fflqb_csi_53
+	//printk(KERN_ERR "********** %s %d %d", __func__, __LINE__, priv->connector_log) ;
+	if (priv->connector_log & IWL_CONN_RX_MPDU_MSK) {
+		//IWL_ERR(priv, "*** fflq dvm %s, send_msg rx_mpdu %d\n", __func__, IWL_CONN_RX_MPDU) ;
+		connector_send_msg((void *)header, len, IWL_CONN_RX_MPDU);
+	}
+
+	/*
 	if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
 		IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",
 				phy_res->cfg_phy_cnt);
-		return;
+		return ;
 	}
+	*/
+	if ((unlikely(phy_res->cfg_phy_cnt > IWLAGN_MAX_CFG_PHY_CNT))) {
+		IWL_DEBUG_DROP(priv, "dsp size out of range [0,%d]: %d\n",
+				IWLAGN_MAX_CFG_PHY_CNT, phy_res->cfg_phy_cnt);
+		return ;
+	}
+	//fflqe_csi_53
 
 	if (!(rx_pkt_status & RX_RES_STATUS_NO_CRC32_ERROR) ||
 	    !(rx_pkt_status & RX_RES_STATUS_NO_RXE_OVERFLOW)) {
@@ -986,6 +1012,11 @@ void iwl_setup_rx_handlers(struct iwl_priv *priv)
 	/* block ack */
 	handlers[REPLY_COMPRESSED_BA]		=
 		iwlagn_rx_reply_compressed_ba;
+
+	//fflqb_csi_53
+	/* Beamforming */
+	handlers[REPLY_BFEE_NOTIFICATION] = iwlagn_bfee_notif;
+	//fflqe_csi_53
 
 	priv->rx_handlers[REPLY_TX] = iwlagn_rx_reply_tx;
 

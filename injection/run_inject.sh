@@ -1,6 +1,6 @@
 #!/usr/bin/sudo /bin/bash
 
-wlan=inj0
+wlan=mon0
 npac=20
 nintv=500000
 if [ $# -ge 1 ]; then

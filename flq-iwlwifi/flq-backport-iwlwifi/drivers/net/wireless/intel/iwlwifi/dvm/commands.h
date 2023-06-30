@@ -14,6 +14,9 @@
 #include <linux/ieee80211.h>
 #include <linux/types.h>
 
+//fflqb_csi_53 handle conflict with fw/api/tx.h
+#include "fw/api/tx.h"
+//fflqe_csi_53
 
 enum {
 	REPLY_ALIVE = 0x1,
@@ -128,6 +131,13 @@ enum {
 	REPLY_WOWLAN_KEK_KCK_MATERIAL = 0xe4,
 	REPLY_WOWLAN_GET_STATUS = 0xe5,
 	REPLY_D3_CONFIG = 0xd3,
+
+	//fflqb_csi_53
+	/* Beamforming */
+	REPLY_BFEE_NOTIFICATION = 0xbb,
+	/* Gets metadata for Beamforming */
+	DSP_DEBUG_CMD = 0xf1,
+	//fflqe_csi_53
 
 	REPLY_MAX = 0xff
 };
@@ -515,6 +525,12 @@ enum {
 #define RXON_FLG_CHANNEL_MODE_PURE_40	cpu_to_le32(CHANNEL_MODE_PURE_40 << RXON_FLG_CHANNEL_MODE_POS)
 #define RXON_FLG_CHANNEL_MODE_MIXED	cpu_to_le32(CHANNEL_MODE_MIXED << RXON_FLG_CHANNEL_MODE_POS)
 
+//fflqb_csi_53
+/* Beamforming */
+#define RXON_FLG_BF_ENABLE_POS			(29)
+#define RXON_FLG_BF_ENABLE_MSK			cpu_to_le32(0x1<<29)
+//fflqe_csi_53
+
 /* CTS to self (if spec allows) flag */
 #define RXON_FLG_SELF_CTS_EN			cpu_to_le32(0x1<<30)
 
@@ -726,6 +742,11 @@ struct iwl_qosparam_cmd {
 #define	IWL_AP_ID		0
 #define	IWL_AP_ID_PAN		1
 #define	IWL_STA_ID		2
+
+//fflqb_csi_53
+#define IWLAGN_MONITOR_ID	13
+//fflqe_csi_53
+
 #define IWLAGN_PAN_BCAST_ID	14
 #define IWLAGN_BROADCAST_ID	15
 #define	IWLAGN_STATION_COUNT	16
@@ -1034,6 +1055,10 @@ struct iwl_wep_cmd {
 #define IWLAGN_OFDM_RSSI_ALLBAND_C_BITMSK 0xff00
 #define IWLAGN_OFDM_RSSI_C_BIT_POS 0
 
+//fflqb_csi_53
+#define IWLAGN_MAX_CFG_PHY_CNT 20
+//fflqe_csi_53
+
 struct iwlagn_non_cfg_phy {
 	__le32 non_cfg_phy[IWLAGN_RX_RES_PHY_CNT];  /* up to 8 phy entries */
 } __packed;
@@ -1056,6 +1081,10 @@ struct iwl_rx_phy_res {
 	__le32 rate_n_flags;	/* RATE_MCS_* */
 	__le16 byte_count;	/* frame's byte-count */
 	__le16 frame_time;	/* frame's time on the air */
+
+	//fflqb_csi_53
+	u8 cfg_phy_buf[0];	/* The values requested via DSP_DEBUG */
+	//fflqe_csi_53
 } __packed;
 
 struct iwl_rx_mpdu_res_start {
@@ -1176,6 +1205,8 @@ struct iwl_dram_scratch {
 	__le16 reserved;
 } __packed;
 
+//fflqb_csi_53 has def in fw/api/tx.h
+#if 0
 struct iwl_tx_cmd {
 	/*
 	 * MPDU byte count:
@@ -1290,6 +1321,14 @@ enum {
 	TX_STATUS_FAIL_PASSIVE_NO_RX = 0x90,
 	TX_STATUS_FAIL_NO_BEACON_ON_RADAR = 0x91,
 };
+#endif
+enum {
+	TX_STATUS_FAIL_FIFO_UNDERRUN = 0x84,
+	TX_STATUS_FAIL_INSUFFICIENT_CF_POLL = 0x8f,
+	TX_STATUS_FAIL_PASSIVE_NO_RX = 0x90,
+	TX_STATUS_FAIL_NO_BEACON_ON_RADAR = 0x91,
+};
+//fflqe_csi_53
 
 #define	TX_PACKET_MODE_REGULAR		0x0000
 #define	TX_PACKET_MODE_BURST_SEQ	0x0100
@@ -1299,6 +1338,8 @@ enum {
 	TX_POWER_PA_NOT_ACTIVE = 0x0,
 };
 
+//fflqb_csi_53 has def in fw/api/tx.h
+#if 0
 enum {
 	TX_STATUS_MSK = 0x000000ff,		/* bits 0:7 */
 	TX_STATUS_DELAY_MSK = 0x00000040,
@@ -1309,13 +1350,15 @@ enum {
 	TX_POWER_PA_DETECT_MSK = 0x7f800000,	/* bits 23:30 */
 	TX_ABORT_REQUIRED_MSK = 0x80000000,	/* bits 31:31 */
 };
+#endif
+//fflqe_csi_53
 
 /* *******************************
  * TX aggregation status
  ******************************* */
 
 enum {
-	AGG_TX_STATE_TRANSMITTED = 0x00,
+	//AGG_TX_STATE_TRANSMITTED = 0x00,
 	AGG_TX_STATE_UNDERRUN_MSK = 0x01,
 	AGG_TX_STATE_BT_PRIO_MSK = 0x02,
 	AGG_TX_STATE_FEW_BYTES_MSK = 0x04,
@@ -1346,6 +1389,8 @@ enum {
 #define AGG_TX_STATE_SEQ_NUM_POS 16
 #define AGG_TX_STATE_SEQ_NUM_MSK 0xffff0000
 
+//fflqb_csi_53
+#if 0
 /*
  * REPLY_TX = 0x1c (response)
  *
@@ -1372,6 +1417,8 @@ struct agg_tx_status {
 	__le16 status;
 	__le16 sequence;
 } __packed;
+#endif
+//fflqe_csi_53
 
 /* refer to ra_tid */
 #define IWLAGN_TX_RES_TID_POS	0
@@ -3829,6 +3876,69 @@ struct iwlagn_wowlan_status {
 	union iwlagn_all_tsc_rsc tsc_rsc;
 	__le16 reserved3;
 } __packed;
+
+//fflqb_csi_53
+/******************************************************************************
+ * (14)
+ * Beamforming commands
+ *
+ *****************************************************************************/
+
+/*
+ * REPLY_BFEE_NOTIFICATION = 0xbb
+ *
+ */
+struct iwl_bfee_notif {
+	__le32 timestamp_low;
+	__le16 bfee_count;
+	__le16 reserved1;
+	u8 Nrx, Ntx;
+	u8 rssiA, rssiB, rssiC;
+	s8 noise;
+	u8 agc, antenna_sel;
+	__le16 len;
+	__le16 fake_rate_n_flags;
+	//fflq
+#ifdef FLQ_DEVFN
+	//u8 dev_name[12+1] ;
+	u8 devfn ;
+#endif
+	u8 payload[0];
+} __attribute__ ((packed));
+
+/******************************************************************************
+ * (15)
+ * DSP debug interface
+ *
+ *****************************************************************************/
+
+/* DSP debugging */
+#define DSP_DEBUG_CCK_MSK		(0x1)
+#define DSP_DEBUG_OFDM_MSK		(0x0)
+/* MIB values */
+#define OFDM_RX_ANT_OUT			0x4302
+
+/*
+ * DSP_DEBUG_CMD = 0xf1
+ *
+ */
+struct iwl5000_dsp_debug {
+	u8 mib_cnt;
+	u8 flags;
+	u8 stat_id;
+	u8 reserved;
+	u16 mib_indices[0];
+} __attribute__ ((packed));
+
+/* For rotate rates */
+#define ROTATE_SISO	1
+#define ROTATE_MIMO2	2
+#define ROTATE_MIMO3	4
+#define ROTATE_TX_SEL	8
+#define ROTATE_HT40	16
+#define ROTATE_SGI	32
+#define ROTATE_SKIP	64
+//fflqe_csi_53
 
 /*
  * REPLY_WIPAN_PARAMS = 0xb2 (Commands and Notification)

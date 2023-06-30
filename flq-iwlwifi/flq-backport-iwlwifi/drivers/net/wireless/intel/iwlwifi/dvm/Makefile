@@ -13,7 +13,7 @@ iwldvm-$(CONFIG_IWLWIFI_DEBUGFS) += debugfs.o
 
 #fflqb
 #ccflags-y += -I $(srctree)/$(src)/../
-#iwldvm-y += flq-iwl-eeprom-parse.o
+iwldvm-y += connector.o
 ccflags-y += -I$(src)/../
 #fflqe
 

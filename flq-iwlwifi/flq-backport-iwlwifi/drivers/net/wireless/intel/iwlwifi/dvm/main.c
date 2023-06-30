@@ -32,7 +32,6 @@
 
 #include "iwl-eeprom-read.h"
 #include "iwl-eeprom-parse.h"
-//#include "flq-iwl-eeprom-parse.h"
 #include "iwl-io.h"
 #include "iwl-trans.h"
 #include "iwl-op-mode.h"
@@ -44,6 +43,9 @@
 #include "calib.h"
 #include "agn.h"
 
+//fflqb_csi_53
+#include "connector.h"
+//fflqe_csi_53
 
 /******************************************************************************
  *
@@ -631,7 +633,10 @@ static void iwl_init_context(struct iwl_priv *priv, u32 ucode_flags)
 	priv->contexts[IWL_RXON_CTX_BSS].exclusive_interface_modes =
 		BIT(NL80211_IFTYPE_ADHOC) | BIT(NL80211_IFTYPE_MONITOR);
 	priv->contexts[IWL_RXON_CTX_BSS].interface_modes =
-		BIT(NL80211_IFTYPE_STATION);
+	//fflqb_csi_53
+		//BIT(NL80211_IFTYPE_STATION);
+		BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_AP);
+	//fflqe_csi_53
 	priv->contexts[IWL_RXON_CTX_BSS].ap_devtype = RXON_DEV_TYPE_AP;
 	priv->contexts[IWL_RXON_CTX_BSS].ibss_devtype = RXON_DEV_TYPE_IBSS;
 	priv->contexts[IWL_RXON_CTX_BSS].station_devtype = RXON_DEV_TYPE_ESS;
@@ -864,6 +869,10 @@ int iwl_alive_start(struct iwl_priv *priv)
 
 	/* At this point, the NIC is initialized and operational */
 	iwl_rf_kill_ct_config(priv);
+
+	//fflqb_csi_53
+	iwl_connector_set_priv(priv) ;
+	//fflqe_csi_53
 
 	IWL_DEBUG_INFO(priv, "ALIVE processing complete.\n");
 
@@ -1116,6 +1125,19 @@ static int iwl_init_drv(struct iwl_priv *priv)
 	priv->agg_tids_count = 0;
 
 	priv->rx_statistics_jiffies = jiffies;
+
+	//fflqb_csi_53
+	/* Dan's parameters */
+	priv->connector_log = iwlwifi_mod_params.connector_log;
+	//IWL_ERR(priv, "*** fflq c_log %d\n", priv->connector_log) ;
+	priv->bf_enabled = 1;		/* Enabled */
+	priv->rotate_rates = 0;		/* Disabled */
+	priv->last_rotate_rate = 0;	/* Disabled */
+	priv->rotate_rate_total = 0;	/* Disabled */
+	priv->rotate_rate_array = NULL;	/* Disabled */
+	priv->monitor_tx_rate = 0;	/* Disabled */
+	priv->bcast_tx_rate = 0;	/* Disabled */
+	//fflqe_csi_53
 
 	/* Choose which receivers/antennas to use */
 	iwlagn_set_rxon_chain(priv, &priv->contexts[IWL_RXON_CTX_BSS]);
@@ -2163,6 +2185,14 @@ static int __init iwl_init(void)
 		iwlagn_rate_control_unregister();
 	}
 
+	//fflqb_csi_53
+	ret = iwlagn_register_connector();
+	if (ret) {
+		pr_err("Unable to initialize connector: %d\n", ret);
+		iwlagn_unregister_connector();
+	}
+	//fflqe_csi_53
+
 	return ret;
 }
 module_init(iwl_init);
@@ -2171,5 +2201,9 @@ static void __exit iwl_exit(void)
 {
 	iwl_opmode_deregister("iwldvm");
 	iwlagn_rate_control_unregister();
+
+	//fflqb_csi_53
+	iwlagn_unregister_connector();
+	//fflqe_csi_53
 }
 module_exit(iwl_exit);

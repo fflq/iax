@@ -54,13 +54,13 @@ int main(int argc, char** argv)
 
 	/* Parse arguments */
 	if (argc > 6) {
-		printf("Usage: random_packets <number> <length> <mode: 0=my MAC, 1=injection MAC> <delay in us>\n");
+		printf("Usage: random_packets <number> <length> <mode: 0=my MAC, 1=injection MAC> <delay in us> <wlan>\n");
 		return 1;
 	}
 	//fflq
 	if (argc > 5) {
 		mon = argv[5] ;
-		printf("* set inj %s\n", mon) ;
+		printf("* set mon %s\n", mon) ;
 	}
 	if (argc < 5 || (1 != sscanf(argv[4], "%u", &delay_us))) {
 		delay_us = 0;

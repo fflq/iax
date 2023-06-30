@@ -59,6 +59,9 @@ config IWLDVM
 	tristate "Intel Wireless WiFi DVM Firmware support"
 	depends on m
 	depends on MAC80211
+	#fflqb_csi_53
+	depends on CONNECTOR
+	#fflqe_csi_53
 	help
 	  This is the driver that supports the DVM firmware. The list
 	  of the devices that use this firmware is available here:

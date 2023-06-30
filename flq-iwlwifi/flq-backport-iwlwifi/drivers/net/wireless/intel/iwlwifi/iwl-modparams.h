@@ -93,6 +93,10 @@ struct iwl_mod_params {
 	u32 enable_ini;
 	bool disable_11be;
 
+	//fflqb_csi_53
+	// @connector_log: which connector messages, default = 0
+	int connector_log;
+	//fflqe_csi_53
 };
 
 static inline bool iwl_enable_rx_ampdu(void)

@@ -890,6 +890,25 @@ struct iwl_priv {
 
 	/* indicator of loaded ucode image */
 	enum iwl_ucode_type cur_ucode;
+
+	//fflqb_csi_53
+	u8 last_cfg_phy_buf[IWLAGN_MAX_CFG_PHY_CNT*sizeof(u32)];
+		
+	u32 connector_log;
+	int last_rx_noise;
+	s8 last_rx_noiseA;
+	s8 last_rx_noiseB;
+	s8 last_rx_noiseC;
+	bool bf_enabled;
+	u32 monitor_tx_rate;
+	u32 bcast_tx_rate;
+
+	/* Setup for rotating rates */
+	u32 rotate_rates;
+	u32 last_rotate_rate;
+	u32 rotate_rate_total;
+	u32 *rotate_rate_array;
+	//fflqe_csi_53
 }; /*iwl_priv */
 
 static inline struct iwl_rxon_context *

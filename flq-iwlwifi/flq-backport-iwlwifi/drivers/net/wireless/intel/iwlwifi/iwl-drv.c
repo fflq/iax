@@ -2374,3 +2374,9 @@ MODULE_PARM_DESC(remove_when_gone,
 module_param_named(disable_11be, iwlwifi_mod_params.disable_11be, bool, 0444);
 MODULE_PARM_DESC(disable_11be, "Disable EHT capabilities (default: false)");
 
+//fflqb_csi_53
+module_param_named(connector_log, iwlwifi_mod_params.connector_log, int,
+		S_IRUGO);
+MODULE_PARM_DESC(connector_log,
+		"set connector log mask (default 0 [nothing])");
+//fflqe_csi_53

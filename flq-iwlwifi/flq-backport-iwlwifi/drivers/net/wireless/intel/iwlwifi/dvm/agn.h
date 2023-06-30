@@ -412,4 +412,20 @@ do {									\
 } while (0)
 #endif				/* CONFIG_IWLWIFI_DEBUG */
 
+//fflqb_csi_53
+/*fflqkey diff from kernel42
+int iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+		      struct iwl_device_cmd *cmd);
+*/
+void iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb);
+
+extern const u8 iwl_monitor_addr[ETH_ALEN];
+static inline bool is_monitor_ether_addr(const u8 *addr)
+{
+	if (WARN_ON(addr == NULL))
+		return 0;
+	return !memcmp(addr, iwl_monitor_addr, ETH_ALEN);
+}
+//fflqe_csi_53
+
 #endif /* __iwl_agn_h__ */
