@@ -1,0 +1,618 @@
+➜  flq-backport-iwlwifi sudo make -j4
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/compat/main.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/core.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/main.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/main.o
+  LD [M]  /home/flq/Tmp/flq-backport-iwlwifi/compat/compat.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/fw.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/core.c:32:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/main.c:29:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rs.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/sysfs.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/status.o
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c: In function ‘iwl_mvm_start_ap_ibss_common’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c:2945:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 2945 |  struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+      |  ^~~~~~
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c: In function ‘iwl_mvm_start_ap_ibss’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/mac80211.c:2987:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 2987 |  struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
+      |  ^~~~~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/sysfs.c:19:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/radiotap.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rate.h:18,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/status.c:16:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c:38:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c: In function ‘iwlagn_mac_sta_remove’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/agn.h:411:29: warning: passing argument 3 of ‘__iwl_err’ makes pointer from integer without a cast [-Wint-conversion]
+  411 |   __iwl_err((m)->dev, true, true, fmt, ##args); \
+      |                             ^~~~
+      |                             |
+      |                             int
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c:832:4: note: in expansion of macro ‘IWL_DEBUG_QUIET_RFKILL’
+  832 |    IWL_DEBUG_QUIET_RFKILL(priv,
+      |    ^~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/../iwl-trans.h:15,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/../iwl-devtrace.h:13,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/../iwl-io.h:8,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/mac80211.c:31:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/../iwl-debug.h:33:72: note: expected ‘const char *’ but argument is of type ‘int’
+   33 | void __iwl_err(struct device *dev, enum iwl_err_mode mode, const char *fmt, ...)
+      |                                                            ~~~~~~~~~~~~^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/util.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/ucode.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/nvm.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/util.c:24:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.c:9:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/tx.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/ops.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/sta_info.o
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/ops.c: In function ‘iwl_mvm_rx’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/ops.c:1821:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 1821 |  static int flqcnt = 0 ; ++flqcnt;
+      |  ^~~~~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/sta_info.c:24:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/lib.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/phy-ctxt.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c:64:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c: In function ‘reg_rules_intersect’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c:1374:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 1374 |  const struct ieee80211_freq_range *freq_range1, *freq_range2;
+      |  ^~~~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c: In function ‘reg_process_hint_driver’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c:2813:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 2813 |  const struct ieee80211_regdomain *regd, *tmp;
+      |  ^~~~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c: In function ‘reg_process_self_managed_hint’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c:3168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 3168 |  struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
+      |  ^~~~~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c: In function ‘restore_regulatory_settings’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c:3499:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 3499 |  char alpha2[2];
+      |  ^~~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c: In function ‘set_regdom’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/reg.c:3977:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 3977 |  struct regulatory_request *lr;
+      |  ^~~~~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/calib.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/mac-ctxt.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/tt.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/wep.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/scan.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/utils.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/aead_api.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/sta.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/wpa.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/scan.c:26:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/utils.c: In function ‘iwl_mvm_send_cmd_status’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/utils.c:77:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+   77 |  struct iwl_rx_packet *pkt;
+      |  ^~~~~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rx.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rx.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/scan.o
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rx.c: In function ‘iwl_mvm_get_signal_strength’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rx.c:133:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  133 |  static int flqcnt = 0 ;
+      |  ^~~~~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/scan.c:25:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/power.o
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c: In function ‘iwl_mvm_get_signal_strength’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:277:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  277 |  static int flqcnt = 0 ;
+      |  ^~~~~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c:32:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c: In function ‘flq_record_macs’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:2284:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 2284 |  u8 *dst_mac = hdr->addr1, *src_mac = hdr->addr2 ; //fflq key, get mac
+      |  ^~
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:2287:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 2287 |  u8 *mac = mvm->flq_src_mac;
+      |  ^~
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rxmq.c:2287:6: warning: unused variable ‘mac’ [-Wunused-variable]
+ 2287 |  u8 *mac = mvm->flq_src_mac;
+      |      ^~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c: In function ‘nl80211_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c:5795:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 5795 |  struct cfg80211_registered_device *rdev = info->user_ptr[0];
+      |  ^~~~~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c: In function ‘nl80211_set_beacon’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c:6092:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 6092 |  struct cfg80211_registered_device *rdev = info->user_ptr[0];
+      |  ^~~~~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c: In function ‘nl80211_set_station’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c:6989:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 6989 |  struct cfg80211_registered_device *rdev = info->user_ptr[0];
+      |  ^~~~~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/scan.o
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c: In function ‘nl80211_get_reg_do’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c:8405:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 8405 |  const struct ieee80211_regdomain *regdom = NULL;
+      |  ^~~~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c: In function ‘nl80211_set_reg’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c:8612:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 8612 |  struct nlattr *tb[NL80211_REG_RULE_ATTR_MAX + 1];
+      |  ^~~~~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/offchannel.o
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c: In function ‘nl80211_vendor_cmd’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c:14781:3: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+14781 |   int n = rdev->wiphy.n_vendor_commands;
+      |   ^~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c:14781:7: warning: unused variable ‘n’ [-Wunused-variable]
+14781 |   int n = rdev->wiphy.n_vendor_commands;
+      |       ^
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c: In function ‘nl80211_prepare_vendor_dump’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c:14906:3: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+14906 |   int n = (*rdev)->wiphy.n_vendor_commands;
+      |   ^~~
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c: In function ‘nl80211_vendor_cmd_dump’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/nl80211.c:14958:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+14958 |  struct cfg80211_registered_device *rdev;
+      |  ^~~~~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/tx.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rxon.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/offchannel.c:16:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:17:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c: In function ‘iwlagn_disable_bss’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/agn.h:411:29: warning: passing argument 3 of ‘__iwl_err’ makes pointer from integer without a cast [-Wint-conversion]
+  411 |   __iwl_err((m)->dev, true, true, fmt, ##args); \
+      |                             ^~~~
+      |                             |
+      |                             int
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:98:3: note: in expansion of macro ‘IWL_DEBUG_QUIET_RFKILL’
+   98 |   IWL_DEBUG_QUIET_RFKILL(priv,
+      |   ^~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/../iwl-trans.h:15,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:14:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/../iwl-debug.h:33:72: note: expected ‘const char *’ but argument is of type ‘int’
+   33 | void __iwl_err(struct device *dev, enum iwl_err_mode mode, const char *fmt, ...)
+      |                                                            ~~~~~~~~~~~~^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:17:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c: In function ‘iwlagn_update_qos’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/agn.h:411:29: warning: passing argument 3 of ‘__iwl_err’ makes pointer from integer without a cast [-Wint-conversion]
+  411 |   __iwl_err((m)->dev, true, true, fmt, ##args); \
+      |                             ^~~~
+      |                             |
+      |                             int
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:182:3: note: in expansion of macro ‘IWL_DEBUG_QUIET_RFKILL’
+  182 |   IWL_DEBUG_QUIET_RFKILL(priv, "Failed to update QoS\n");
+      |   ^~~~~~~~~~~~~~~~~~~~~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/../iwl-trans.h:15,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/rxon.c:14:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/../iwl-debug.h:33:72: note: expected ‘const char *’ but argument is of type ‘int’
+   33 | void __iwl_err(struct device *dev, enum iwl_err_mode mode, const char *fmt, ...)
+      |                                                            ~~~~~~~~~~~~^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/ht.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/devices.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/binding.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rate.h:18,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/ht.c:19:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/led.o
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/binding.c: In function ‘iwl_mvm_binding_cmd’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/binding.c:25:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+   25 |  struct iwl_binding_cmd cmd;
+      |  ^~~~~~
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/binding.c: In function ‘iwl_mvm_binding_add_vif’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/binding.c:145:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  145 |  struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+      |  ^~~~~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/agg-tx.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/quota.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/debugfs.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/agg-tx.c:20:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/sta.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/agg-rx.o
+  LD [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/dvm/iwldvm.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/vht.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/agg-rx.c:43:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rate.h:18,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/vht.c:14:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/sf.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/xvt/xvt.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/he.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/scan.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/s1g.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/xvt/user-infc.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/s1g.c:9:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/ibss.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/mlme.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/ibss.c:25:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/time-event.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/mlme.c:21:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/xvt/utils.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/iface.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/xvt/fw.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/ibss.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rs.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/iface.c:26:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/xvt/nvm.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/ibss.c:16:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/link.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/xvt/rx.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/sme.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/link.c:11:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rs-fw.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/xvt/debugfs.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/sme.c:23:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rate.o
+  LD [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/xvt/iwlxvt.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/power.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/chan.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-io.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rate.h:18,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rate.c:14:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/chan.c:16:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/coex.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/michael.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/ethtool.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-drv.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/tt.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/tkip.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/ethtool.c:5:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/tkip.c:15:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/offloading.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/mesh.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/ap.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/aes_cmac.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/mesh.c:11:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/aes_gmac.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/tdls.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/ap.c:11:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/trace.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/ocb.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/fils_aead.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/ftm-responder.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/ocb.c:16:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/cfg.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/pmsr.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/ftm-initiator.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/cfg.c:21:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/pmsr.c:8:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h: In function ‘rdev_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/wireless/rdev-ops.h:168:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  168 |  int ret;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-debug.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/rfi.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/nan.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/ethtool.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/debugfs.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-read.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/ethtool.c:14:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/time-sync.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rx.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/mld-key.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rx.c:27:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac.o
+  GEN     /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/shipped-certs.c
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/link.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-eeprom-parse.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/mld-sta.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/mld-mac80211.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/spectmgmt.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-phy-db.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/tx.o
+  GEN     /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/extra-certs.c
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/shipped-certs.o
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c: In function ‘iwl_dbgfs_csi_addresses_write’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/debugfs.c:2358:3: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 2358 |   static char mac[18] = { 0 } ;
+      |   ^~~~~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/extra-certs.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/debugfs-vif.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/tx.c:31:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  LD [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/wireless/cfg80211.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/led.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/d3.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/key.o
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c: In function ‘fflq_send_test’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c:2026:6: warning: unused variable ‘i’ [-Wunused-variable]
+ 2026 |  int i;
+      |      ^
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c:2025:6: warning: unused variable ‘pos’ [-Wunused-variable]
+ 2025 |  u8 *pos;
+      |      ^~~
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c: In function ‘iwl_mvm_send_csi_event’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/vendor-cmd.c:2061:7: warning: unused variable ‘csid’ [-Wunused-variable]
+ 2061 |   int csid = mvm->csi_portid ;
+      |       ^~~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/key.c:23:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.o
+  LD [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/mvm/iwlmvm.o
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c: In function ‘iwl_parse_nvm_data’:
+/home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-nvm-parse.c:1675:3: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+ 1675 |   u16 lar_offset = data->nvm_version < 0xE39 ?
+      |   ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/util.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/wme.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/chan.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/util.c:29:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-dbg-tlv.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/chan.c:12:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/trace.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/trace.c:8:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-trans.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/mlme.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/mlme.c:29:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/queue/tx.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/img.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/notif-wait.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/tdls.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/rs.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/tdls.c:17:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/dbg.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/pnvm.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/ocb.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/ocb.c:22:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/dump.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/paging.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/airtime.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/smem.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/init.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/eht.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/led.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/debugfs.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/cfg/1000.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/debugfs.c:14:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/debugfs_sta.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/debugfs_netdev.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/cfg/2000.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/debugfs_key.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/cfg/5000.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/debugfs_sta.c:17:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rate.h:18,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/debugfs_netdev.c:21:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/pm.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/cfg/6000.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rc80211_minstrel_ht.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rc80211_minstrel_ht_debugfs.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/cfg/7000.o
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/pm.c:11:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+In file included from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rate.h:18,
+                 from /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/rc80211_minstrel_ht.c:14:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h: In function ‘drv_start_ap’:
+/home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/driver-ops.h:953:2: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+  953 |  int ret = 0;
+      |  ^~~
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/cfg/8000.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/cfg/9000.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/cfg/22000.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/debugfs.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/acpi.o
+  LD [M]  /home/flq/Tmp/flq-backport-iwlwifi/net/mac80211/mac80211.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/uefi.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/pcie/drv.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/pcie/rx.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/pcie/tx.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/pcie/trans.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/pcie/ctxt-info-gen3.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/pcie/trans-gen2.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/pcie/tx-gen2.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-dbg-cfg.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-devtrace.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-tm-gnl.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-dnt-cfg.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-dnt-dispatch.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwl-dnt-dev-if.o
+  CC [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/fw/testmode.o
+  LD [M]  /home/flq/Tmp/flq-backport-iwlwifi/drivers/net/wireless/intel/iwlwifi/iwlwifi.o
+  MODPOST /home/flq/Tmp/flq-backport-iwlwifi/Module.symvers
+ERROR: modpost: module iwldvm uses symbol __iwl_err from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_remove_notification from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_cmd_groups_verify_sorted from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_read32 from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_set_bits_mask_prph from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_opmode_register from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_wait_notification from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_trans_send_cmd from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol __iwl_dbg from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_init_notification_wait from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_write_direct32 from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_write32 from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_get_cmd_string from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwlwifi_mod_params from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol __iwl_info from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol __iwl_warn from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_abort_notification_waits from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_opmode_deregister from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_notification_wait from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_notification_wait_init from namespace IWLWIFI, but does not import it.
+ERROR: modpost: module iwldvm uses symbol iwl_read_eeprom from namespace IWLWIFI, but does not import it.
+make[5]: *** [scripts/Makefile.modpost:133: /home/flq/Tmp/flq-backport-iwlwifi/Module.symvers] Error 1
+make[5]: *** Deleting file '/home/flq/Tmp/flq-backport-iwlwifi/Module.symvers'
+make[4]: *** [Makefile:1821: modules] Error 2
+make[3]: *** [Makefile.build:13: modules] Error 2
+make[2]: *** [Makefile.real:100: modules] Error 2
+make[1]: *** [Makefile:43: modules] Error 2
+make: *** [Makefile:30: default] Error 2
+

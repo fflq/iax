@@ -82,7 +82,8 @@ function plot_breath(csist)
 	addpoints(h, x, s) ;
 	x = x + 1;
 	xlim([x-180, x+20]);
-	ylim([1, 4]*1e4);
+	%ylim([1, 4]*1e4);
+	ylim([0, 3]*1e4);
 	%ylim([-1, 5]*1e4);
 	pause(0.01) ;
 end
