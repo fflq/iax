@@ -3,7 +3,6 @@
 
 
 wlan=wlp8s0 
-mon=mon0
 chn=4
 chtype=HT20
 if [ $# -ge 3 ]; then
@@ -12,7 +11,7 @@ if [ $# -ge 3 ]; then
 	chtype=$3 ;
 else
 	echo "Usage: $0 wlan chn chtype" ;
-	echo " - wlan: gen mon0 (is monitor type)" ;
+	echo " - wlan: gen xmon0 (is monitor type)" ;
 	echo " - chn: channel"
 	echo " - chtype: custom format. eg HT40 VHT80 HE160"
 	echo " * eg: $0 wlp3s0 64 HT20"
@@ -20,7 +19,9 @@ else
 	echo " * eg: $0 wlp3s0 40 HE160"
 	exit -1 ;
 fi
-echo "* $0 $wlan $chn $chtype"
+mon="${wlan}mon0"
+
+echo "* $0 $wlan $mon $chn $chtype"
 
 
 
@@ -45,7 +46,8 @@ nmcli dev set $wlan managed no > /dev/null 2>&1
 #nmcli r wifi off
 rfkill unblock wifi ;
 #if not work, check kill
-ret=$(iw dev | grep -A1 monitor | grep $chn)
+#ret=$(iw dev | grep -A1 monitor | grep $chn)
+ret=$(iw dev | grep -A6 $mon | grep $chn)
 if [ "$ret" == "" ]; then
 	airmon-ng check kill
 fi
