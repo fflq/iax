@@ -16,3 +16,15 @@
 
 
 
+#support intel5300
+[modify]
+Kconfig
+Makefile
+dvm/Makefile
+
+[add]
+cfg/{1000.c 2000.c 5000.c 6000.c}
+
+
+
+
