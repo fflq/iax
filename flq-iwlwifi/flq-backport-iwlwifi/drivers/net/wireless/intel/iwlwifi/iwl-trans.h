@@ -271,7 +271,10 @@ static inline void iwl_free_rxb(struct iwl_rx_cmd_buffer *r)
 	__free_pages(r->_page, r->_rx_page_order);
 }
 
-#define MAX_NO_RECLAIM_CMDS	6
+//fflqb_csi_53
+//#define MAX_NO_RECLAIM_CMDS	6
+#define MAX_NO_RECLAIM_CMDS	7
+//fflqe_csi_53
 
 #define IWL_MASK(lo, hi) ((1 << (hi)) | ((1 << (hi)) - (1 << (lo))))
 

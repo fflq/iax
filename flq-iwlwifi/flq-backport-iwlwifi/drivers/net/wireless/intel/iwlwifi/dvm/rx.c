@@ -271,11 +271,26 @@ static void iwlagn_rx_calc_noise(struct iwl_priv *priv)
 		num_active_rx++;
 	}
 
+	//fflqb_csi_53
 	/* Average among active antennas */
+#if 0
 	if (num_active_rx)
 		last_rx_noise = (total_silence / num_active_rx) - 107;
 	else
 		last_rx_noise = IWL_NOISE_MEAS_NOT_AVAILABLE;
+#endif
+	if (num_active_rx) {
+		last_rx_noise = (total_silence / num_active_rx) - 107;
+		if (priv->connector_log & IWL_CONN_NOISE_MSK)
+			connector_send_msg((void *)&last_rx_noise,
+					sizeof(last_rx_noise), IWL_CONN_NOISE);
+	} else
+		last_rx_noise = IWL_NOISE_MEAS_NOT_AVAILABLE;
+	priv->last_rx_noise = last_rx_noise;
+	priv->last_rx_noiseA = bcn_silence_a;
+	priv->last_rx_noiseB = bcn_silence_b;
+	priv->last_rx_noiseC = bcn_silence_c;
+	//fflqe_csi_53
 
 	IWL_DEBUG_CALIB(priv, "inband silence a %u, b %u, c %u, dBm %d\n",
 			bcn_silence_a, bcn_silence_b, bcn_silence_c,

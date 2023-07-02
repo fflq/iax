@@ -263,7 +263,10 @@ extern const u8 iwl_bcast_addr[ETH_ALEN];
 /* Sensitivity and chain noise calibration */
 #define INITIALIZATION_VALUE		0xFFFF
 #define IWL_CAL_NUM_BEACONS		16
-#define MAXIMUM_ALLOWED_PATHLOSS	15
+//fflqb_csi_53
+//#define MAXIMUM_ALLOWED_PATHLOSS	15
+#define MAXIMUM_ALLOWED_PATHLOSS	50
+//fflqe_csi_53
 
 #define CHAIN_NOISE_MAX_DELTA_GAIN_CODE 3
 

@@ -11,9 +11,12 @@ iwldvm-objs		+= rxon.o devices.o
 iwldvm-$(CONFIG_IWLWIFI_LEDS) += led.o
 iwldvm-$(CONFIG_IWLWIFI_DEBUGFS) += debugfs.o
 
-#fflqb
-#ccflags-y += -I $(srctree)/$(src)/../
+#fflqb_csi_53
 iwldvm-y += connector.o
+#fflqe
+
+#fflqb_dvm
+#ccflags-y += -I $(srctree)/$(src)/../
 ccflags-y += -I$(src)/../
 #fflqe
 

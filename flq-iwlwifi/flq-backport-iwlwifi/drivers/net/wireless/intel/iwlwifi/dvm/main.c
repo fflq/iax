@@ -55,7 +55,7 @@
 
 #define DRV_DESCRIPTION	"Intel(R) Wireless WiFi Link AGN driver for Linux"
 MODULE_DESCRIPTION(DRV_DESCRIPTION);
-//fflqb
+//fflqb_dvm
 //MODULE_AUTHOR(DRV_AUTHOR);
 MODULE_IMPORT_NS(IWLWIFI);
 //fflqe
@@ -142,6 +142,10 @@ static const struct iwl_hcmd_names iwl_dvm_cmd_names[] = {
 	HCMD_NAME(REPLY_WOWLAN_TKIP_PARAMS),
 	HCMD_NAME(REPLY_WOWLAN_KEK_KCK_MATERIAL),
 	HCMD_NAME(REPLY_WOWLAN_GET_STATUS),
+
+	//fflqb_csi_53 from dvm/rx.c
+	HCMD_NAME(REPLY_BFEE_NOTIFICATION),
+	//ffle_csi_53
 };
 
 static const struct iwl_hcmd_arr iwl_dvm_groups[] = {
@@ -294,7 +298,7 @@ static void iwl_bg_beacon_update(struct work_struct *work)
 		goto out;
 	}
 
-	//fflqb_csi
+	//fflqb_csi_dvm
 	/* Pull updated AP beacon from mac80211. will fail if not in AP mode */
 	//beacon = ieee80211_beacon_get(priv->hw, priv->beacon_ctx->vif);
 	beacon = ieee80211_beacon_get(priv->hw, priv->beacon_ctx->vif, 0);
@@ -1274,6 +1278,10 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
 		REPLY_COMPRESSED_BA,
 		STATISTICS_NOTIFICATION,
 		REPLY_TX,
+
+		//fflqb_csi_53
+		REPLY_BFEE_NOTIFICATION,
+		//fflqe
 	};
 	int i;
 

@@ -895,6 +895,12 @@ static void rs_tx_status(void *priv_r, struct ieee80211_supported_band *sband,
 		return;
 	}
 
+	//fflqb_csi_53
+	/* Exit if in a fixed-rate mode */
+	if (priv && priv->rotate_rates)
+		return;
+	//fflqe
+
 	if (!ieee80211_is_data(hdr->frame_control) ||
 	    info->flags & IEEE80211_TX_CTL_NO_ACK)
 		return;
@@ -2710,6 +2716,15 @@ static void rs_get_rate(void *priv_r, struct ieee80211_sta *sta, void *priv_sta,
 		IWL_DEBUG_RATE(priv, "Rate scaling not initialized yet.\n");
 		priv_sta = NULL;
 	}
+
+	//fflqb_csi_53
+	/* Exit if in a fixed-rate mode */
+	if (priv && priv->rotate_rates) {
+		info->control.rates[0].flags = 0;
+		info->control.rates[0].idx = 0;
+		return;
+	}
+	//fflqe
 
 	rate_idx  = lq_sta->last_txrate_idx;
 
