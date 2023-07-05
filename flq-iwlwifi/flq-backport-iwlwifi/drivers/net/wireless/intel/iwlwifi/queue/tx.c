@@ -1741,6 +1741,7 @@ next_queue:
 
 #define HOST_COMPLETE_TIMEOUT	(2 * HZ * CPTCFG_IWL_TIMEOUT_FACTOR)
 
+//fflqkey_for_sw_err
 static int iwl_trans_txq_send_hcmd_sync(struct iwl_trans *trans,
 					struct iwl_host_cmd *cmd)
 {
@@ -1790,6 +1791,7 @@ static int iwl_trans_txq_send_hcmd_sync(struct iwl_trans *trans,
 		goto cancel;
 	}
 
+	//fflqkey_for_sw_info
 	if (test_bit(STATUS_FW_ERROR, &trans->status)) {
 		if (!test_and_clear_bit(STATUS_SUPPRESS_CMD_ERROR_ONCE,
 					&trans->status)) {

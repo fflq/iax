@@ -15,7 +15,8 @@
 #include <linux/types.h>
 
 //fflqb_csi_53 handle conflict with fw/api/tx.h
-#include "fw/api/tx.h"
+//fw/api/tx.h is for mvm, dvm use here(eg. iwl_tx_cmd must 56B or crash when scan)
+//#include "fw/api/tx.h"
 //fflqe_csi_53
 
 enum {
@@ -1205,8 +1206,6 @@ struct iwl_dram_scratch {
 	__le16 reserved;
 } __packed;
 
-//fflqb_csi_53 has def in fw/api/tx.h
-#if 0
 struct iwl_tx_cmd {
 	/*
 	 * MPDU byte count:
@@ -1321,13 +1320,15 @@ enum {
 	TX_STATUS_FAIL_PASSIVE_NO_RX = 0x90,
 	TX_STATUS_FAIL_NO_BEACON_ON_RADAR = 0x91,
 };
-#endif
+//fflqb_csi_53 has def in fw/api/tx.h
+#if 0
 enum {
 	TX_STATUS_FAIL_FIFO_UNDERRUN = 0x84,
 	TX_STATUS_FAIL_INSUFFICIENT_CF_POLL = 0x8f,
 	TX_STATUS_FAIL_PASSIVE_NO_RX = 0x90,
 	TX_STATUS_FAIL_NO_BEACON_ON_RADAR = 0x91,
 };
+#endif
 //fflqe_csi_53
 
 #define	TX_PACKET_MODE_REGULAR		0x0000
@@ -1338,8 +1339,6 @@ enum {
 	TX_POWER_PA_NOT_ACTIVE = 0x0,
 };
 
-//fflqb_csi_53 has def in fw/api/tx.h
-#if 0
 enum {
 	TX_STATUS_MSK = 0x000000ff,		/* bits 0:7 */
 	TX_STATUS_DELAY_MSK = 0x00000040,
@@ -1350,6 +1349,8 @@ enum {
 	TX_POWER_PA_DETECT_MSK = 0x7f800000,	/* bits 23:30 */
 	TX_ABORT_REQUIRED_MSK = 0x80000000,	/* bits 31:31 */
 };
+//fflqb_csi_53 has def in fw/api/tx.h
+#if 0
 #endif
 //fflqe_csi_53
 
@@ -1389,8 +1390,6 @@ enum {
 #define AGG_TX_STATE_SEQ_NUM_POS 16
 #define AGG_TX_STATE_SEQ_NUM_MSK 0xffff0000
 
-//fflqb_csi_53
-#if 0
 /*
  * REPLY_TX = 0x1c (response)
  *
@@ -1417,6 +1416,8 @@ struct agg_tx_status {
 	__le16 status;
 	__le16 sequence;
 } __packed;
+//fflqb_csi_53
+#if 0
 #endif
 //fflqe_csi_53
 

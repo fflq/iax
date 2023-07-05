@@ -2166,7 +2166,7 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
 	int i;
 	struct iwl_drv *drv;
 	struct iwlwifi_opmode_table *op;
-	printk(KERN_ERR "******** %s %d", __func__, __LINE__);
+	printk(KERN_ERR "******** %s:%d", __func__, __LINE__);
 
 	mutex_lock(&iwlwifi_opmode_table_mtx);
 	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++) {
@@ -2177,7 +2177,7 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
 		/* TODO: need to handle exceptional case */
 		list_for_each_entry(drv, &op->drv, list)
 		{
-			printk(KERN_ERR "******** %s %d %s %d", __func__, __LINE__, op->name, op->ops);
+			printk(KERN_ERR "********fflq %s:%d %s %p", __func__, __LINE__, op->name, op->ops);
 			drv->op_mode = _iwl_op_mode_start(drv, op);
 		}
 

@@ -126,6 +126,11 @@ static const struct iwl_hcmd_names iwl_dvm_cmd_names[] = {
 	HCMD_NAME(REPLY_WIPAN_QOS_PARAM),
 	HCMD_NAME(REPLY_WIPAN_WEPKEY),
 	HCMD_NAME(REPLY_WIPAN_P2P_CHANNEL_SWITCH),
+
+	//fflqb_csi_53, from dvm/rx.c, need sorted
+	HCMD_NAME(REPLY_BFEE_NOTIFICATION),
+	//ffle_csi_53
+
 	HCMD_NAME(REPLY_WIPAN_NOA_NOTIFICATION),
 	HCMD_NAME(REPLY_WIPAN_DEACTIVATION_COMPLETE),
 	HCMD_NAME(REPLY_RX_PHY_CMD),
@@ -142,10 +147,6 @@ static const struct iwl_hcmd_names iwl_dvm_cmd_names[] = {
 	HCMD_NAME(REPLY_WOWLAN_TKIP_PARAMS),
 	HCMD_NAME(REPLY_WOWLAN_KEK_KCK_MATERIAL),
 	HCMD_NAME(REPLY_WOWLAN_GET_STATUS),
-
-	//fflqb_csi_53 from dvm/rx.c
-	HCMD_NAME(REPLY_BFEE_NOTIFICATION),
-	//ffle_csi_53
 };
 
 static const struct iwl_hcmd_arr iwl_dvm_groups[] = {
@@ -1279,8 +1280,8 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
 		STATISTICS_NOTIFICATION,
 		REPLY_TX,
 
-		//fflqb_csi_53
-		REPLY_BFEE_NOTIFICATION,
+		//fflqb_csi_53 
+		STATISTICS_NOTIFICATION,
 		//fflqe
 	};
 	int i;
@@ -1369,7 +1370,7 @@ static struct iwl_op_mode *iwl_op_mode_dvm_start(struct iwl_trans *trans,
 
 	trans_cfg.cmd_q_wdg_timeout = IWL_WATCHDOG_DISABLED;
 
-	trans_cfg.command_groups = iwl_dvm_groups;
+	trans_cfg.command_groups = iwl_dvm_groups; //fflqkey
 	trans_cfg.command_groups_size = ARRAY_SIZE(iwl_dvm_groups);
 
 	trans_cfg.cmd_fifo = IWLAGN_CMD_FIFO_NUM;

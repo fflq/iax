@@ -246,7 +246,7 @@ int iwl_cmd_groups_verify_sorted(const struct iwl_trans_config *trans)
 		if (!arr->arr)
 			continue;
 		for (j = 0; j < arr->size - 1; j++)
-			if (arr->arr[j].cmd_id > arr->arr[j + 1].cmd_id)
+			if (arr->arr[j].cmd_id > arr->arr[j + 1].cmd_id) 
 				return -1;
 	}
 	return 0;

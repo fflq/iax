@@ -256,24 +256,11 @@ struct iwl_tx_cmd {
 	u8 tid_tspec;
 	__le16 pm_frame_timeout;
 	__le16 reserved4;
+
 	union {
 		DECLARE_FLEX_ARRAY(u8, payload);
 		DECLARE_FLEX_ARRAY(struct ieee80211_hdr, hdr);
 	};
-
-	//fflqb_csi_53 conflict struct, add fromwith dvm/tx.h
-	__le16 next_frame_len;
-	__le16 driver_txop;
-	union {
-		__le16 pm_frame_timeout;
-		__le16 attempt_duration;
-	} timeout;
-	union {
-		__le32 life_time;
-		__le32 attempt;
-	} stop_time;
-	//fflqe_csi_53 
-
 } __packed; /* TX_CMD_API_S_VER_6 */
 
 struct iwl_dram_sec_info {

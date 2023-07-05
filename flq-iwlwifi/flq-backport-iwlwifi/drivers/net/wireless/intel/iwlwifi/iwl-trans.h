@@ -229,6 +229,9 @@ struct iwl_host_cmd {
 	struct iwl_rx_packet *resp_pkt;
 	unsigned long _rx_page_addr;
 	u32 _rx_page_order;
+	//fflqb_csi_53
+	int status_handler;
+	//fflqe
 
 	u32 flags;
 	u32 id;

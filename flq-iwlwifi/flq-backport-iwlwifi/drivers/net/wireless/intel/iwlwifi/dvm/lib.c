@@ -22,8 +22,8 @@
 #include "dev.h"
 #include "agn.h"
 
-//fflqb_csi_53
-#include "../pcie/internal.h"
+//fflqb_csi_53, cannot use pcie/internal.h which will include fw/api/tx.h(conflict def with tx.h)
+//#include "../pcie/internal.h"
 #include "connector.h"
 
 /*fflqkey diff from kernel42
@@ -100,11 +100,14 @@ void iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb)
 		//dev_set_name(&dev->dev, "%04x:%02x:%02x.%d", pci_domain_nr(dev->bus), dev->bus->number, 
 		//	PCI_SLOT(dev->devfn), PCI_FUNC(dev->devfn));
 		// iwlwifi/pcie/drv.c
+#if 0
+		//fflqkey, get pcid will use pcie/internal.h which conflit tx.h
 		struct pci_dev *pci_dev = IWL_TRANS_GET_PCIE_TRANS(priv->trans)->pci_dev;
 		//bfee_notif->reserved1 = (pci_dev->bus->number<<8) + pci_dev->devfn ;
 		bfee_notif->reserved1 = (pci_dev->bus->number*1000) + pci_dev->devfn ;
 		IWL_INFO(priv, "---%s, %s=%zd, %d/%d----\n", dev_driver_string(priv->dev), dev_name(priv->dev), 
 			strlen(dev_name(priv->dev)), pci_dev->devfn, bfee_notif->reserved1) ;
+#endif
 
 		connector_send_msg((void *)bfee_notif,
 			len + sizeof(struct iwl_bfee_notif),

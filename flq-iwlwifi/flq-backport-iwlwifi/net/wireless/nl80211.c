@@ -1124,7 +1124,7 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
 	}
 	//chan->flags &= ~IEEE80211_CHAN_RADAR ; //fflqkey change chan->flags, iw list radar dect
 	if (chan->flags & IEEE80211_CHAN_RADAR) {
-		printk("***fflq nl80211_msg_put_channel, NL80211_FREQUENCY_ATTR_RADAR\n") ;
+		//printk("***fflq nl80211_msg_put_channel, NL80211_FREQUENCY_ATTR_RADAR\n") ;
 		if (nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR)) {
 			goto nla_put_failure;
 		}
