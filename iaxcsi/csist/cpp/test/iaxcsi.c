@@ -9,18 +9,12 @@
 #include <unistd.h>
 #include <errno.h>
 
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-
-#include <iostream>
-#include <string>
-#include <map>
-using namespace std ;
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "iwl_fw_api_rs.h"
-#include "axcsi.h"
-#include "tcp_server.h"
+#include "iaxcsi.h"
 
 #define DEBUG
 #ifdef DEBUG
@@ -30,11 +24,20 @@ using namespace std ;
 #endif
 
 
+typedef struct pair_t {
+	int id ;
+	char *str ;
+	int num ;
+} pair_t, *p_pair_t ;
+#define PAIR_RSHIFTN_ROW(_id,_n,_str,_num) [_id>>_n] = {.id=_id,.str=_str,.num=_num}
+#define PAIR_STR_RSHIFTN_ROW(_id,_n,_str) PAIR_RSHIFTN_ROW(_id,_n,_str,-1) 
+#define PAIR_NUM_RSHIFTN_ROW(_id,_n,_num) PAIR_RSHIFTN_ROW(_id,_n,NULL,_num) 
+
+
 FILE *g_fp_csi = NULL ;
 struct nl_cb *gcb = NULL ;
 unsigned int gportid = 0;
 int gdevidx = -1 ;
-tcp_server *p_tcp_server = nullptr ;
 
 
 void call_iwl_mvm_vendor_csi_register(struct nl_sock *sk, int family_id)
@@ -70,11 +73,29 @@ void output_tb_msg(struct nlattr **tb_msg)
 	for (i = 0; i < NL80211_ATTR_MAX; ++ i)
 	{
 		if (tb_msg[i])
-			flqstdout("-- tb_msg[%x]: len %d, type %x\n", i, 
-					tb_msg[i]->nla_len, tb_msg[i]->nla_type) ;
+			flqstdout("-- tb_msg[%x]: len %d, type %x\n", i, tb_msg[i]->nla_len, tb_msg[i]->nla_type) ;
 	}
 }
 
+
+/*
+%len=(nrx,ntx,ntone)*4
+%NOHT/BCC
+%NOHT20: 208=(1,1,52), 416=(2,1,52), 832=(2,2,52)
+%HT/BCC
+%HT20: 224=(1,1,56), 448=(2,1,56), 896=(2,2,56)
+%HT40: 456=(1,1,114), 912=(2,1,114), 1824=(2,2,114)
+%VHT/BCC
+%VHT80: 968=(1,1,242), 1936=(2,1,242), 3872=(2,2,242)
+%VHT160: 1992=(1,1,498), 3984=(2,1,498), 7968=(2,2,498)
+%HE/LDPC
+%HE20: 968=(1,1,242), 1936=(2,1,242), 3872=(2,2,242)
+%HE40: 1936=(1,1,484), 3872=(2,1,484), 7744=(2,2,484)
+%HE80: 3984=(1,1,996), 7968=(2,1,996), 15936=(2,2,996)
+%HE160: 8080=(1,1,2020), 16160=(2,1,2020), 32320=(2,2,2020)
+%Note
+%VHT80 and HE20 are same, avoid use
+*/
 
 void output_hexs(uint8_t *data, int len)
 {
@@ -88,27 +109,60 @@ void output_hexs(uint8_t *data, int len)
 	printf("\n") ;
 }
 
+typedef struct rate_info_t {
+	int mod_type ;
+	char *mod_type_str ;
+	int he_type ;
+	char *he_type_str ;
+	int chan_width ;
+	char *chan_width_str ;
+	int ant_sel ;
+	int ldpc ;
+} rate_info_t, *p_rate_info_t ;
+
+
+#define MOD_TYPE_ROW(_id,_str) PAIR_STR_RSHIFTN_ROW(_id,RATE_MCS_MOD_TYPE_POS,_str)
+pair_t g_mod_types[(RATE_MCS_MOD_TYPE_MSK>>RATE_MCS_MOD_TYPE_POS)+1] = {
+	MOD_TYPE_ROW(RATE_MCS_CCK_MSK, "CCK"), 
+	MOD_TYPE_ROW(RATE_MCS_LEGACY_OFDM_MSK, "NOHT"), 
+	MOD_TYPE_ROW(RATE_MCS_HT_MSK, "HT"), 
+	MOD_TYPE_ROW(RATE_MCS_VHT_MSK, "VHT"), 
+	MOD_TYPE_ROW(RATE_MCS_HE_MSK, "HE"), 
+	MOD_TYPE_ROW(RATE_MCS_EHT_MSK, "EH"), 
+} ;
+
+#define HE_TYPE_ROW(_id,_str) PAIR_STR_RSHIFTN_ROW(_id,RATE_MCS_HE_TYPE_POS,_str)
+pair_t g_he_types[(RATE_MCS_HE_TYPE_MSK>>RATE_MCS_HE_TYPE_POS)+1] = {
+	HE_TYPE_ROW(RATE_MCS_HE_TYPE_SU, "HE-SU"), 
+	HE_TYPE_ROW(RATE_MCS_HE_TYPE_EXT_SU, "HE-EXT-SU"), 
+	HE_TYPE_ROW(RATE_MCS_HE_TYPE_MU, "HE-MU"), 
+	HE_TYPE_ROW(RATE_MCS_HE_TYPE_TRIG, "HE-TRIG"), 
+} ;
+
+#define CHAN_WIDTH_ROW(_id,_num) PAIR_NUM_RSHIFTN_ROW(_id,RATE_MCS_CHAN_WIDTH_POS,_num)
+pair_t g_chan_widths[(RATE_MCS_CHAN_WIDTH_MSK>>RATE_MCS_CHAN_WIDTH_POS)+1] = {
+	CHAN_WIDTH_ROW(RATE_MCS_CHAN_WIDTH_20, 20), 
+	CHAN_WIDTH_ROW(RATE_MCS_CHAN_WIDTH_40, 40), 
+	CHAN_WIDTH_ROW(RATE_MCS_CHAN_WIDTH_80, 80), 
+	CHAN_WIDTH_ROW(RATE_MCS_CHAN_WIDTH_160, 160), 
+	CHAN_WIDTH_ROW(RATE_MCS_CHAN_WIDTH_320, 320), 
+} ;
+
+
 
 void handle_rate_n_flags(uint32_t rate_n_flags, p_rate_info_t p_rinfo)
 {
 	//Bits 10-8: rate format, mod type
-	uint32_t rate_mcs_mod_type = rate_n_flags & RATE_MCS_MOD_TYPE_MSK ;
-	p_rinfo->mod_type = rate_mcs_mod_type >> RATE_MCS_MOD_TYPE_POS ; 
-	p_rinfo->mod_type_str = g_mod_type_map[rate_mcs_mod_type].c_str() ;
+	p_rinfo->mod_type = (rate_n_flags & RATE_MCS_MOD_TYPE_MSK) >> RATE_MCS_MOD_TYPE_POS ; 
+	p_rinfo->mod_type_str = g_mod_types[p_rinfo->mod_type].str ;
 
 	//Bits 24-23: HE type
-	if (p_rinfo->mod_type == (RATE_MCS_HE_MSK>>RATE_MCS_MOD_TYPE_POS)) {
-		uint32_t rate_mcs_he_type = rate_n_flags & RATE_MCS_HE_TYPE_MSK ;
-		p_rinfo->he_type = rate_mcs_he_type >> RATE_MCS_HE_TYPE_POS ;
-		p_rinfo->he_type_str = g_he_type_map[rate_mcs_he_type].c_str() ;
-	}
+	p_rinfo->he_type = (rate_n_flags & RATE_MCS_HE_TYPE_MSK) >> RATE_MCS_HE_TYPE_POS ;
+	p_rinfo->he_type_str = g_he_types[p_rinfo->he_type].str ;
 
-	//Bits 13-11: chan width
-	uint32_t rate_mcs_chan_width = rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK ;
-	p_rinfo->chan_width_type = rate_mcs_chan_width >> RATE_MCS_CHAN_WIDTH_POS ;
-	p_rinfo->chan_width = g_chan_width_map[rate_mcs_chan_width] ;
-
-	p_rinfo->chan_type_str = (p_rinfo->mod_type_str + std::to_string(p_rinfo->chan_width)).c_str() ;
+	//BIts 13-11: chan width
+	uint32_t chan_width_type = (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK) >> RATE_MCS_CHAN_WIDTH_POS ;
+	p_rinfo->chan_width = g_chan_widths[chan_width_type].num ;
 
 	//Bits 15-14: antenna selection
 	p_rinfo->ant_sel = (rate_n_flags & RATE_MCS_ANT_MSK) >> RATE_MCS_ANT_POS ; 
@@ -116,11 +170,9 @@ void handle_rate_n_flags(uint32_t rate_n_flags, p_rate_info_t p_rinfo)
 	//Bits 16: LDPC enables
 	p_rinfo->ldpc = (rate_n_flags & RATE_MCS_LDPC_MSK) >> RATE_MCS_LDPC_POS ; 
 
-	flqstdout("chan_type_str(%u,%u,%s) he_type(%d,%s) ant_sel(%u) ldpc(%u)\n",
-			p_rinfo->mod_type, p_rinfo->chan_width_type, p_rinfo->chan_type_str, 
-			p_rinfo->he_type, p_rinfo->he_type_str, 
-			p_rinfo->ant_sel, p_rinfo->ldpc) ;
-	//if (p_rinfo->chan_width_type == 2) getchar() ;
+	flqstdout("mod_type(%u,%s) he_type(%u,%s) chan_width_type(%u,%u) ant_sel(%u) ldpc(%u)\n",
+			p_rinfo->mod_type, p_rinfo->mod_type_str, p_rinfo->he_type, p_rinfo->he_type_str, 
+			chan_width_type, p_rinfo->chan_width, p_rinfo->ant_sel, p_rinfo->ldpc) ;
 }
 
 
@@ -129,29 +181,22 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 	flqstdout("* %s\n", __func__) ;
 
 	uint32_t n32 ;
-	static buf[20480] ;
 
 	// save to file
-	fwrite(&n32, 1, 4, g_fp_csi) ;
 	n32 = htonl(csi_hdr_len) ;
 	fwrite(&n32, 1, 4, g_fp_csi) ;
 	fwrite(csi_hdr, 1, csi_hdr_len, g_fp_csi) ;
+		
 	n32 = htonl(csi_data_len) ;
 	fwrite(&n32, 1, 4, g_fp_csi) ;
 	fwrite(csi_data, 1, csi_data_len, g_fp_csi) ;
 	fflush(g_fp_csi) ;
 
-	// send to net
-	std::vector<std::pair<int, uint8_t*>> msgs ;
-	msgs.emplace_back(std::make_pair(csi_hdr_len, csi_hdr)) ;
-	msgs.emplace_back(std::make_pair(csi_data_len, csi_data)) ;
-	p_tcp_server->broadcast(msgs) ;
-
 	// decompose csi_hdr
 	csi_hdr_t *pch = (p_csi_hdr_t)csi_hdr ;
-	flqstdout("csi_len(%u) ftm(%u) (nrx,ntx,ntone)=(%u,%u,%u)\n", 
+	flqstdout("csi_len(%u) ftm(%u) nrx(%u) ntx(%u) ntone(%u)\n", 
 			pch->csi_len, pch->ftm, pch->nrx, pch->ntx, pch->ntone) ;
-	flqstdout("rssi(%d,%d) seq(%u) us(%u) rnf(0x%x)\n", 
+	flqstdout("rssi1(%d) rssi2(%d) seq(%u) us(%u) rnf(0x%x)\n", 
 			-pch->opp_rssi1, -pch->opp_rssi2, pch->seq, pch->us, pch->rate_n_flags) ;
 	uint8_t *smac = pch->smac ;
 	flqstdout("mac(%02x:%02x:%02x:%02x:%02x:%02x)\n", 
@@ -159,14 +204,15 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 
 	rate_info_t rinfo ;
 	handle_rate_n_flags(pch->rate_n_flags, &rinfo) ;
+	flqstdout("%s\n", rinfo.mod_type_str) ;
 
-	//output_hexs(csi_hdr, csi_hdr_len) ;
+	output_hexs(csi_hdr, csi_hdr_len) ;
 }
 
 
 static int valid_cb(struct nl_msg *msg, void *arg) 
 {
-	struct genlmsghdr *gnlh = (genlmsghdr *)nlmsg_data(nlmsg_hdr(msg));
+	struct genlmsghdr *gnlh = nlmsg_data(nlmsg_hdr(msg));
 	struct nlattr *tb_msg[NL80211_ATTR_MAX + 1];
 	struct nlattr *msg_vendor_data, *nmsg_csi_hdr = NULL, *nmsg_csi_data = NULL ;
 	struct nlattr *nested_tb_msg[NL80211_ATTR_MAX + 1];
@@ -192,15 +238,15 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 		nmsg_csi_hdr = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_HDR] ;
 	 	nmsg_csi_data = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_DATA] ;
 		if (nmsg_csi_hdr && nmsg_csi_data) {
-			flqstdout("-- (nla_type,nla_len) csi_hdr(%x,%u-4) csi_data(%x,%u-4)\n", 
+			flqstdout("-- (nla_type,nla_len) csi_hdr(%x,%u) csi_data(%x,%u)\n", 
 					nmsg_csi_hdr->nla_type, nmsg_csi_hdr->nla_len,
 					nmsg_csi_data->nla_type, nmsg_csi_data->nla_len) ;
 
 			uint16_t csi_hdr_len = nmsg_csi_hdr->nla_len - 4 ;
-			uint8_t *csi_hdr = (uint8_t *)nla_get_string(nmsg_csi_hdr) ;
+			uint8_t *csi_hdr = nla_get_string(nmsg_csi_hdr) ;
 						
 			uint16_t csi_data_len = nmsg_csi_data->nla_len - 4 ;
-			uint8_t *csi_data = (uint8_t *)nla_get_string(nmsg_csi_data) ;
+			uint8_t *csi_data = nla_get_string(nmsg_csi_data) ;
 
 			if ((csi_hdr_len != 272) || !csi_hdr || !csi_data) {
 				flqstdout("* %s, csi_hdr_len(%d)!=272 or !csi_hdr or !csi_data\n", __func__, csi_hdr_len) ;
@@ -218,7 +264,7 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 
 
 static int finish_cb(struct nl_msg *msg, void *arg) {
-	int *finished = (int *)arg;
+	int *finished = arg;
   	*finished = 1;
   	flqstdout("* %s -------\n", __func__) ;
 	nl_msg_dump(msg, stdout);
@@ -269,8 +315,6 @@ void handle_args(int argc, char **argv)
 		}
 		flqstdout("* %s, %s/%d %s\n", __func__, argv[1], gdevidx, argv[2]) ;
 	}
-
-	p_tcp_server = new tcp_server(7120) ;
 }
 
 
@@ -292,7 +336,7 @@ struct nl_sock *init_nl_socket()
 	//nl_socket_add_memberships(sk, 13, 0) ; 
 
   	nl_socket_set_buffer_size(sk, 8192, 8192);
-	nl_socket_disable_seq_check(sk) ;	// miss will nl_recvmsgs_default=-16
+	nl_socket_disable_seq_check(sk) ;
 	int family_id = genl_ctrl_resolve(sk, "nl80211") ;
 	//family_id = 34 ;
 	//int family_id = genl_ctrl_resolve(sk, "iwl_tm_gnl") ;
@@ -338,5 +382,79 @@ int main(int argc, char **argv)
 	return 0 ;
 }
 
+
+
+/*
+void handle_rate_n_flags(uint32_t rate_n_flags)
+{
+	//Bits 10-8: rate format, mod type
+	switch (rate_n_flags & RATE_MCS_MOD_TYPE_MSK) {
+		case RATE_MCS_CCK_MSK: 
+			printf("*mod_type cck\n") ;
+			break ;
+		case RATE_MCS_LEGACY_OFDM_MSK:
+			printf("*mod_type noht\n") ;
+			break ;
+		case RATE_MCS_HT_MSK:
+			printf("*mod_type ht\n") ;
+			break ;
+		case RATE_MCS_VHT_MSK:
+			printf("*mod_type vht\n") ;
+			break ;
+		case RATE_MCS_HE_MSK:
+			printf("*mod_type he\n") ;
+	//Bits 24-23: HE type
+	switch (rate_n_flags & RATE_MCS_HE_TYPE_MSK) {
+		case RATE_MCS_HE_TYPE_SU :
+			printf("* he_type su\n") ;
+			break ;
+		case RATE_MCS_HE_TYPE_EXT_SU :
+			printf("* he_type ext_su\n") ;
+			break ;
+		case RATE_MCS_HE_TYPE_MU :
+			printf("* he_type mu_su\n") ;
+			break ;
+		case RATE_MCS_HE_TYPE_TRIG :
+			printf("* he_type trig\n") ;
+			break ;
+	}
+
+			break ;
+		case RATE_MCS_EHT_MSK:
+			printf("*mod_type eht\n") ;
+			break ;
+	}
+
+	//BIts 13-11: chan width
+	switch (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK) {
+		case RATE_MCS_CHAN_WIDTH_20:
+			printf("*chan_width 20\n") ;
+			break ;
+		case RATE_MCS_CHAN_WIDTH_40:
+			printf("*chan_width 40\n") ;
+			break ;
+		case RATE_MCS_CHAN_WIDTH_80:
+			printf("*chan_width 80\n") ;
+			break ;
+		case RATE_MCS_CHAN_WIDTH_160:
+			printf("*chan_width 160\n") ;
+			break ;
+		case RATE_MCS_CHAN_WIDTH_320:
+			printf("*chan_width 320\n") ;
+			break ;
+	}
+
+	//Bits 15-14: antenna selection
+	switch (rate_n_flags & RATE_MCS_ANT_MSK) {
+	}
+
+	//Bits 16: LDPC enables
+	if (rate_n_flags & RATE_MCS_LDPC_MSK) 
+		printf("* ldpc\n") ;
+	else
+		printf("* bcc\n") ;
+
+}
+*/
 
 

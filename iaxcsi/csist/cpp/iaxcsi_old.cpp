@@ -19,7 +19,7 @@
 using namespace std ;
 
 #include "iwl_fw_api_rs.h"
-#include "axcsi.h"
+#include "iaxcsi.h"
 #include "tcp_server.h"
 
 #define DEBUG
@@ -129,25 +129,23 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 	flqstdout("* %s\n", __func__) ;
 
 	uint32_t n32 ;
-	static uint8_t buf[20480] ;
-	int pos = 0 ;
-
-	pos += 4 ;
-	n32 = htonl(csi_hdr_len) ;
-	memcpy(buf+pos, &n32, 4); pos += 4 ;
-	memcpy(buf+pos, csi_hdr, csi_hdr_len); pos += csi_hdr_len ;
-	n32 = htonl(csi_data_len) ;
-	memcpy(buf+pos, &n32, 4); pos += 4 ;
-	memcpy(buf+pos, csi_data, csi_data_len); pos += csi_data_len ;
-	n32 = htonl(pos-4) ;
-	memcpy(buf, &n32, 4); 
+	static buf[20480] ;
 
 	// save to file
-	fwrite(buf, 1, pos, g_fp_csi) ;
+	fwrite(&n32, 1, 4, g_fp_csi) ;
+	n32 = htonl(csi_hdr_len) ;
+	fwrite(&n32, 1, 4, g_fp_csi) ;
+	fwrite(csi_hdr, 1, csi_hdr_len, g_fp_csi) ;
+	n32 = htonl(csi_data_len) ;
+	fwrite(&n32, 1, 4, g_fp_csi) ;
+	fwrite(csi_data, 1, csi_data_len, g_fp_csi) ;
 	fflush(g_fp_csi) ;
 
 	// send to net
-	p_tcp_server->broadcast(buf, pos) ;
+	std::vector<std::pair<int, uint8_t*>> msgs ;
+	msgs.emplace_back(std::make_pair(csi_hdr_len, csi_hdr)) ;
+	msgs.emplace_back(std::make_pair(csi_data_len, csi_data)) ;
+	p_tcp_server->broadcast(msgs) ;
 
 	// decompose csi_hdr
 	csi_hdr_t *pch = (p_csi_hdr_t)csi_hdr ;
@@ -272,10 +270,7 @@ void handle_args(int argc, char **argv)
 		flqstdout("* %s, %s/%d %s\n", __func__, argv[1], gdevidx, argv[2]) ;
 	}
 
-	if (!(p_tcp_server = new tcp_server(7120))) {
-		flqstdout("* tcp_server err") ;
-		exit(EXIT_FAILURE) ;
-	}
+	p_tcp_server = new tcp_server(7120) ;
 }
 
 

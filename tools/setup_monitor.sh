@@ -84,7 +84,7 @@ fi
 
 #conclude
 #n-virtual-dev in wlp8s0(include wlp8s0), can only up only one,
-#so, ./axcsi in monitor need (wlp8s0-down, one-mon-up)
+#so, ./iaxcsi in monitor need (wlp8s0-down, one-mon-up)
 
 
 ### recover --------------------------------------

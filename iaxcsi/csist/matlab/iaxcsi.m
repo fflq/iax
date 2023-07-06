@@ -1,5 +1,5 @@
 
-classdef axcsi < handle
+classdef iaxcsi < handle
 
 properties (Access='public')
 	%file
@@ -16,29 +16,139 @@ end
 	
 
 methods (Access='public')
-	function self = axcsi(inputname)
-		if contains(inputname, ':') && ~contains(inputname, '/')
-			self.is_net = true;
-			addr = strsplit(inputname,":") ;
-			self.ip = addr{1};
-			self.port = str2num(addr{2}) ;
-			self.sfd = tcpclient(self.ip, self.port, "Timeout",5) ;
-		else
-			self.is_net = false;
-			self.fd = fopen(inputname, 'rb') ;
-			self.file_len = axcsi.get_file_len(self.fd) ;
-			self.pos = 0; 
+	function self = iaxcsi(inputname)
+		try
+			if contains(inputname, ':') && ~contains(inputname, '/')
+				self.is_net = true;
+				addr = strsplit(inputname,":") ;
+				self.ip = addr{1};
+				self.port = str2num(addr{2}) ;
+				%self.sfd = tcpclient(self.ip, self.port, "Timeout",5) ;
+				self.sfd = tcpclient(self.ip, self.port);
+			else
+				self.is_net = false;
+				self.fd = fopen(inputname, 'rb') ;
+				self.file_len = iaxcsi.get_file_len(self.fd) ;
+				self.pos = 0; 
+			end
+		catch ME
+			ME.identifier
+			%self = [];
 		end
 	end
 
-	function st = read(self)
+	function delete(self)
+		if (self.fd > 0)
+			fclose(self.fd) ;
+			self.fd = -1;
+		end
+
+		if (self.sfd > 0)
+			fclose(self.sfd) ;
+			self.sfd = -1;
+		end
+	end
+
+
+	%
+	function [st, len] = read_file_once(self)
+		try
+			msg_len = fread(self.fd, 1, 'int32', 'b') ;
+			if isempty(msg_len)
+				st = [] ; len = 0 ; return ;
+			end
+			msg = fread(self.fd, msg_len, 'uint8') ;
+			st = iaxcsi.read_axcsi_st(msg) ;
+			len = 4 + msg_len ;
+		catch ME
+			ME.identifier
+			st = [] ;
+		end
+	end
+
+	function [st, len] = read_net_once(self)
+		try
+			msg_len = iaxcsi.be_uintn(double(read(self.sfd, 4, 'uint8'))) ;
+			if isempty(msg_len)
+				st = [] ; len = 0 ; return ;
+			end
+			msg = double(read(self.sfd, msg_len, 'uint8')) ;
+			st = iaxcsi.read_axcsi_st(msg) ;
+			len = 4 + msg_len ;
+		catch ME
+			ME.identifier
+			st = [] ;
+		end
+		%fflqdbg
+		st
+	end
+
+	function [st, len] = read_once(self, savename)
+		if (nargin < 2); savename = '' ; end
+
 		if (self.is_net)
-			st = axcsi.read_net_once(self.sfd) ;
+			[st, len] = self.read_net_once();
 		else 
-			st = axcsi.read_file_once(self.fd) ;
+			[st, len] = self.read_file_once();
+		end
+
+		sts = st;
+		if ~isempty(savename)
+			save(savename, "sts");
 		end
 	end
 
+	function [st, len] = read(self, savename)
+		if (nargin < 2); savename = '' ; end
+		[st, len] = self.read_once(savename);
+	end
+
+
+	%
+	function sts = read_file_all(self)
+		sts = {} ;
+		while self.pos < self.file_len
+			if ~mod(length(sts),100)
+				fprintf("* read %.2f %%\n", 100*self.pos/self.file_len) ;
+			end
+
+			[st, len] = self.read_file_once();
+			self.pos = self.pos + len ;
+			if isempty(st); break; end
+			sts{end+1} = st ;
+			%test_st(st) ;
+		end
+	end
+
+	function sts = read_net_all(self)
+		sts = {} ;
+		while true
+			if ~mod(length(sts),100)
+				fprintf("* read %.2f %%\n", 100*self.pos/self.file_len) ;
+			end
+
+			st = self.read_net_once() ;
+			if isempty(st); break; end
+			sts{end+1} = st ;
+		end
+	end
+
+	function sts = read_all(self, savename)
+		if (nargin < 2); savename = '' ; end
+
+		if (self.is_net)
+			sts = self.read_net_all() ;
+		else 
+			sts = self.read_file_all() ;
+		end
+
+		if ~isempty(savename)
+			save(savename, "sts");
+		end
+	end
+
+
+	%test
 	function r = test(self)
 		r = true ;
 		if (self.is_net)
@@ -56,76 +166,19 @@ end
 
 methods (Static)
 
-	function [st, len] = read_file_once(fd)
-		msg_len = fread(fd, 1, 'int32', 'b') ;
-		if isempty(msg_len)
-			st = [] ; len = 0 ; return ;
-		end
-		msg = fread(fd, msg_len, 'uint8') ;
-		st = axcsi.read_axcsi_st(msg) ;
-		len = 4 + msg_len ;
-	end
-
-	function [st, len] = read_net_once(sfd)
-		msg_len = axcsi.be_uintn(double(read(sfd, 4, 'uint8'))) ;
-		if isempty(msg_len)
-			st = [] ; len = 0 ; return ;
-		end
-		msg = double(read(sfd, msg_len, 'uint8')) ;
-		st = axcsi.read_axcsi_st(msg) ;
-		len = 4 + msg_len ;
-	end
-
-
-	function sts = read_all(inputname, savename)
+	function [st, len] = static_read_once(inputname, savename)
 		if (nargin < 2); savename = '' ; end
-
-		if contains(inputname, ':') && ~contains(inputname, '/')
-			sts = axcsi.read_net_all(inputname) ;
-		else
-			sts = axcsi.read_file_all(inputname) ;
-		end
-
-		if ~isempty(savename)
-			save(savename, "sts");
-		end
+		[st, len] = iaxcsi(inputname).read_once(savename) 
 	end
 
-
-	function sts = read_file_all(filename)
-		f = fopen(filename, 'rb') ;
-		file_len = axcsi.get_file_len(f) ;
-		pos = 0; 
-
-		sts = {} ;
-		while pos < file_len
-			if ~mod(length(sts),200)
-				fprintf("* read %.2f %%\n", 100*pos/file_len) ;
-			end
-
-			[st, len] = axcsi.read_file_once(f);
-			pos = pos + len ;
-			if isempty(st); break; end
-			sts{end+1} = st ;
-			%test_st(st) ;
-		end
-
-		fclose(f) ;	
+	function [st, len] = static_read(inputname, savename)
+		if (nargin < 2); savename = '' ; end
+		[st, len] = iaxcsi.static_read_once(inputname, savename);
 	end
 
-
-	function sts = read_net_all(inputname)
-		addr = strsplit(inputname,":") ;
-		ip = addr{1};
-		port = str2num(addr{2}) ;
-		sfd = tcpclient(ip, port, "Timeout",10) ;
-
-		sts = {} ;
-		while true
-			st = axcsi.read_net_once(sfd) ;
-			if isempty(st); break; end
-			sts{end+1} = st ;
-		end
+	function sts = static_read_all(inputname, savename)
+		if (nargin < 2); savename = '' ; end
+		sts = iaxcsi(inputname).read_all(savename);
 	end
 
 
@@ -134,25 +187,25 @@ methods (Static)
 		st = [] ;
 
 		try
-			hdr_len = axcsi.be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
+			hdr_len = iaxcsi.be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
 			if (hdr_len ~= 272)
 				fprintf("*err hdr_len %d!=272\n", hdr_len) ;
 				return ;
 			end
 			hdr_buf = buf(pos:pos+hdr_len-1); pos = pos + hdr_len ;
-			hdr_st = axcsi.get_csi_hdr_st(hdr_buf) ; 
-			rnf_st = axcsi.get_rnf_st(hdr_st.rnf) ;
+			hdr_st = iaxcsi.get_csi_hdr_st(hdr_buf) ; 
+			rnf_st = iaxcsi.get_rnf_st(hdr_st.rnf) ;
 
-			csi_len = axcsi.be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
+			csi_len = iaxcsi.be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
 			csi_buf = buf(pos:pos+csi_len-1); pos = pos + csi_len ;
 			if length(buf) ~= pos-1
 				fprintf("* buf len err: %d %d-1\n", length(buf), pos) ;
 				pause ;
 			end
-			csi = axcsi.get_csi(csi_buf, hdr_st) ;
+			csi = iaxcsi.get_csi(csi_buf, hdr_st) ;
 
 			%[hdr_len, csi_len, 111111, hdr_st.csi_len, hdr_st.ntone] 
-			st = axcsi.fill_csist(hdr_st, rnf_st, csi) ;  
+			st = iaxcsi.fill_csist(hdr_st, rnf_st, csi) ;  
 		catch ME
 			ME.identifier
 		end
@@ -192,8 +245,8 @@ methods (Static)
 		st.csi_len = hdr_st.csi_len ;
 
 		st.csi = csi ;
-		st = axcsi.calib_csi_subcs(st) ;
-		st = axcsi.calib_csi_perm(st) ;
+		st = iaxcsi.calib_csi_subcs(st) ;
+		st = iaxcsi.calib_csi_perm(st) ;
 	end
 
 
@@ -223,9 +276,9 @@ methods (Static)
 		st.perm = [1,2] ;
 		pw1 = sum(abs(st.csi(1,1,:))) ;
 		pw2 = sum(abs(st.csi(2,1,:))) ;
-		[a,b,st.scsi(1,1,:)] = axcsi.fit_csi(st.scsi(1,1,:), st.subc.subcs) ;
-		[a,b,st.scsi(2,1,:)] = axcsi.fit_csi(st.scsi(2,1,:), st.subc.subcs) ;
-		[dk, deltab, tones] = axcsi.fit_csi(st.scsi(2,1,:) .* conj(st.scsi(1,1,:)), st.subc.subcs);
+		[a,b,st.scsi(1,1,:)] = iaxcsi.fit_csi(st.scsi(1,1,:), st.subc.subcs) ;
+		[a,b,st.scsi(2,1,:)] = iaxcsi.fit_csi(st.scsi(2,1,:), st.subc.subcs) ;
+		[dk, deltab, tones] = iaxcsi.fit_csi(st.scsi(2,1,:) .* conj(st.scsi(1,1,:)), st.subc.subcs);
 		if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
 		%if mod(st.us, 3)
 			st.perm = [2,1] ;
@@ -275,7 +328,7 @@ methods (Static)
 			% for raw_csi, only data_tones valid
 			x = subc.idx_data_subcs ;
 			xv = subc.idx_pilot_dc_subcs ;
-			data_pilot_dc_tones(xv) = axcsi.do_complex_interp(xv, x, data_pilot_dc_tones(x)) ;
+			data_pilot_dc_tones(xv) = iaxcsi.do_complex_interp(xv, x, data_pilot_dc_tones(x)) ;
 			scsi(irx,itx,:) = data_pilot_dc_tones ;
 		end; end;
 		
@@ -298,23 +351,23 @@ methods (Static)
 
 		%Bits 10-8: mod type
 		mod_type_strs = ["CCK", "NOHT", "HT", "VHT", "HE", "EH"] ;
-		[mod_type, rnf_st.mod_type_str] = axcsi.get_rate_mcs_fmt_val(8, 7, mod_type_strs, rnf) ;  
+		[mod_type, rnf_st.mod_type_str] = iaxcsi.get_rate_mcs_fmt_val(8, 7, mod_type_strs, rnf) ;  
 
 		%Bits 24-23: HE type
 		if (mod_type == 4+1) 
 			he_type_strs = ["HE-SU", "HE-EXT-SU", "HE-MU", "HE-TRIG"] ;
-			[~, rnf_st.mod_type_str] = axcsi.get_rate_mcs_fmt_val(23, 3, he_type_strs, rnf) ;
+			[~, rnf_st.mod_type_str] = iaxcsi.get_rate_mcs_fmt_val(23, 3, he_type_strs, rnf) ;
 		end
 
 		%Bits 13-11: chan width
 		chan_width_vals = [20, 40, 80, 160, 320] ;
-		[~, rnf_st.chan_width] = axcsi.get_rate_mcs_fmt_val(11, 7, chan_width_vals, rnf) ;
+		[~, rnf_st.chan_width] = iaxcsi.get_rate_mcs_fmt_val(11, 7, chan_width_vals, rnf) ;
 
 		rnf_st.chan_type_str = strcat(rnf_st.mod_type_str, num2str(rnf_st.chan_width)) ;
 
 		%Bits 15-14: ant sel
 		ant_sel_vals = 0:3 ;
-		rnf_st.ant_sel = axcsi.get_rate_mcs_fmt_val(14, 3, ant_sel_vals, rnf) ;
+		rnf_st.ant_sel = iaxcsi.get_rate_mcs_fmt_val(14, 3, ant_sel_vals, rnf) ;
 
 		%Bits 16
 		rnf_st.ldpc = rnf & bitshift(1, 16) ;
@@ -332,7 +385,7 @@ methods (Static)
 
 
 	function r = le_int(s)
-		r = axcsi.le_uint(s) ;
+		r = iaxcsi.le_uint(s) ;
 		nbit = length(s)*8 ;
 		highest_bit = bitshift(1, nbit-1) ;
 		if bitand(r, highest_bit)
@@ -344,17 +397,17 @@ methods (Static)
 	function hdr_st = get_csi_hdr_st(hdrbuf) 
 		hdr_st = struct() ;
 
-		hdr_st.csi_len = axcsi.le_uint(hdrbuf(1:4)) ; 
-		hdr_st.ftm = uint32(axcsi.le_uint(hdrbuf(9:12))) ;
+		hdr_st.csi_len = iaxcsi.le_uint(hdrbuf(1:4)) ; 
+		hdr_st.ftm = uint32(iaxcsi.le_uint(hdrbuf(9:12))) ;
 		hdr_st.nrx = hdrbuf(47) ;
 		hdr_st.ntx = hdrbuf(48) ;
-		hdr_st.ntone = axcsi.le_uint(hdrbuf(53:56)) ;
+		hdr_st.ntone = iaxcsi.le_uint(hdrbuf(53:56)) ;
 		hdr_st.rssi1 = -hdrbuf(61) ;
 		hdr_st.rssi2 = -hdrbuf(65) ;
 		hdr_st.smac = join(string(dec2hex(hdrbuf(69:74))),':') ;
-		hdr_st.seq = axcsi.le_uint(hdrbuf(77)) ;
-		hdr_st.us = uint64(axcsi.le_uint(hdrbuf(89:92))) ;
-		hdr_st.rnf = axcsi.le_uint(hdrbuf(93:96)) ;
+		hdr_st.seq = iaxcsi.le_uint(hdrbuf(77)) ;
+		hdr_st.us = uint64(iaxcsi.le_uint(hdrbuf(89:92))) ;
+		hdr_st.rnf = iaxcsi.le_uint(hdrbuf(93:96)) ;
 	end
 
 
@@ -367,8 +420,8 @@ methods (Static)
 		for rxidx = 1:hdr_st.nrx; for txidx = 1:hdr_st.ntx; for toneidx = 1:hdr_st.ntone
 				%imag = fread(f, 1, 'int16', 'l') ;
 				%real = fread(f, 1, 'int16', 'l') ;
-				imag = axcsi.le_int(csibuf(pos:pos+1)) ;
-				real = axcsi.le_int(csibuf(pos+2:pos+3)) ;
+				imag = iaxcsi.le_int(csibuf(pos:pos+1)) ;
+				real = iaxcsi.le_int(csibuf(pos+2:pos+3)) ;
 				csi(rxidx, txidx, toneidx) = real + 1j*imag ;
 				pos = pos + 4 ;
 		end; end; end
@@ -404,19 +457,19 @@ methods (Static)
 	end
 
 	function r = le_uintn(s)
-		r = axcsi.to_uintn(s, false) ;
+		r = iaxcsi.to_uintn(s, false) ;
 	end
 
 	function r = le_intn(s, nbits)
-		r = axcsi.uintn_to_intn(axcsi.le_uintn(s), nbits) ;
+		r = iaxcsi.uintn_to_intn(iaxcsi.le_uintn(s), nbits) ;
 	end
 
 	function r = be_uintn(s)
-		r = axcsi.to_uintn(s, true) ;
+		r = iaxcsi.to_uintn(s, true) ;
 	end
 
 	function r = be_intn(s, nbits)
-		r = axcsi.uintn_to_intn(axcsi.be_uintn(s), nbits) ;
+		r = iaxcsi.uintn_to_intn(iaxcsi.be_uintn(s), nbits) ;
 	end
 
 end

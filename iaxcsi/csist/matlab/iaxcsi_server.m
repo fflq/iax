@@ -7,10 +7,10 @@ Instrument Tools, Signal Processing Toolbox
 addpath('/home/flq/ws/git/CSI/intel5300')
 
 
-classdef AXCSIServer < CSIServer
+classdef iaxcsi_server < CSIServer
 
 methods (Access='public')
-	function obj = AXCSIServer(ip, port)
+	function obj = iaxcsi_server(ip, port)
 		obj = obj@CSIServer()
 	end
 

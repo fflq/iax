@@ -3,7 +3,7 @@ set -x
 
 dt=$(date +'%Y%m%d')
 src_dir=.
-pack_name=axcsi_package_${dt}
+pack_name=iaxcsi_package_${dt}
 pack_dir=/tmp/
 dst_dir=/tmp/$pack_name
 
@@ -13,8 +13,8 @@ mkdir -p $dst_dir
 cp $src_dir/run_in_package.sh $dst_dir/run.sh
 cp $src_dir/activate.sh $dst_dir
 cp $src_dir/setup_monitor.sh $dst_dir
-cp $src_dir/setup_axcsi_monitor.sh $dst_dir
-cp $src_dir/setup_axcsi_injector.sh $dst_dir
+cp $src_dir/setup_iaxcsi_monitor.sh $dst_dir
+cp $src_dir/setup_iaxcsi_injector.sh $dst_dir
 cp $src_dir/connwifi.sh $dst_dir
 cp $src_dir/sources.list $dst_dir
 
@@ -33,12 +33,12 @@ make clean -C $dst_dir/injection/lorcon-old
 
 
 mkdir -p $dst_dir/csi
-netlink_files=(axcsi.cpp axcsi.h iwl_fw_api_rs.h tcp_server.h Makefile)
+netlink_files=(iaxcsi.cpp iaxcsi.h iwl_fw_api_rs.h tcp_server.h Makefile)
 for f in ${netlink_files[@]}
 do
 	cp -rf $src_dir/csist/cpp/$f $dst_dir/csi/
 done
-script_files=(read_axcsi.m)
+script_files=(read_iaxcsi.m)
 for f in ${script_files[@]}
 do
 	cp -rf $src_dir/csist/matlab/$f $dst_dir/csi/

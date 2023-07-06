@@ -1,13 +1,13 @@
 
-function sts = read_axcsi(inputname, savename)
+function sts = read_iaxcsi(inputname, savename)
 	if (nargin < 2)
 		savename = '' ;
 	end
 
 	if isnumeric(inputname)
-		sts = read_axcsi_net(inputname) ;
+		sts = read_iaxcsi_net(inputname) ;
 	else
-		sts = read_axcsi_file(inputname) ;
+		sts = read_iaxcsi_file(inputname) ;
 	end
 
 	if ~isempty(savename)
@@ -17,7 +17,7 @@ function sts = read_axcsi(inputname, savename)
 end
 
 
-function sts = read_axcsi_file(filename)
+function sts = read_iaxcsi_file(filename)
 	f = fopen(filename, 'rb') ;
 	file_len = get_file_len(f) ;
 	pos = 0; 
@@ -32,7 +32,7 @@ function sts = read_axcsi_file(filename)
 		msg = fread(f, msg_len, 'uint8') ;
 		pos = pos + 4 + msg_len ;
 
-		st = read_axcsi_st(msg) ;
+		st = read_iaxcsi_st(msg) ;
 		if isempty(st); break; end
 		sts{end+1} = st ;
 		%test_st(st) ;
@@ -42,20 +42,20 @@ function sts = read_axcsi_file(filename)
 end
 
 
-function sts = read_axcsi_net(port)
+function sts = read_iaxcsi_net(port)
 	sts = {} ;
 	cfd = tcpclient('localhost', 7120) ;
 	while true
 		msg_len = be_uintn(double(read(cfd, 4, 'uint8'))) ;
 		msg = double(read(cfd, msg_len, 'uint8')) ;
-		st = read_axcsi_st(msg) ;
+		st = read_iaxcsi_st(msg) ;
 		sts{end+1} = st ;
 		st
 	end
 end
 
 
-function st = read_axcsi_st(buf)
+function st = read_iaxcsi_st(buf)
 	pos = 1 ;
 	st = [] ;
 

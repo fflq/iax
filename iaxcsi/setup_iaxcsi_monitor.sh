@@ -11,7 +11,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "" 
-sudo ./activate.sh 50000 $3 ""
+sudo ./iaxcsi_activate.sh $3 10000 ""
 if [ $? -ne 0 ]; then
 	exit -1 ;
 fi
