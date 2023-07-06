@@ -1,0 +1,1 @@
+../tools/setup_monitor.sh
