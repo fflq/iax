@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # sudo pip3 install libnl3 numpy seaborn
 # ref iaxcsi.c(genl to nl)(https://www.infradead.org/~tgr/libnl/doc/api/group__genl.html)
+# pyroute2 basic support netlink may not statisfy.
 
 import socket
 import sys
@@ -83,20 +84,21 @@ class iaxcsi_netlink:
 
                 
     def handle_nmsg_csi(self, csi_hdr, csi_hdr_len, csi_data, csi_data_len):
-        with open(self.savepath, 'ab') as f:
-            f.write(struct.pack('>i', csi_hdr_len+csi_data_len+8))
-            f.write(struct.pack('>i', csi_hdr_len))
-            f.write(csi_hdr)
-            f.write(struct.pack('>i', csi_data_len))
-            f.write(csi_data)
+        if self.savepath:
+            with open(self.savepath, 'ab') as f:
+                f.write(struct.pack('>i', csi_hdr_len+csi_data_len+8))
+                f.write(struct.pack('>i', csi_hdr_len))
+                f.write(csi_hdr)
+                f.write(struct.pack('>i', csi_data_len))
+                f.write(csi_data)
 
         try:
             if self.iaxcsist_callback:
                 self.iaxcsist_callback(iaxcsi_st(csi_hdr, csi_data)); return
             if self.csist_callback:
                 self.csist_callback(iaxcsi_st(csi_hdr, csi_data).csist); return
-        except:
-            pass
+        except Exception as e:
+            print(e)
 
                
     def valid_cb(self, msg, args):

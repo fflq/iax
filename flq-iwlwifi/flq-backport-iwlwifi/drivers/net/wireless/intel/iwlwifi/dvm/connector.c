@@ -117,6 +117,7 @@ static void connector_send_all(void)
 	cn_buf_read = end;
 	spin_unlock_irqrestore(&connector_lock, flags);
 }
+
 static void connector_work(struct work_struct *trash)
 {
 	connector_send_all();
@@ -162,6 +163,7 @@ void connector_callback(struct cn_msg *msg, struct netlink_skb_parms *nsp)
 	msg->seq, msg->ack, msg->len);
 }
 EXPORT_SYMBOL(connector_callback);
+
 int iwlagn_register_connector(void)
 {
 	int ret;
@@ -182,6 +184,7 @@ int iwlagn_register_connector(void)
 	return 0;
 }
 EXPORT_SYMBOL(iwlagn_register_connector);
+
 void iwlagn_unregister_connector(void)
 {
 	u32 i;
@@ -198,6 +201,7 @@ void iwlagn_unregister_connector(void)
 	printk(KERN_INFO "iwlagn: connector callback deregistered\n");
 }
 EXPORT_SYMBOL(iwlagn_unregister_connector);
+
 void iwl_connector_set_priv(struct iwl_priv *p)
 {
 	unsigned long flags;

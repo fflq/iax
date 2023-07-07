@@ -4,7 +4,7 @@
 import struct
 import os
 
-from pyiaxcsi.iaxcsi_st import iaxcsi_st
+from iaxcsi_st import iaxcsi_st
 
 
 class iaxcsi_file:
