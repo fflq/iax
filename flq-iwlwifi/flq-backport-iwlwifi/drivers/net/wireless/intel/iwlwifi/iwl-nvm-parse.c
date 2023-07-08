@@ -2241,8 +2241,8 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
 	if (le32_to_cpu(rsp->regulatory.lar_enabled) &&
 	    fw_has_capa(&fw->ucode_capa,
 			IWL_UCODE_TLV_CAPA_LAR_SUPPORT)) {
-		printk("***fflq %s, lar_enabled=true\n", __func__) ;
 		nvm->lar_enabled = true;
+		printk("***fflq %s, lar_enabled=%d\n", __func__, nvm->lar_enabled) ;
 		sbands_flags |= IWL_NVM_SBANDS_FLAGS_LAR;
 	}
 	//nvm->lar_enabled=false; //fflq lar

@@ -436,6 +436,7 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
 
 
 
+exit
 sns.set_style("whitegrid", {'axes.linewidth':0.2})    
 
 #plt.ion()

@@ -1,0 +1,803 @@
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/Kconfig linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/Kconfig
+[36m55a56[0m
+[32m> 	depends on CONNECTOR[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/Makefile linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/Makefile
+[36m7c7[0m
+[31m< iwldvm-objs		+= scan.o[0m
+---
+[32m> iwldvm-objs		+= scan.o connector.o[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/agn.h linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/agn.h
+[36m223a224,225[0m
+[32m> int iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,[0m
+[32m> 		      struct iwl_device_cmd *cmd);[0m
+[36m491a494,502[0m
+[32m> [0m
+[32m> extern const u8 iwl_monitor_addr[ETH_ALEN];[0m
+[32m> static inline bool is_monitor_ether_addr(const u8 *addr)[0m
+[32m> {[0m
+[32m> 	if (WARN_ON(addr == NULL))[0m
+[32m> 		return 0;[0m
+[32m> 	return !memcmp(addr, iwl_monitor_addr, ETH_ALEN);[0m
+[32m> }[0m
+[32m> [0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/commands.h linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/commands.h
+[36m160a161,164[0m
+[32m> [0m
+[32m> 	/* Beamforming */[0m
+[32m> 	REPLY_BFEE_NOTIFICATION = 0xbb,[0m
+[32m> [0m
+[36m189a194,196[0m
+[32m> 	/* Gets metadata for Beamforming */[0m
+[32m> 	DSP_DEBUG_CMD = 0xf1,[0m
+[32m> [0m
+[36m580a588,591[0m
+[32m> /* Beamforming */[0m
+[32m> #define RXON_FLG_BF_ENABLE_POS			(29)[0m
+[32m> #define RXON_FLG_BF_ENABLE_MSK			cpu_to_le32(0x1<<29)[0m
+[32m> [0m
+[36m791a803[0m
+[32m> #define IWLAGN_MONITOR_ID	13[0m
+[36m1098a1111[0m
+[32m> #define IWLAGN_MAX_CFG_PHY_CNT 20[0m
+[36m1111c1124[0m
+[31m< 	u8 cfg_phy_cnt;		/* configurable DSP phy data byte count */[0m
+---
+[32m> 	u8 cfg_phy_cnt;		/* configurable DSP phy data element count */[0m
+[36m1121a1135[0m
+[32m> 	u8 cfg_phy_buf[0];	/* The values requested via DSP_DEBUG */[0m
+[36m3911a3926,3981[0m
+[32m> [0m
+[32m> /******************************************************************************[0m
+[32m>  * (14)[0m
+[32m>  * Beamforming commands[0m
+[32m>  *[0m
+[32m>  *****************************************************************************/[0m
+[32m> [0m
+[32m> /*[0m
+[32m>  * REPLY_BFEE_NOTIFICATION = 0xbb[0m
+[32m>  *[0m
+[32m>  */[0m
+[32m> struct iwl_bfee_notif {[0m
+[32m> 	__le32 timestamp_low;[0m
+[32m> 	__le16 bfee_count;[0m
+[32m> 	__le16 reserved1;[0m
+[32m> 	u8 Nrx, Ntx;[0m
+[32m> 	u8 rssiA, rssiB, rssiC;[0m
+[32m> 	s8 noise;[0m
+[32m> 	u8 agc, antenna_sel;[0m
+[32m> 	__le16 len;[0m
+[32m> 	__le16 fake_rate_n_flags;[0m
+[32m> 	u8 payload[0];[0m
+[32m> } __attribute__ ((packed));[0m
+[32m> [0m
+[32m> /******************************************************************************[0m
+[32m>  * (15)[0m
+[32m>  * DSP debug interface[0m
+[32m>  *[0m
+[32m>  *****************************************************************************/[0m
+[32m> [0m
+[32m> /* DSP debugging */[0m
+[32m> #define DSP_DEBUG_CCK_MSK		(0x1)[0m
+[32m> #define DSP_DEBUG_OFDM_MSK		(0x0)[0m
+[32m> /* MIB values */[0m
+[32m> #define OFDM_RX_ANT_OUT			0x4302[0m
+[32m> [0m
+[32m> /*[0m
+[32m>  * DSP_DEBUG_CMD = 0xf1[0m
+[32m>  *[0m
+[32m>  */[0m
+[32m> struct iwl5000_dsp_debug {[0m
+[32m> 	u8 mib_cnt;[0m
+[32m> 	u8 flags;[0m
+[32m> 	u8 stat_id;[0m
+[32m> 	u8 reserved;[0m
+[32m> 	u16 mib_indices[0];[0m
+[32m> } __attribute__ ((packed));[0m
+[32m> [0m
+[32m> /* For rotate rates */[0m
+[32m> #define ROTATE_SISO	1[0m
+[32m> #define ROTATE_MIMO2	2[0m
+[32m> #define ROTATE_MIMO3	4[0m
+[32m> #define ROTATE_TX_SEL	8[0m
+[32m> #define ROTATE_HT40	16[0m
+[32m> #define ROTATE_SGI	32[0m
+[32m> #define ROTATE_SKIP	64[0m
+Only in linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm: connector.c
+Only in linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm: connector.h
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/debugfs.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+[36m2355a2356,2667[0m
+[32m> static ssize_t iwl_dbgfs_bf_flag_read(struct file *file,[0m
+[32m> 					  char __user *user_buf,[0m
+[32m> 					  size_t count, loff_t *ppos)[0m
+[32m> {[0m
+[32m> 	struct iwl_priv *priv = file->private_data;[0m
+[32m> 	char buf[11];[0m
+[32m> 	int len;[0m
+[32m> [0m
+[32m> 	len = scnprintf(buf, sizeof(buf), "%d", priv->bf_enabled);[0m
+[32m> [0m
+[32m> 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);[0m
+[32m> }[0m
+[32m> [0m
+[32m> static ssize_t iwl_dbgfs_bf_flag_write(struct file *file,[0m
+[32m> 					   const char __user *user_buf,[0m
+[32m> 					   size_t count, loff_t *ppos)[0m
+[32m> {[0m
+[32m> 	struct iwl_priv *priv = file->private_data;[0m
+[32m> 	char buf[11];[0m
+[32m> 	unsigned long val;[0m
+[32m> 	int ret;[0m
+[32m> [0m
+[32m> 	if (count > sizeof(buf))[0m
+[32m> 		return -EINVAL;[0m
+[32m> [0m
+[32m> 	memset(buf, 0, sizeof(buf));[0m
+[32m> 	if (copy_from_user(buf, user_buf, count))[0m
+[32m> 		return -EFAULT;[0m
+[32m> [0m
+[32m> 	ret = kstrtoul(buf, 0, &val);[0m
+[32m> 	if (ret)[0m
+[32m> 		return ret;[0m
+[32m> [0m
+[32m> 	priv->bf_enabled = !!val;[0m
+[32m> [0m
+[32m> 	return count;[0m
+[32m> }[0m
+[32m> DEBUGFS_READ_WRITE_FILE_OPS(bf_flag);[0m
+[32m> [0m
+[32m> static ssize_t iwl_dbgfs_rx_chains_msk_read(struct file *file,[0m
+[32m> 					  char __user *user_buf,[0m
+[32m> 					  size_t count, loff_t *ppos)[0m
+[32m> {[0m
+[32m> 	struct iwl_priv *priv = file->private_data;[0m
+[32m> 	char buf[128];[0m
+[32m> 	int len;[0m
+[32m> [0m
+[32m> 	len = scnprintf(buf, sizeof(buf), "rx_chains: %d antennas, mask 0x%x",[0m
+[32m> 			priv->hw_params.rx_chains_num,[0m
+[32m> 			priv->nvm_data->valid_rx_ant);[0m
+[32m> [0m
+[32m> 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);[0m
+[32m> }[0m
+[32m> [0m
+[32m> static ssize_t iwl_dbgfs_rx_chains_msk_write(struct file *file,[0m
+[32m> 					   const char __user *user_buf,[0m
+[32m> 					   size_t count, loff_t *ppos)[0m
+[32m> {[0m
+[32m> 	struct iwl_priv *priv = file->private_data;[0m
+[32m> 	struct iwl_rxon_context *ctx;[0m
+[32m> 	char buf[11];[0m
+[32m> 	unsigned long val;[0m
+[32m> 	int ret;[0m
+[32m> [0m
+[32m> 	if (count > sizeof(buf))[0m
+[32m> 		return -EINVAL;[0m
+[32m> [0m
+[32m> 	memset(buf, 0, sizeof(buf));[0m
+[32m> 	if (copy_from_user(buf, user_buf, count))[0m
+[32m> 		return -EFAULT;[0m
+[32m> [0m
+[32m> 	ret = kstrtoul(buf, 0, &val);[0m
+[32m> 	if (ret)[0m
+[32m> 		return ret;[0m
+[32m> [0m
+[32m> 	if ((val & ANT_ABC) != val) {[0m
+[32m> 		IWL_ERR(priv, "Invalid rx ant mask 0x%lx\n", val);[0m
+[32m> 		return -EINVAL;[0m
+[32m> 	}[0m
+[32m> 	IWL_INFO(priv, "Committing rx_chains_msk = 0x%lx\n", val);[0m
+[32m> [0m
+[32m> 	mutex_lock(&priv->mutex);[0m
+[32m> 	/* Update chains and number of chains */[0m
+[32m> 	priv->nvm_data->valid_rx_ant = val;[0m
+[32m> 	priv->hw_params.rx_chains_num = num_of_ant(val);[0m
+[32m> 	/* This is useful for verifying valid rates */[0m
+[32m> 	priv->chain_noise_data.active_chains = val;[0m
+[32m> [0m
+[32m> 	for_each_context(priv, ctx) {[0m
+[32m> 		iwlagn_set_rxon_chain(priv, ctx);[0m
+[32m> 		iwlagn_commit_rxon(priv, ctx);[0m
+[32m> 	}[0m
+[32m> 	mutex_unlock(&priv->mutex);[0m
+[32m> [0m
+[32m> 	return count;[0m
+[32m> }[0m
+[32m> DEBUGFS_READ_WRITE_FILE_OPS(rx_chains_msk);[0m
+[32m> [0m
+[32m> static ssize_t iwl_dbgfs_rotate_rates_read(struct file *file,[0m
+[32m> 					  char __user *user_buf,[0m
+[32m> 					  size_t count, loff_t *ppos)[0m
+[32m> {[0m
+[32m> 	struct iwl_priv *priv = file->private_data;[0m
+[32m> 	char buf[11];[0m
+[32m> 	int len;[0m
+[32m> [0m
+[32m> 	len = scnprintf(buf, sizeof(buf), "0x%x", priv->rotate_rates);[0m
+[32m> [0m
+[32m> 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);[0m
+[32m> }[0m
+[32m> [0m
+[32m> static ssize_t iwl_dbgfs_rotate_rates_write(struct file *file,[0m
+[32m> 					   const char __user *user_buf,[0m
+[32m> 					   size_t count, loff_t *ppos)[0m
+[32m> {[0m
+[32m> 	struct iwl_priv *priv = file->private_data;[0m
+[32m> 	char buf[11];[0m
+[32m> 	unsigned long val;[0m
+[32m> 	int ret;[0m
+[32m> 	u32 num_rates;[0m
+[32m> 	u32 cur_rate;[0m
+[32m> 	u32 tmp, i, start_rate;[0m
+[32m> [0m
+[32m> 	if (count > sizeof(buf))[0m
+[32m> 		return -EINVAL;[0m
+[32m> [0m
+[32m> 	memset(buf, 0, sizeof(buf));[0m
+[32m> 	if (copy_from_user(buf, user_buf, count))[0m
+[32m> 		return -EFAULT;[0m
+[32m> [0m
+[32m> 	ret = kstrtoul(buf, 0, &val);[0m
+[32m> 	if (ret)[0m
+[32m> 		return ret;[0m
+[32m> [0m
+[32m> 	/* Dan: new rotate_rates scheme using flags */[0m
+[32m> 	if (priv->rotate_rates) {[0m
+[32m> 		kfree(priv->rotate_rate_array);[0m
+[32m> 		priv->rotate_rate_array = NULL;[0m
+[32m> 		priv->last_rotate_rate = 0;[0m
+[32m> 		priv->rotate_rate_total = 0;[0m
+[32m> 		priv->rotate_rates = 0;[0m
+[32m> 	}[0m
+[32m> [0m
+[32m> 	if (val == 0)[0m
+[32m> 		return count;[0m
+[32m> [0m
+[32m> 	/* Parse val to determine number of configs */[0m
+[32m> 	num_rates = 0;[0m
+[32m> 	if (val & ROTATE_SISO) /* SISO */[0m
+[32m> 		num_rates++;[0m
+[32m> 	if (val & ROTATE_MIMO2) /* MIMO2 */[0m
+[32m> 		num_rates++;[0m
+[32m> 	if (val & ROTATE_MIMO3) /* MIMO3 */[0m
+[32m> 		num_rates++;[0m
+[32m> 	if (val & ROTATE_TX_SEL) /* TX SEL */ {[0m
+[32m> 		if (val & ROTATE_SISO) num_rates += 2;[0m
+[32m> 		if (val & ROTATE_MIMO2) num_rates += 2;[0m
+[32m> 	}[0m
+[32m> 	if (val & ROTATE_HT40) /* HT40 */[0m
+[32m> 		num_rates *= 2;[0m
+[32m> 	if (val & ROTATE_SGI) /* SGI */[0m
+[32m> 		num_rates *= 2;[0m
+[32m> 	if (val & ROTATE_SKIP) /* SKIP short rates */ {[0m
+[32m> 		num_rates *= 6;[0m
+[32m> 		start_rate = 2;[0m
+[32m> 	} else {[0m
+[32m> 		num_rates *= 8;[0m
+[32m> 		start_rate = 0;[0m
+[32m> 	}[0m
+[32m> [0m
+[32m> 	/* Shouldn't be true but may as well make sure */[0m
+[32m> 	if (num_rates == 0)[0m
+[32m> 		return -EINVAL;[0m
+[32m> [0m
+[32m> 	/* Now set up rotate_rate_array */[0m
+[32m> 	priv->rotate_rate_array = kmalloc(num_rates * sizeof(u32),[0m
+[32m> 			GFP_KERNEL);[0m
+[32m> 	if (!priv->rotate_rate_array)[0m
+[32m> 		return -ENOMEM;[0m
+[32m> 	priv->rotate_rates = 1;[0m
+[32m> 	priv->last_rotate_rate = 0;[0m
+[32m> 	priv->rotate_rate_total = num_rates;[0m
+[32m> [0m
+[32m> 	cur_rate = 0;[0m
+[32m> 	if (val & ROTATE_SISO) /* SISO rates */[0m
+[32m> 		for (i = start_rate; i < 8; ++i, ++cur_rate)[0m
+[32m> 			priv->rotate_rate_array[cur_rate] = 0x4100 + i;[0m
+[32m> 	if (val & ROTATE_MIMO2) /* MIMO2 rates */[0m
+[32m> 		for (i = start_rate; i < 8; ++i, ++cur_rate)[0m
+[32m> 			priv->rotate_rate_array[cur_rate] = 0xc108 + i;[0m
+[32m> 	if (val & ROTATE_MIMO3) /* MIMO3 rates */[0m
+[32m> 		for (i = start_rate; i < 8; ++i, ++cur_rate)[0m
+[32m> 			priv->rotate_rate_array[cur_rate] = 0x1c110 + i;[0m
+[32m> 	if ((val & ROTATE_TX_SEL) && (val & ROTATE_SISO)) {[0m
+[32m> 		/* TX SEL SISO rates */[0m
+[32m> 		for (i = start_rate; i < 8; ++i, ++cur_rate)[0m
+[32m> 			priv->rotate_rate_array[cur_rate] = 0x8100 + i;[0m
+[32m> 		for (i = start_rate; i < 8; ++i, ++cur_rate)[0m
+[32m> 			priv->rotate_rate_array[cur_rate] = 0x10100 + i;[0m
+[32m> 	}[0m
+[32m> 	if ((val & ROTATE_TX_SEL) && (val & ROTATE_MIMO2)) {[0m
+[32m> 		/* TX SEL MIMO2 rates */[0m
+[32m> 		for (i = start_rate; i < 8; ++i, ++cur_rate)[0m
+[32m> 			priv->rotate_rate_array[cur_rate] = 0x14108 + i;[0m
+[32m> 		for (i = start_rate; i < 8; ++i, ++cur_rate)[0m
+[32m> 			priv->rotate_rate_array[cur_rate] = 0x18108 + i;[0m
+[32m> 	}[0m
+[32m> 	if (val & ROTATE_HT40) { /* HT40 rates */[0m
+[32m> 		tmp = cur_rate;[0m
+[32m> 		for (i = start_rate; i < tmp; ++i, ++cur_rate)[0m
+[32m> 			priv->rotate_rate_array[cur_rate] =[0m
+[32m> 				priv->rotate_rate_array[i] | RATE_MCS_HT40_MSK;[0m
+[32m> 	}[0m
+[32m> 	if (val & ROTATE_SGI) { /* SGI rates */[0m
+[32m> 		tmp = cur_rate;[0m
+[32m> 		for (i = start_rate; i < tmp; ++i, ++cur_rate)[0m
+[32m> 			priv->rotate_rate_array[cur_rate] =[0m
+[32m> 				priv->rotate_rate_array[i] | RATE_MCS_SGI_MSK;[0m
+[32m> 	}[0m
+[32m> [0m
+[32m> 	IWL_INFO(priv, "Set up %u rotate_rates:%s%s%s%s%s%s%s.\n",[0m
+[32m> 			priv->rotate_rate_total,[0m
+[32m> 			(val & ROTATE_SISO) ? " SISO" : "",[0m
+[32m> 			(val & ROTATE_MIMO2) ? " MIMO2" : "",[0m
+[32m> 			(val & ROTATE_MIMO3) ? " MIMO3" : "",[0m
+[32m> 			(val & ROTATE_TX_SEL) ? " TX_SEL" : "",[0m
+[32m> 			(val & ROTATE_HT40) ? " HT40" : "",[0m
+[32m> 			(val & ROTATE_SGI) ? " SGI" : "",[0m
+[32m> 			(val & ROTATE_SKIP) ? " SKIP" : "");[0m
+[32m> [0m
+[32m> 	return count;[0m
+[32m> }[0m
+[32m> DEBUGFS_READ_WRITE_FILE_OPS(rotate_rates);[0m
+[32m> [0m
+[32m> static ssize_t iwl_dbgfs_monitor_tx_rate_read(struct file *file,[0m
+[32m> 					  char __user *user_buf,[0m
+[32m> 					  size_t count, loff_t *ppos)[0m
+[32m> {[0m
+[32m> 	struct iwl_priv *priv = file->private_data;[0m
+[32m> 	char buf[11];[0m
+[32m> 	int len;[0m
+[32m> [0m
+[32m> 	len = scnprintf(buf, sizeof(buf), "0x%x", priv->monitor_tx_rate);[0m
+[32m> [0m
+[32m> 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);[0m
+[32m> }[0m
+[32m> [0m
+[32m> static ssize_t iwl_dbgfs_monitor_tx_rate_write(struct file *file,[0m
+[32m> 					   const char __user *user_buf,[0m
+[32m> 					   size_t count, loff_t *ppos)[0m
+[32m> {[0m
+[32m> 	struct iwl_priv *priv = file->private_data;[0m
+[32m> 	char buf[11];[0m
+[32m> 	unsigned long val;[0m
+[32m> 	int ret;[0m
+[32m> [0m
+[32m> 	if (count > sizeof(buf))[0m
+[32m> 		return -EINVAL;[0m
+[32m> [0m
+[32m> 	memset(buf, 0, sizeof(buf));[0m
+[32m> 	if (copy_from_user(buf, user_buf, count))[0m
+[32m> 		return -EFAULT;[0m
+[32m> [0m
+[32m> 	ret = kstrtoul(buf, 0, &val);[0m
+[32m> 	if (ret)[0m
+[32m> 		return ret;[0m
+[32m> [0m
+[32m> 	priv->monitor_tx_rate = val;[0m
+[32m> [0m
+[32m> 	return count;[0m
+[32m> }[0m
+[32m> DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate);[0m
+[32m> [0m
+[32m> static ssize_t iwl_dbgfs_bcast_tx_rate_read(struct file *file,[0m
+[32m> 					  char __user *user_buf,[0m
+[32m> 					  size_t count, loff_t *ppos)[0m
+[32m> {[0m
+[32m> 	struct iwl_priv *priv = file->private_data;[0m
+[32m> 	char buf[11];[0m
+[32m> 	int len;[0m
+[32m> [0m
+[32m> 	len = scnprintf(buf, sizeof(buf), "0x%x", priv->bcast_tx_rate);[0m
+[32m> [0m
+[32m> 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);[0m
+[32m> }[0m
+[32m> [0m
+[32m> static ssize_t iwl_dbgfs_bcast_tx_rate_write(struct file *file,[0m
+[32m> 					   const char __user *user_buf,[0m
+[32m> 					   size_t count, loff_t *ppos)[0m
+[32m> {[0m
+[32m> 	struct iwl_priv *priv = file->private_data;[0m
+[32m> 	char buf[11];[0m
+[32m> 	unsigned long val;[0m
+[32m> 	int ret;[0m
+[32m> [0m
+[32m> 	if (count > sizeof(buf))[0m
+[32m> 		return -EINVAL;[0m
+[32m> [0m
+[32m> 	memset(buf, 0, sizeof(buf));[0m
+[32m> 	if (copy_from_user(buf, user_buf, count))[0m
+[32m> 		return -EFAULT;[0m
+[32m> [0m
+[32m> 	ret = kstrtoul(buf, 0, &val);[0m
+[32m> 	if (ret)[0m
+[32m> 		return ret;[0m
+[32m> [0m
+[32m> 	priv->bcast_tx_rate = val;[0m
+[32m> [0m
+[32m> 	return count;[0m
+[32m> }[0m
+[32m> DEBUGFS_READ_WRITE_FILE_OPS(bcast_tx_rate);[0m
+[32m> [0m
+[36m2414a2727,2731[0m
+[32m> 	DEBUGFS_ADD_FILE(bf_flag, dir_debug, S_IRUSR | S_IWUSR);[0m
+[32m> 	DEBUGFS_ADD_FILE(rx_chains_msk, dir_debug, S_IRUSR | S_IWUSR);[0m
+[32m> 	DEBUGFS_ADD_FILE(rotate_rates, dir_debug, S_IRUSR | S_IWUSR);[0m
+[32m> 	DEBUGFS_ADD_FILE(monitor_tx_rate, dir_debug, S_IRUSR | S_IWUSR);[0m
+[32m> 	DEBUGFS_ADD_FILE(bcast_tx_rate, dir_debug, S_IRUSR | S_IWUSR);[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/dev.h linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/dev.h
+[36m286c286[0m
+[31m< #define MAXIMUM_ALLOWED_PATHLOSS	15[0m
+---
+[32m> #define MAXIMUM_ALLOWED_PATHLOSS	50[0m
+[36m810a811[0m
+[32m> 	u8 last_cfg_phy_buf[IWLAGN_MAX_CFG_PHY_CNT*sizeof(u32)];[0m
+[36m875a877,891[0m
+[32m> [0m
+[32m> 	u32 connector_log;[0m
+[32m> 	int last_rx_noise;[0m
+[32m> 	s8 last_rx_noiseA;[0m
+[32m> 	s8 last_rx_noiseB;[0m
+[32m> 	s8 last_rx_noiseC;[0m
+[32m> 	bool bf_enabled;[0m
+[32m> 	u32 monitor_tx_rate;[0m
+[32m> 	u32 bcast_tx_rate;[0m
+[32m> [0m
+[32m> 	/* Setup for rotating rates */[0m
+[32m> 	u32 rotate_rates;[0m
+[32m> 	u32 last_rotate_rate;[0m
+[32m> 	u32 rotate_rate_total;[0m
+[32m> 	u32 *rotate_rate_array;[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/lib.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/lib.c
+[36m41a42,117[0m
+[32m> #include "connector.h"[0m
+[32m> [0m
+[32m> int iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,[0m
+[32m> 		struct iwl_device_cmd *cmd)[0m
+[32m> {[0m
+[32m> 	/*[0m
+[32m> 	 * Just print a notification that there was a notification passed up[0m
+[32m> 	 * from SVD[0m
+[32m> 	 */[0m
+[32m> 	struct iwl_rx_packet *pkt = rxb_addr(rxb);[0m
+[32m> 	struct iwl_bfee_notif *bfee_notif = (void *)pkt->data;[0m
+[32m> 	u8 Nrx, Ntx;[0m
+[32m> 	u16 len = le16_to_cpu(bfee_notif->len);[0m
+[32m> 	struct iwl_rx_phy_res *phy;[0m
+[32m> 	u32 *non_cfg_buf, *cfg_buf;[0m
+[32m> 	static u16 bfee_count;[0m
+[32m> [0m
+[32m> 	if (priv->last_phy_res_valid) {[0m
+[32m> 		phy = &priv->last_phy_res;[0m
+[32m> 		non_cfg_buf = (u32 *)phy->non_cfg_phy_buf;[0m
+[32m> 		bfee_notif->timestamp_low =[0m
+[32m> 			cpu_to_le32(__le64_to_cpu(phy->timestamp));[0m
+[32m> 		bfee_notif->rssiA =[0m
+[32m> 			(non_cfg_buf[IWLAGN_RX_RES_RSSI_AB_IDX] &[0m
+[32m> 			 IWLAGN_OFDM_RSSI_INBAND_A_BITMSK) >>[0m
+[32m> 			IWLAGN_OFDM_RSSI_A_BIT_POS;[0m
+[32m> 		bfee_notif->rssiB =[0m
+[32m> 			(non_cfg_buf[IWLAGN_RX_RES_RSSI_AB_IDX] &[0m
+[32m> 			 IWLAGN_OFDM_RSSI_INBAND_B_BITMSK) >>[0m
+[32m> 			IWLAGN_OFDM_RSSI_B_BIT_POS;[0m
+[32m> 		bfee_notif->rssiC =[0m
+[32m> 			(non_cfg_buf[IWLAGN_RX_RES_RSSI_C_IDX] &[0m
+[32m> 			 IWLAGN_OFDM_RSSI_INBAND_C_BITMSK) >>[0m
+[32m> 			IWLAGN_OFDM_RSSI_C_BIT_POS;[0m
+[32m> 		bfee_notif->noise = priv->last_rx_noise;[0m
+[32m> 		bfee_notif->agc =[0m
+[32m> 			(non_cfg_buf[IWLAGN_RX_RES_AGC_IDX] &[0m
+[32m> 			 IWLAGN_OFDM_AGC_MSK) >> IWLAGN_OFDM_AGC_BIT_POS;[0m
+[32m> 		if (phy->cfg_phy_cnt > 0) {[0m
+[32m> 			cfg_buf = (u32 *)&priv->last_cfg_phy_buf;[0m
+[32m> 			bfee_notif->antenna_sel = cfg_buf[0];[0m
+[32m> 		}[0m
+[32m> 		/* Everything but antennas is in bottom 14 bits */[0m
+[32m> 		bfee_notif->fake_rate_n_flags =[0m
+[32m> 			cpu_to_le16(__le32_to_cpu(phy->rate_n_flags) & 0x3fff);[0m
+[32m> 		IWL_INFO(priv, "rssis: %u %u %u noise: %d agc: %u "[0m
+[32m> 				"antenna_sel: %02x fake_rate_n_flags=0x%x\n",[0m
+[32m> 				bfee_notif->rssiA, bfee_notif->rssiB,[0m
+[32m> 				bfee_notif->rssiC, bfee_notif->noise,[0m
+[32m> 				bfee_notif->agc, bfee_notif->antenna_sel,[0m
+[32m> 				bfee_notif->fake_rate_n_flags);[0m
+[32m> [0m
+[32m> 		/* Increment counter */[0m
+[32m> 		bfee_count++;[0m
+[32m> 		bfee_notif->bfee_count = cpu_to_le16(bfee_count);[0m
+[32m> 	}[0m
+[32m> [0m
+[32m> 	/* Log the bytes to a file */[0m
+[32m> 	if (priv->connector_log & IWL_CONN_BFEE_NOTIF_MSK)[0m
+[32m> 		connector_send_msg((void *)bfee_notif,[0m
+[32m> 			len + sizeof(struct iwl_bfee_notif),[0m
+[32m> 			IWL_CONN_BFEE_NOTIF);[0m
+[32m> [0m
+[32m> 	/* Now print out that we got a notification, and the size of it */[0m
+[32m> 	Nrx = bfee_notif->Nrx;[0m
+[32m> 	Ntx = bfee_notif->Ntx;[0m
+[32m> 	/*[0m
+[32m> 	 * Each subcarrier uses Ntx * Nrx * 2 * 8 bits for matrix[0m
+[32m> 	 * (2 signed 8-bit I/Q vals) plus 3 bits for SNR. I think the hardware[0m
+[32m> 	 * always gives 0 for these 3 bits. See 802.11n spec section 7.3.1.28.[0m
+[32m> 	 */[0m
+[32m> 	IWL_DEBUG_RX(priv, "BFEE NOTIFICATION, Nrx=%u Ntx=%u "[0m
+[32m> 			"len=%u calc_len=%u\n",[0m
+[32m> 			Nrx, Ntx, len, (30*(3+2*Nrx*Ntx*8)+7)/8);[0m
+[32m> 	return 0;[0m
+[32m> }[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/main.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/main.c
+[36m58a59[0m
+[32m> #include "connector.h"[0m
+[36m555c556[0m
+[31m< 		BIT(NL80211_IFTYPE_STATION);[0m
+---
+[32m> 		BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_AP);[0m
+[36m788a790,791[0m
+[32m> 	iwl_connector_set_priv(priv);[0m
+[32m> [0m
+[36m1040a1044,1053[0m
+[32m> 	/* Dan's parameters */[0m
+[32m> 	priv->connector_log = iwlwifi_mod_params.connector_log;[0m
+[32m> 	priv->bf_enabled = 1;		/* Enabled */[0m
+[32m> 	priv->rotate_rates = 0;		/* Disabled */[0m
+[32m> 	priv->last_rotate_rate = 0;	/* Disabled */[0m
+[32m> 	priv->rotate_rate_total = 0;	/* Disabled */[0m
+[32m> 	priv->rotate_rate_array = NULL;	/* Disabled */[0m
+[32m> 	priv->monitor_tx_rate = 0;	/* Disabled */[0m
+[32m> 	priv->bcast_tx_rate = 0;	/* Disabled */[0m
+[32m> [0m
+[36m1160a1174[0m
+[32m> 		REPLY_BFEE_NOTIFICATION,[0m
+[36m2073a2088,2093[0m
+[32m> 	ret = iwlagn_register_connector();[0m
+[32m> 	if (ret) {[0m
+[32m> 		pr_err("Unable to initialize connector: %d\n", ret);[0m
+[32m> 		goto error_connector_register;[0m
+[32m> 	}[0m
+[32m> [0m
+[36m2077c2097[0m
+[31m< 		iwlagn_rate_control_unregister();[0m
+---
+[32m> 		goto error_opmode_register;[0m
+[36m2080a2101,2107[0m
+[32m> [0m
+[32m> error_opmode_register:[0m
+[32m> 	iwlagn_unregister_connector();[0m
+[32m> error_connector_register:[0m
+[32m> 	iwlagn_rate_control_unregister();[0m
+[32m> [0m
+[32m> 	return ret;[0m
+[36m2086a2114[0m
+[32m> 	iwlagn_unregister_connector();[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/rs.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/rs.c
+[36m921a922,925[0m
+[32m> 	/* Exit if in a fixed-rate mode */[0m
+[32m> 	if (priv && priv->rotate_rates)[0m
+[32m> 		return;[0m
+[32m> [0m
+[36m2749a2754,2760[0m
+[32m> [0m
+[32m> 	/* Exit if in a fixed-rate mode */[0m
+[32m> 	if (priv && priv->rotate_rates) {[0m
+[32m> 		info->control.rates[0].flags = 0;[0m
+[32m> 		info->control.rates[0].idx = 0;[0m
+[32m> 		return;[0m
+[32m> 	}[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/rx.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/rx.c
+[36m38a39[0m
+[32m> #include "connector.h"[0m
+[36m116a118[0m
+[32m> 	IWL_CMD_ENTRY(REPLY_BFEE_NOTIFICATION),[0m
+[36m375c377[0m
+[31m< 	if (num_active_rx)[0m
+---
+[32m> 	if (num_active_rx) {[0m
+[36m377c379,382[0m
+[31m< 	else[0m
+---
+[32m> 		if (priv->connector_log & IWL_CONN_NOISE_MSK)[0m
+[32m> 			connector_send_msg((void *)&last_rx_noise,[0m
+[32m> 					sizeof(last_rx_noise), IWL_CONN_NOISE);[0m
+[32m> 	} else[0m
+[36m378a384,387[0m
+[32m> 	priv->last_rx_noise = last_rx_noise;[0m
+[32m> 	priv->last_rx_noiseA = bcn_silence_a;[0m
+[32m> 	priv->last_rx_noiseB = bcn_silence_b;[0m
+[32m> 	priv->last_rx_noiseC = bcn_silence_c;[0m
+[36m661a671[0m
+[32m> 	struct iwl_rx_phy_res *rx_phy_res = (void *)pkt->data;[0m
+[36m666a677,678[0m
+[32m> 	memcpy(&priv->last_cfg_phy_buf, rx_phy_res->cfg_phy_buf,[0m
+[32m> 			rx_phy_res->cfg_phy_cnt * sizeof(u32));[0m
+[36m917a930,931[0m
+[32m> 	if (priv->connector_log & IWL_CONN_RX_MPDU_MSK)[0m
+[32m> 		connector_send_msg((void *)header, len, IWL_CONN_RX_MPDU);[0m
+[36m919,921c933,935[0m
+[31m< 	if ((unlikely(phy_res->cfg_phy_cnt > 20))) {[0m
+[31m< 		IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",[0m
+[31m< 				phy_res->cfg_phy_cnt);[0m
+---
+[32m> 	if ((unlikely(phy_res->cfg_phy_cnt > IWLAGN_MAX_CFG_PHY_CNT))) {[0m
+[32m> 		IWL_DEBUG_DROP(priv, "dsp size out of range [0,%d]: %d\n",[0m
+[32m> 				IWLAGN_MAX_CFG_PHY_CNT, phy_res->cfg_phy_cnt);[0m
+[36m1093a1108,1110[0m
+[32m> [0m
+[32m> 	/* Beamforming */[0m
+[32m> 	handlers[REPLY_BFEE_NOTIFICATION] = iwlagn_bfee_notif;[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/rxon.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/rxon.c
+[36m532a533,559[0m
+[32m> int iwlagn_send_dsp_debug(struct iwl_priv *priv)[0m
+[32m> {[0m
+[32m> 	u32 count = 1;[0m
+[32m> 	size_t len = sizeof(struct iwl5000_dsp_debug) +[0m
+[32m> 		((count + 1) & ~1) * sizeof(u16);[0m
+[32m> 	struct iwl5000_dsp_debug *dsp_debug = kmalloc(len, GFP_ATOMIC);[0m
+[32m> 	u16 *mib_indices;[0m
+[32m> 	int ret;[0m
+[32m> [0m
+[32m> 	if (!dsp_debug)[0m
+[32m> 		return -ENOMEM;[0m
+[32m> [0m
+[32m> 	mib_indices = (u16 *) dsp_debug->mib_indices;[0m
+[32m> [0m
+[32m> 	dsp_debug->mib_cnt = count;[0m
+[32m> 	dsp_debug->flags = DSP_DEBUG_OFDM_MSK;[0m
+[32m> 	dsp_debug->stat_id = 0;[0m
+[32m> 	dsp_debug->reserved = 0;[0m
+[32m> 	mib_indices[0] = OFDM_RX_ANT_OUT;[0m
+[32m> [0m
+[32m> 	ret = iwl_dvm_send_cmd_pdu(priv, DSP_DEBUG_CMD, CMD_ASYNC, len,[0m
+[32m> 			dsp_debug);[0m
+[32m> 	kfree(dsp_debug);[0m
+[32m> [0m
+[32m> 	return ret;[0m
+[32m> }[0m
+[32m> [0m
+[36m1064a1092,1097[0m
+[32m> 	/* Enable beamforming */[0m
+[32m> 	if (priv->bf_enabled)[0m
+[32m> 		ctx->staging.flags |= RXON_FLG_BF_ENABLE_MSK;[0m
+[32m> 	else[0m
+[32m> 		ctx->staging.flags &= ~RXON_FLG_BF_ENABLE_MSK;[0m
+[32m> [0m
+[36m1144a1178,1182[0m
+[32m> 	if (ret)[0m
+[32m> 		return ret;[0m
+[32m> [0m
+[32m> 	/* DSP debug command makes sure we get antenna selection information */[0m
+[32m> 	ret = iwlagn_send_dsp_debug(priv);[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/sta.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/sta.c
+[36m35a36[0m
+[32m> const u8 iwl_monitor_addr[ETH_ALEN] = { 0x00, 0x16, 0xEA, 0x12, 0x34, 0x56 };[0m
+[36m295a297,298[0m
+[32m> 	else if (is_monitor_ether_addr(addr))[0m
+[32m> 		sta_id = IWLAGN_MONITOR_ID;[0m
+[36m1345a1349,1373[0m
+[32m> 	/* Above: broadcast. Below: monitor */[0m
+[32m> 	spin_lock_bh(&priv->sta_lock);[0m
+[32m> 	sta_id = iwl_prep_station(priv, ctx, iwl_monitor_addr, false, NULL);[0m
+[32m> 	if (sta_id == IWL_INVALID_STATION) {[0m
+[32m> 		IWL_ERR(priv, "Unable to prepare monitor station\n");[0m
+[32m> 		spin_unlock_bh(&priv->sta_lock);[0m
+[32m> [0m
+[32m> 		return -EINVAL;[0m
+[32m> 	}[0m
+[32m> [0m
+[32m> 	priv->stations[sta_id].used |= IWL_STA_DRIVER_ACTIVE;[0m
+[32m> 	priv->stations[sta_id].used |= IWL_STA_BCAST;[0m
+[32m> 	spin_unlock_bh(&priv->sta_lock);[0m
+[32m> [0m
+[32m> 	link_cmd = iwl_sta_alloc_lq(priv, ctx, sta_id);[0m
+[32m> 	if (!link_cmd) {[0m
+[32m> 		IWL_ERR(priv,[0m
+[32m> 			"Unable to initialize rate scaling for monitor station.\n");[0m
+[32m> 		return -ENOMEM;[0m
+[32m> 	}[0m
+[32m> [0m
+[32m> 	spin_lock_bh(&priv->sta_lock);[0m
+[32m> 	priv->stations[sta_id].lq = link_cmd;[0m
+[32m> 	spin_unlock_bh(&priv->sta_lock);[0m
+[32m> [0m
+[36m1371a1400,1416[0m
+[32m> 	priv->stations[sta_id].lq = link_cmd;[0m
+[32m> 	spin_unlock_bh(&priv->sta_lock);[0m
+[32m> [0m
+[32m> 	/* Above: broadcast. Below: monitor */[0m
+[32m> 	sta_id = IWLAGN_MONITOR_ID;[0m
+[32m> [0m
+[32m> 	link_cmd = iwl_sta_alloc_lq(priv, ctx, sta_id);[0m
+[32m> 	if (!link_cmd) {[0m
+[32m> 		IWL_ERR(priv, "Unable to initialize rate scaling for monitor station.\n");[0m
+[32m> 		return -ENOMEM;[0m
+[32m> 	}[0m
+[32m> [0m
+[32m> 	spin_lock_bh(&priv->sta_lock);[0m
+[32m> 	if (priv->stations[sta_id].lq)[0m
+[32m> 		kfree(priv->stations[sta_id].lq);[0m
+[32m> 	else[0m
+[32m> 		IWL_DEBUG_INFO(priv, "Monitor station rate scaling has not been initialized yet.\n");[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/dvm/tx.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/tx.c
+[36m159,161c159,175[0m
+[31m< 	/* DATA packets will use the uCode station table for rate/antenna[0m
+[31m< 	 * selection */[0m
+[31m< 	if (ieee80211_is_data(fc)) {[0m
+---
+[32m> 	/*[0m
+[32m> 	 * DATA packets will use the uCode station table for rate/antenna[0m
+[32m> 	 * selection.[0m
+[32m> 	 * ...[0m
+[32m> 	 * But handle some special experimental cases first[0m
+[32m> 	 */[0m
+[32m> 	if (ieee80211_is_data(fc) && priv->rotate_rates) {[0m
+[32m> 		tx_cmd->tx_flags &= ~TX_CMD_FLG_STA_RATE_MSK;[0m
+[32m> 		tx_cmd->rate_n_flags = cpu_to_le32([0m
+[32m> 			priv->rotate_rate_array[priv->last_rotate_rate]);[0m
+[32m> 		priv->last_rotate_rate = (priv->last_rotate_rate + 1) %[0m
+[32m> 			priv->rotate_rate_total;[0m
+[32m> 		/* No retries in this mode */[0m
+[32m> 		tx_cmd->data_retry_limit = 0;[0m
+[32m> 		tx_cmd->rts_retry_limit = 0;[0m
+[32m> 		return;[0m
+[32m> 	} else if (ieee80211_is_data(fc)) {[0m
+[36m341a356,357[0m
+[32m> 	if (sta == NULL && is_monitor_ether_addr(hdr->addr1))[0m
+[32m> 		sta_id = IWLAGN_MONITOR_ID;[0m
+[36m383c399,411[0m
+[31m< 	iwlagn_tx_cmd_build_rate(priv, tx_cmd, info, sta, fc);[0m
+---
+[32m> 	/* If packet is to the monitor address, use the monitor rate; or[0m
+[32m> 	 * if packet is to the broadcast address, use the broadcast rate[0m
+[32m> 	 */[0m
+[32m> 	if ((IWLAGN_MONITOR_ID == sta_id) &&[0m
+[32m> 			(priv->monitor_tx_rate != 0)) {[0m
+[32m> 		tx_cmd->tx_flags &= ~TX_CMD_FLG_STA_RATE_MSK;[0m
+[32m> 		tx_cmd->rate_n_flags = cpu_to_le32(priv->monitor_tx_rate);[0m
+[32m> 	} else if ((ctx->bcast_sta_id == sta_id) &&[0m
+[32m> 			(priv->bcast_tx_rate != 0)) {[0m
+[32m> 		tx_cmd->tx_flags &= ~TX_CMD_FLG_STA_RATE_MSK;[0m
+[32m> 		tx_cmd->rate_n_flags = cpu_to_le32(priv->bcast_tx_rate);[0m
+[32m> 	} else[0m
+[32m> 		iwlagn_tx_cmd_build_rate(priv, tx_cmd, info, sta, fc);[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/iwl-5000.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/iwl-5000.c
+[36m38c38[0m
+[31m< #define IWL5000_UCODE_API_OK 5[0m
+---
+[32m> #define IWL5000_UCODE_API_OK 2[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/iwl-drv.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/iwl-drv.c
+[36m1168a1169,1174[0m
+[32m> 	 * Dan -- disable firmware version checks. Instead, verify[0m
+[32m> 	 * that the firmware has the size expected for the hacked firmware[0m
+[32m> 	 */[0m
+[32m> 	(void)api_min; /* Dan -- remove warning */[0m
+[32m> #if 0[0m
+[32m> 	/*[0m
+[36m1195a1202,1207[0m
+[32m> #endif[0m
+[32m> [0m
+[32m> 	if (ucode_raw->size != 336252) {[0m
+[32m> 		IWL_ERR(drv,[0m
+[32m> 			"Firmware size does not match iwlwifi-5000-2.ucode.sigcomm2010. The UW 802.11n CSI Tool will not work.\n");[0m
+[32m> 	}[0m
+[36m1470a1483,1485[0m
+[32m> #ifdef CONFIG_IWLWIFI_DEBUG[0m
+[32m> 	.debug_level = IWL_DL_FW_ERRORS,[0m
+[32m> #endif[0m
+[36m1564a1580,1583[0m
+[32m> module_param_named(connector_log, iwlwifi_mod_params.connector_log, int,[0m
+[32m> 		S_IRUGO);[0m
+[32m> MODULE_PARM_DESC(connector_log,[0m
+[32m> 		"set connector log mask (default 0 [nothing])");[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/iwl-modparams.h linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/iwl-modparams.h
+[36m97a98[0m
+[32m>  * @connector_log: which connector messages, default = 0[0m
+[36m103c104[0m
+[31m<  * @debug_level: levels are IWL_DL_*[0m
+---
+[32m>  * @debug_level: levels are IWL_DL_*, default = IWL_DL_FW_ERRORS[0m
+[36m113a115[0m
+[32m> 	int connector_log;[0m
+diff -r '--color=always' linux-4.2/drivers/net/wireless/iwlwifi/iwl-trans.h linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/iwl-trans.h
+[36m319c319[0m
+[31m< #define MAX_NO_RECLAIM_CMDS	6[0m
+---
+[32m> #define MAX_NO_RECLAIM_CMDS	7[0m

@@ -181,7 +181,7 @@ class iaxcsi_netlink:
         while True:
             r = nl.nl_recvmsgs_default(self.sk)
             n = n + 1
-            print('* %d, nl_recvmsgs %d' % (n, r))
+            print('* recv no.%d, nl_recvmsgs %d' % (n, r))
             if r < 0:
                 print('** nl_recvmsgs err %d' % (r))
                 continue 

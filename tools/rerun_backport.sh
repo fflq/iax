@@ -1,28 +1,24 @@
 #!/usr/bin/sudo /bin/bash
 set -x ;
 
+tools_dir=$(dirname ${BASH_SOURCE[0]})
+
+if [ $# -ge 1 ]; then
+	${tools_dir}/cleanupdates.sh
+	shift
+fi
 
 make -j4 ;
 make modules_install ;
-
-#./cleanupdates.sh
 depmod ;
 
-modprobe -r iwlwifi 
-modprobe -r ath9k ;
-modprobe -r cfg80211 ;
-modprobe iwlwifi fw_restart=1 ;
+${tools_dir}/reins_csi_iwlwifi.sh
 
-pkill wpa_supplicant ;
-systemctl restart NetworkManager.service
+#pkill wpa_supplicant ;
+#systemctl restart NetworkManager.service
 
+#custom flqu
 sleep 1 ;
 echo 1 | sudo tee /sys/kernel/debug/iwlwifi/0000:08:00.0/iwlmvm/csi_enabled ;
-#cat mem ;
-#echo 1 > /sys/kernel/debug/iwlwifi/0000:08:00.0/iwlmvm/csi_enabled ;
-#sudo cat /sys/kernel/debug/iwlwifi/0000:08:00.0/iwlmvm/mem ;
-
-
-sudo ./reinstall_mod.sh iwlwifi
 
 

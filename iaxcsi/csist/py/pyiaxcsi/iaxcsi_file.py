@@ -2,9 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import struct
-import os
 
-from iaxcsi_st import iaxcsi_st
+from pyiaxcsi.iaxcsi_st import iaxcsi_st
 
 
 class iaxcsi_file:
@@ -26,6 +25,9 @@ class iaxcsi_file:
     def read_iaxcsi_file(self, f):
         n = 0
         while True:
+            n = n + 1
+            print('* file no.%d\n' % (n))
+
             n4 = f.read(4)
             if n4 == b'': break
             msg_len = struct.unpack('>i', n4)[0]
@@ -37,9 +39,6 @@ class iaxcsi_file:
 
             csi_data_len = struct.unpack('>i', f.read(4))[0]
             csi_data = f.read(csi_data_len)
-
-            n = n + 1
-            print('* this csi no.%d\n' % (n))
 
             if self.iaxcsist_callback:
                 self.iaxcsist_callback(iaxcsi_st(csi_hdr, csi_data)); continue

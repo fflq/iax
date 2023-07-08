@@ -1,24 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-from i53csi_st import i53csi_st
-from i53csi_file import i53csi_file
-from i53csi_netlink import i53csi_netlink
+from pyiaxcsi.iaxcsi_file import iaxcsi_file
+from pyiaxcsi.iaxcsi_netlink import iaxcsi_netlink
 
 
-class i53csi:
+class iaxcsi:
     wlan: str = None
     csipath: str = None
     savepath: str = None
     file_not_netlink = True
     csist_callback = None
 
-    csi_file_handler: i53csi_file = None
-    csi_netlink_handler: i53csi_netlink = None
+    csi_file_handler: iaxcsi_file = None
+    csi_netlink_handler: iaxcsi_netlink = None
 
 
     def __init__(self, wlan=None, csipath=None, savepath=None, csist_callback=None): 
@@ -29,11 +24,11 @@ class i53csi:
 
         if self.csipath:
             self.file_not_netlink = False
-            self.csi_file_handler = i53csi_file(csipath=csipath, csist_callback=self.csist_callback)
+            self.csi_file_handler = iaxcsi_file(csipath=csipath, csist_callback=self.csist_callback)
 
         if self.wlan:
             self.file_not_netlink = True
-            self.csi_netlink_handler = i53csi_netlink(savepath=self.savepath, csist_callback=self.csist_callback)
+            self.csi_netlink_handler = iaxcsi_netlink(wlan=self.wlan, savepath=self.savepath, csist_callback=self.csist_callback)
 
 
     def start(self):

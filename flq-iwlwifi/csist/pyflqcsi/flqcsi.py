@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+import sys
+#pyincsi and pyiaxcsi are indeps, so only addpath, 
+#not make pyiaxcsi.* change to pyflqcsi.pyiaxcsi.iaxcsi
+curdir = os.path.dirname(os.path.abspath(__file__))
+if os.path.exists(curdir) :
+    sys.path.append(curdir)
+
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 from enum import Enum
+import threading
 
-from pyi53csi import i53csi_st
-from pyi53csi.i53csi import i53csi
+from pyflqcsi.pyincsi import incsi_st
+from pyflqcsi.pyincsi.incsi import incsi
 
-from pyiaxcsi import iaxcsi_st 
-from pyiaxcsi.iaxcsi import iaxcsi
+from pyflqcsi.pyiaxcsi import iaxcsi_st 
+from pyflqcsi.pyiaxcsi.iaxcsi import iaxcsi
 
 
 class flqcsi_st:
@@ -24,9 +30,11 @@ class flqcsi_st:
     #tx*rx*tone
     csi: np.array
 
+    csi_type: int
 
-class csi_type_enum(Enum):
-    I53CSI_TYPE = 1
+
+class flqcsi_type(Enum):
+    INCSI_TYPE = 1
     IAXCSI_TYPE = 2
 
 
@@ -37,14 +45,14 @@ class flqcsi:
     csipath: str = None
     savepath: str = None
     csist_callback = None
-    csi_type: csi_type_enum
+    csi_type: flqcsi_type
     file_no_netlink = True
 
-    i53csi_handler: i53csi = None
-    iaxcsi_handler: iaxcsi_handler = None
+    incsi_handler: incsi = None
+    iaxcsi_handler: iaxcsi = None
 
 
-    def __init__(self, csi_type: csi_type_enum, file_not_netlink=True, wlan=None, csipath=None, savepath=None, csist_callback=None):
+    def __init__(self, csi_type: flqcsi_type, file_not_netlink=True, wlan=None, csipath=None, savepath=None, csist_callback=None):
         self.wlan = wlan
         self.csipath = csipath
         self.savepath = savepath
@@ -53,53 +61,74 @@ class flqcsi:
         self.file_no_netlink = file_not_netlink
 
         if (self.csi_type == csi_type.IAXCSI_TYPE):
-            self.iaxcsi_handler = iaxcsi(wlan=self.wlan, csipath=self.csipath, csist_callback=self.iaxcsist_callback)
+            self.iaxcsi_handler = iaxcsi(wlan=self.wlan, csipath=self.csipath, savepath=self.savepath, csist_callback=self.iaxcsist_callback)
         else:
-            self.i53csi_handler = i53csi(csipath=self.csipath, savepath=self.savepath, csist_callback=self.i53csist_callback)
+            self.incsi_handler = incsi(csipath=self.csipath, savepath=self.savepath, csist_callback=self.incsist_callback)
+
+        print(self.__dict__)
 
 
-    def convert_i53csist_to_flqcsist(i53csist: i53csi_st.csi_st):
+    def start(self):
+        if self.incsi_handler:
+            self.incsi_handler.start()
+
+        if self.iaxcsi_handler:
+            self.iaxcsi_handler.start()
+
+    
+    def async_start(self):
+        t = threading.Thread(target=self.start)
+        t.start()
+        return t
+
+
+    def convert_incsist_to_flqcsist(self, incsist: incsi_st.csi_st):
         flqcsist = flqcsi_st()
-        flqcsist.rssis = np.array([i53csist.rssi_a, i53csist.rssi_b, i53csist.rssi_c])
-        flqcsist.nrx = i53csist.nrx
-        flqcsist.ntx = i53csist.ntx
-        flqcsist.ntone = i53csist.ntone
-        flqcsist.agc = i53csist.agc
-        flqcsist.noise = i53csist.noise
-        flqcsist.perm = i53csist.perm
-        flqcsist.us = i53csist.timestamp_low
-        flqcsist.seq = i53csist.bfee_count
-        flqcsist.rate = i53csist.rate
+        flqcsist.csi_type = int(self.csi_type)
+        flqcsist.rssis = np.array([incsist.rssi_a, incsist.rssi_b, incsist.rssi_c])
+        flqcsist.ntx = incsist.ntx
+        flqcsist.nrx = incsist.nrx
+        flqcsist.ntone = incsist.ntone
+        flqcsist.agc = incsist.agc
+        flqcsist.noise = incsist.noise
+        flqcsist.perm = incsist.perm
+        flqcsist.us = incsist.timestamp_low
+        flqcsist.seq = incsist.bfee_count
+        flqcsist.rate = incsist.rate
         #flqcsist.bw = ?
         #flqcsist.subcs = ?
-        flqcsist.csi = i53csist.csi
+        print(flqcsist.__dict__)
+        flqcsist.csi = incsist.csi
         return flqcsist
 
 
-    def i53csist_callback(self, i53csist: i53csi_st.csi_st):
+    def incsist_callback(self, incsist: incsi_st.csi_st):
         if (self.csist_callback):
-            self.csist_callback(self.convert_i53csist_to_flqcsist(i53csist))
+            self.csist_callback(self.convert_incsist_to_flqcsist(incsist))
 
 
-    def convert_iaxcsist_to_flqcsist(iaxcsist: iaxcsi_st.csi_st):
+    def convert_iaxcsist_to_flqcsist(self, iaxcsist: iaxcsi_st.csi_st):
         flqcsist = flqcsi_st()
+        flqcsist.csi_type = int(self.csi_type)
         flqcsist.rssis = np.array([iaxcsist.rssi1, iaxcsist.rssi2])
-        flqcsist.nrx = iaxcsist.nrx
         flqcsist.ntx = iaxcsist.ntx
+        flqcsist.nrx = iaxcsist.nrx
         flqcsist.ntone = iaxcsist.nstone
         flqcsist.seq = iaxcsist.seq
         flqcsist.perm = iaxcsist.perm
-        flqcsist.us = iaxcsist.timestamp_low
+        flqcsist.us = iaxcsist.us
         flqcsist.smac = iaxcsist.smac
         flqcsist.rate = iaxcsist.rnf
         flqcsist.bw = iaxcsist.chan_width
         flqcsist.chan_type_str = iaxcsist.chan_type_str
         flqcsist.subcs = iaxcsist.subc.subcs
 
-        flqcsist.csi = np.zeros([flqcsist.ntx, flqcsist.nrx, flqcsist.ntone])
-        for itx in range(flqcsist.itx):
-            for irx in range(flqcsist.irx):
+        print(flqcsist.__dict__)
+        flqcsist.csi = np.zeros([flqcsist.ntx, flqcsist.nrx, flqcsist.ntone], dtype=complex)
+        for itx in range(flqcsist.ntx):
+            for irx in range(flqcsist.nrx):
                 flqcsist.csi[itx,irx] = iaxcsist.scsi[irx,itx]
+        return flqcsist
  
 
     def iaxcsist_callback(self, iaxcsist: iaxcsi_st):

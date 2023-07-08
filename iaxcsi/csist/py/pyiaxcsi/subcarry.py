@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import numpy as np
 from dataclasses import dataclass
 
@@ -28,6 +31,7 @@ class subcs_st:
 		self.pilot_subcs = pilot_subcs
 		self.dc_subcs = dc_subcs
 		self.gen_subc_common()
+		print(self.__dict__)
 
 	def gen_subc_common(self):
 		self.subcs = np.arange(-self.subcs_radius,self.subcs_radius+subcarry_st.range_end) 
@@ -139,6 +143,7 @@ class subcarry_st:
 	def ht20_subc():
 		return subcs_st(
 			subcs_radius = 28 ,
+			#has a strange subc-1 likes dc sometimes
 			data_pilot_subcs = np.arange(1, 28+subcarry_st.range_end) ,
 			pilot_subcs = np.array([7, 21]) 
 		)
