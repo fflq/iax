@@ -1,0 +1,803 @@
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/Kconfig linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/Kconfig
+55a56
+> 	depends on CONNECTOR
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/Makefile linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/Makefile
+7c7
+< iwldvm-objs		+= scan.o
+---
+> iwldvm-objs		+= scan.o connector.o
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/agn.h linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/agn.h
+223a224,225
+> int iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+> 		      struct iwl_device_cmd *cmd);
+491a494,502
+> 
+> extern const u8 iwl_monitor_addr[ETH_ALEN];
+> static inline bool is_monitor_ether_addr(const u8 *addr)
+> {
+> 	if (WARN_ON(addr == NULL))
+> 		return 0;
+> 	return !memcmp(addr, iwl_monitor_addr, ETH_ALEN);
+> }
+> 
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/commands.h linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/commands.h
+160a161,164
+> 
+> 	/* Beamforming */
+> 	REPLY_BFEE_NOTIFICATION = 0xbb,
+> 
+189a194,196
+> 	/* Gets metadata for Beamforming */
+> 	DSP_DEBUG_CMD = 0xf1,
+> 
+580a588,591
+> /* Beamforming */
+> #define RXON_FLG_BF_ENABLE_POS			(29)
+> #define RXON_FLG_BF_ENABLE_MSK			cpu_to_le32(0x1<<29)
+> 
+791a803
+> #define IWLAGN_MONITOR_ID	13
+1098a1111
+> #define IWLAGN_MAX_CFG_PHY_CNT 20
+1111c1124
+< 	u8 cfg_phy_cnt;		/* configurable DSP phy data byte count */
+---
+> 	u8 cfg_phy_cnt;		/* configurable DSP phy data element count */
+1121a1135
+> 	u8 cfg_phy_buf[0];	/* The values requested via DSP_DEBUG */
+3911a3926,3981
+> 
+> /******************************************************************************
+>  * (14)
+>  * Beamforming commands
+>  *
+>  *****************************************************************************/
+> 
+> /*
+>  * REPLY_BFEE_NOTIFICATION = 0xbb
+>  *
+>  */
+> struct iwl_bfee_notif {
+> 	__le32 timestamp_low;
+> 	__le16 bfee_count;
+> 	__le16 reserved1;
+> 	u8 Nrx, Ntx;
+> 	u8 rssiA, rssiB, rssiC;
+> 	s8 noise;
+> 	u8 agc, antenna_sel;
+> 	__le16 len;
+> 	__le16 fake_rate_n_flags;
+> 	u8 payload[0];
+> } __attribute__ ((packed));
+> 
+> /******************************************************************************
+>  * (15)
+>  * DSP debug interface
+>  *
+>  *****************************************************************************/
+> 
+> /* DSP debugging */
+> #define DSP_DEBUG_CCK_MSK		(0x1)
+> #define DSP_DEBUG_OFDM_MSK		(0x0)
+> /* MIB values */
+> #define OFDM_RX_ANT_OUT			0x4302
+> 
+> /*
+>  * DSP_DEBUG_CMD = 0xf1
+>  *
+>  */
+> struct iwl5000_dsp_debug {
+> 	u8 mib_cnt;
+> 	u8 flags;
+> 	u8 stat_id;
+> 	u8 reserved;
+> 	u16 mib_indices[0];
+> } __attribute__ ((packed));
+> 
+> /* For rotate rates */
+> #define ROTATE_SISO	1
+> #define ROTATE_MIMO2	2
+> #define ROTATE_MIMO3	4
+> #define ROTATE_TX_SEL	8
+> #define ROTATE_HT40	16
+> #define ROTATE_SGI	32
+> #define ROTATE_SKIP	64
+Only in linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm: connector.c
+Only in linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm: connector.h
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/debugfs.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/debugfs.c
+2355a2356,2667
+> static ssize_t iwl_dbgfs_bf_flag_read(struct file *file,
+> 					  char __user *user_buf,
+> 					  size_t count, loff_t *ppos)
+> {
+> 	struct iwl_priv *priv = file->private_data;
+> 	char buf[11];
+> 	int len;
+> 
+> 	len = scnprintf(buf, sizeof(buf), "%d", priv->bf_enabled);
+> 
+> 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> }
+> 
+> static ssize_t iwl_dbgfs_bf_flag_write(struct file *file,
+> 					   const char __user *user_buf,
+> 					   size_t count, loff_t *ppos)
+> {
+> 	struct iwl_priv *priv = file->private_data;
+> 	char buf[11];
+> 	unsigned long val;
+> 	int ret;
+> 
+> 	if (count > sizeof(buf))
+> 		return -EINVAL;
+> 
+> 	memset(buf, 0, sizeof(buf));
+> 	if (copy_from_user(buf, user_buf, count))
+> 		return -EFAULT;
+> 
+> 	ret = kstrtoul(buf, 0, &val);
+> 	if (ret)
+> 		return ret;
+> 
+> 	priv->bf_enabled = !!val;
+> 
+> 	return count;
+> }
+> DEBUGFS_READ_WRITE_FILE_OPS(bf_flag);
+> 
+> static ssize_t iwl_dbgfs_rx_chains_msk_read(struct file *file,
+> 					  char __user *user_buf,
+> 					  size_t count, loff_t *ppos)
+> {
+> 	struct iwl_priv *priv = file->private_data;
+> 	char buf[128];
+> 	int len;
+> 
+> 	len = scnprintf(buf, sizeof(buf), "rx_chains: %d antennas, mask 0x%x",
+> 			priv->hw_params.rx_chains_num,
+> 			priv->nvm_data->valid_rx_ant);
+> 
+> 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> }
+> 
+> static ssize_t iwl_dbgfs_rx_chains_msk_write(struct file *file,
+> 					   const char __user *user_buf,
+> 					   size_t count, loff_t *ppos)
+> {
+> 	struct iwl_priv *priv = file->private_data;
+> 	struct iwl_rxon_context *ctx;
+> 	char buf[11];
+> 	unsigned long val;
+> 	int ret;
+> 
+> 	if (count > sizeof(buf))
+> 		return -EINVAL;
+> 
+> 	memset(buf, 0, sizeof(buf));
+> 	if (copy_from_user(buf, user_buf, count))
+> 		return -EFAULT;
+> 
+> 	ret = kstrtoul(buf, 0, &val);
+> 	if (ret)
+> 		return ret;
+> 
+> 	if ((val & ANT_ABC) != val) {
+> 		IWL_ERR(priv, "Invalid rx ant mask 0x%lx\n", val);
+> 		return -EINVAL;
+> 	}
+> 	IWL_INFO(priv, "Committing rx_chains_msk = 0x%lx\n", val);
+> 
+> 	mutex_lock(&priv->mutex);
+> 	/* Update chains and number of chains */
+> 	priv->nvm_data->valid_rx_ant = val;
+> 	priv->hw_params.rx_chains_num = num_of_ant(val);
+> 	/* This is useful for verifying valid rates */
+> 	priv->chain_noise_data.active_chains = val;
+> 
+> 	for_each_context(priv, ctx) {
+> 		iwlagn_set_rxon_chain(priv, ctx);
+> 		iwlagn_commit_rxon(priv, ctx);
+> 	}
+> 	mutex_unlock(&priv->mutex);
+> 
+> 	return count;
+> }
+> DEBUGFS_READ_WRITE_FILE_OPS(rx_chains_msk);
+> 
+> static ssize_t iwl_dbgfs_rotate_rates_read(struct file *file,
+> 					  char __user *user_buf,
+> 					  size_t count, loff_t *ppos)
+> {
+> 	struct iwl_priv *priv = file->private_data;
+> 	char buf[11];
+> 	int len;
+> 
+> 	len = scnprintf(buf, sizeof(buf), "0x%x", priv->rotate_rates);
+> 
+> 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> }
+> 
+> static ssize_t iwl_dbgfs_rotate_rates_write(struct file *file,
+> 					   const char __user *user_buf,
+> 					   size_t count, loff_t *ppos)
+> {
+> 	struct iwl_priv *priv = file->private_data;
+> 	char buf[11];
+> 	unsigned long val;
+> 	int ret;
+> 	u32 num_rates;
+> 	u32 cur_rate;
+> 	u32 tmp, i, start_rate;
+> 
+> 	if (count > sizeof(buf))
+> 		return -EINVAL;
+> 
+> 	memset(buf, 0, sizeof(buf));
+> 	if (copy_from_user(buf, user_buf, count))
+> 		return -EFAULT;
+> 
+> 	ret = kstrtoul(buf, 0, &val);
+> 	if (ret)
+> 		return ret;
+> 
+> 	/* Dan: new rotate_rates scheme using flags */
+> 	if (priv->rotate_rates) {
+> 		kfree(priv->rotate_rate_array);
+> 		priv->rotate_rate_array = NULL;
+> 		priv->last_rotate_rate = 0;
+> 		priv->rotate_rate_total = 0;
+> 		priv->rotate_rates = 0;
+> 	}
+> 
+> 	if (val == 0)
+> 		return count;
+> 
+> 	/* Parse val to determine number of configs */
+> 	num_rates = 0;
+> 	if (val & ROTATE_SISO) /* SISO */
+> 		num_rates++;
+> 	if (val & ROTATE_MIMO2) /* MIMO2 */
+> 		num_rates++;
+> 	if (val & ROTATE_MIMO3) /* MIMO3 */
+> 		num_rates++;
+> 	if (val & ROTATE_TX_SEL) /* TX SEL */ {
+> 		if (val & ROTATE_SISO) num_rates += 2;
+> 		if (val & ROTATE_MIMO2) num_rates += 2;
+> 	}
+> 	if (val & ROTATE_HT40) /* HT40 */
+> 		num_rates *= 2;
+> 	if (val & ROTATE_SGI) /* SGI */
+> 		num_rates *= 2;
+> 	if (val & ROTATE_SKIP) /* SKIP short rates */ {
+> 		num_rates *= 6;
+> 		start_rate = 2;
+> 	} else {
+> 		num_rates *= 8;
+> 		start_rate = 0;
+> 	}
+> 
+> 	/* Shouldn't be true but may as well make sure */
+> 	if (num_rates == 0)
+> 		return -EINVAL;
+> 
+> 	/* Now set up rotate_rate_array */
+> 	priv->rotate_rate_array = kmalloc(num_rates * sizeof(u32),
+> 			GFP_KERNEL);
+> 	if (!priv->rotate_rate_array)
+> 		return -ENOMEM;
+> 	priv->rotate_rates = 1;
+> 	priv->last_rotate_rate = 0;
+> 	priv->rotate_rate_total = num_rates;
+> 
+> 	cur_rate = 0;
+> 	if (val & ROTATE_SISO) /* SISO rates */
+> 		for (i = start_rate; i < 8; ++i, ++cur_rate)
+> 			priv->rotate_rate_array[cur_rate] = 0x4100 + i;
+> 	if (val & ROTATE_MIMO2) /* MIMO2 rates */
+> 		for (i = start_rate; i < 8; ++i, ++cur_rate)
+> 			priv->rotate_rate_array[cur_rate] = 0xc108 + i;
+> 	if (val & ROTATE_MIMO3) /* MIMO3 rates */
+> 		for (i = start_rate; i < 8; ++i, ++cur_rate)
+> 			priv->rotate_rate_array[cur_rate] = 0x1c110 + i;
+> 	if ((val & ROTATE_TX_SEL) && (val & ROTATE_SISO)) {
+> 		/* TX SEL SISO rates */
+> 		for (i = start_rate; i < 8; ++i, ++cur_rate)
+> 			priv->rotate_rate_array[cur_rate] = 0x8100 + i;
+> 		for (i = start_rate; i < 8; ++i, ++cur_rate)
+> 			priv->rotate_rate_array[cur_rate] = 0x10100 + i;
+> 	}
+> 	if ((val & ROTATE_TX_SEL) && (val & ROTATE_MIMO2)) {
+> 		/* TX SEL MIMO2 rates */
+> 		for (i = start_rate; i < 8; ++i, ++cur_rate)
+> 			priv->rotate_rate_array[cur_rate] = 0x14108 + i;
+> 		for (i = start_rate; i < 8; ++i, ++cur_rate)
+> 			priv->rotate_rate_array[cur_rate] = 0x18108 + i;
+> 	}
+> 	if (val & ROTATE_HT40) { /* HT40 rates */
+> 		tmp = cur_rate;
+> 		for (i = start_rate; i < tmp; ++i, ++cur_rate)
+> 			priv->rotate_rate_array[cur_rate] =
+> 				priv->rotate_rate_array[i] | RATE_MCS_HT40_MSK;
+> 	}
+> 	if (val & ROTATE_SGI) { /* SGI rates */
+> 		tmp = cur_rate;
+> 		for (i = start_rate; i < tmp; ++i, ++cur_rate)
+> 			priv->rotate_rate_array[cur_rate] =
+> 				priv->rotate_rate_array[i] | RATE_MCS_SGI_MSK;
+> 	}
+> 
+> 	IWL_INFO(priv, "Set up %u rotate_rates:%s%s%s%s%s%s%s.\n",
+> 			priv->rotate_rate_total,
+> 			(val & ROTATE_SISO) ? " SISO" : "",
+> 			(val & ROTATE_MIMO2) ? " MIMO2" : "",
+> 			(val & ROTATE_MIMO3) ? " MIMO3" : "",
+> 			(val & ROTATE_TX_SEL) ? " TX_SEL" : "",
+> 			(val & ROTATE_HT40) ? " HT40" : "",
+> 			(val & ROTATE_SGI) ? " SGI" : "",
+> 			(val & ROTATE_SKIP) ? " SKIP" : "");
+> 
+> 	return count;
+> }
+> DEBUGFS_READ_WRITE_FILE_OPS(rotate_rates);
+> 
+> static ssize_t iwl_dbgfs_monitor_tx_rate_read(struct file *file,
+> 					  char __user *user_buf,
+> 					  size_t count, loff_t *ppos)
+> {
+> 	struct iwl_priv *priv = file->private_data;
+> 	char buf[11];
+> 	int len;
+> 
+> 	len = scnprintf(buf, sizeof(buf), "0x%x", priv->monitor_tx_rate);
+> 
+> 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> }
+> 
+> static ssize_t iwl_dbgfs_monitor_tx_rate_write(struct file *file,
+> 					   const char __user *user_buf,
+> 					   size_t count, loff_t *ppos)
+> {
+> 	struct iwl_priv *priv = file->private_data;
+> 	char buf[11];
+> 	unsigned long val;
+> 	int ret;
+> 
+> 	if (count > sizeof(buf))
+> 		return -EINVAL;
+> 
+> 	memset(buf, 0, sizeof(buf));
+> 	if (copy_from_user(buf, user_buf, count))
+> 		return -EFAULT;
+> 
+> 	ret = kstrtoul(buf, 0, &val);
+> 	if (ret)
+> 		return ret;
+> 
+> 	priv->monitor_tx_rate = val;
+> 
+> 	return count;
+> }
+> DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate);
+> 
+> static ssize_t iwl_dbgfs_bcast_tx_rate_read(struct file *file,
+> 					  char __user *user_buf,
+> 					  size_t count, loff_t *ppos)
+> {
+> 	struct iwl_priv *priv = file->private_data;
+> 	char buf[11];
+> 	int len;
+> 
+> 	len = scnprintf(buf, sizeof(buf), "0x%x", priv->bcast_tx_rate);
+> 
+> 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
+> }
+> 
+> static ssize_t iwl_dbgfs_bcast_tx_rate_write(struct file *file,
+> 					   const char __user *user_buf,
+> 					   size_t count, loff_t *ppos)
+> {
+> 	struct iwl_priv *priv = file->private_data;
+> 	char buf[11];
+> 	unsigned long val;
+> 	int ret;
+> 
+> 	if (count > sizeof(buf))
+> 		return -EINVAL;
+> 
+> 	memset(buf, 0, sizeof(buf));
+> 	if (copy_from_user(buf, user_buf, count))
+> 		return -EFAULT;
+> 
+> 	ret = kstrtoul(buf, 0, &val);
+> 	if (ret)
+> 		return ret;
+> 
+> 	priv->bcast_tx_rate = val;
+> 
+> 	return count;
+> }
+> DEBUGFS_READ_WRITE_FILE_OPS(bcast_tx_rate);
+> 
+2414a2727,2731
+> 	DEBUGFS_ADD_FILE(bf_flag, dir_debug, S_IRUSR | S_IWUSR);
+> 	DEBUGFS_ADD_FILE(rx_chains_msk, dir_debug, S_IRUSR | S_IWUSR);
+> 	DEBUGFS_ADD_FILE(rotate_rates, dir_debug, S_IRUSR | S_IWUSR);
+> 	DEBUGFS_ADD_FILE(monitor_tx_rate, dir_debug, S_IRUSR | S_IWUSR);
+> 	DEBUGFS_ADD_FILE(bcast_tx_rate, dir_debug, S_IRUSR | S_IWUSR);
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/dev.h linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/dev.h
+286c286
+< #define MAXIMUM_ALLOWED_PATHLOSS	15
+---
+> #define MAXIMUM_ALLOWED_PATHLOSS	50
+810a811
+> 	u8 last_cfg_phy_buf[IWLAGN_MAX_CFG_PHY_CNT*sizeof(u32)];
+875a877,891
+> 
+> 	u32 connector_log;
+> 	int last_rx_noise;
+> 	s8 last_rx_noiseA;
+> 	s8 last_rx_noiseB;
+> 	s8 last_rx_noiseC;
+> 	bool bf_enabled;
+> 	u32 monitor_tx_rate;
+> 	u32 bcast_tx_rate;
+> 
+> 	/* Setup for rotating rates */
+> 	u32 rotate_rates;
+> 	u32 last_rotate_rate;
+> 	u32 rotate_rate_total;
+> 	u32 *rotate_rate_array;
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/lib.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/lib.c
+41a42,117
+> #include "connector.h"
+> 
+> int iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb,
+> 		struct iwl_device_cmd *cmd)
+> {
+> 	/*
+> 	 * Just print a notification that there was a notification passed up
+> 	 * from SVD
+> 	 */
+> 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
+> 	struct iwl_bfee_notif *bfee_notif = (void *)pkt->data;
+> 	u8 Nrx, Ntx;
+> 	u16 len = le16_to_cpu(bfee_notif->len);
+> 	struct iwl_rx_phy_res *phy;
+> 	u32 *non_cfg_buf, *cfg_buf;
+> 	static u16 bfee_count;
+> 
+> 	if (priv->last_phy_res_valid) {
+> 		phy = &priv->last_phy_res;
+> 		non_cfg_buf = (u32 *)phy->non_cfg_phy_buf;
+> 		bfee_notif->timestamp_low =
+> 			cpu_to_le32(__le64_to_cpu(phy->timestamp));
+> 		bfee_notif->rssiA =
+> 			(non_cfg_buf[IWLAGN_RX_RES_RSSI_AB_IDX] &
+> 			 IWLAGN_OFDM_RSSI_INBAND_A_BITMSK) >>
+> 			IWLAGN_OFDM_RSSI_A_BIT_POS;
+> 		bfee_notif->rssiB =
+> 			(non_cfg_buf[IWLAGN_RX_RES_RSSI_AB_IDX] &
+> 			 IWLAGN_OFDM_RSSI_INBAND_B_BITMSK) >>
+> 			IWLAGN_OFDM_RSSI_B_BIT_POS;
+> 		bfee_notif->rssiC =
+> 			(non_cfg_buf[IWLAGN_RX_RES_RSSI_C_IDX] &
+> 			 IWLAGN_OFDM_RSSI_INBAND_C_BITMSK) >>
+> 			IWLAGN_OFDM_RSSI_C_BIT_POS;
+> 		bfee_notif->noise = priv->last_rx_noise;
+> 		bfee_notif->agc =
+> 			(non_cfg_buf[IWLAGN_RX_RES_AGC_IDX] &
+> 			 IWLAGN_OFDM_AGC_MSK) >> IWLAGN_OFDM_AGC_BIT_POS;
+> 		if (phy->cfg_phy_cnt > 0) {
+> 			cfg_buf = (u32 *)&priv->last_cfg_phy_buf;
+> 			bfee_notif->antenna_sel = cfg_buf[0];
+> 		}
+> 		/* Everything but antennas is in bottom 14 bits */
+> 		bfee_notif->fake_rate_n_flags =
+> 			cpu_to_le16(__le32_to_cpu(phy->rate_n_flags) & 0x3fff);
+> 		IWL_INFO(priv, "rssis: %u %u %u noise: %d agc: %u "
+> 				"antenna_sel: %02x fake_rate_n_flags=0x%x\n",
+> 				bfee_notif->rssiA, bfee_notif->rssiB,
+> 				bfee_notif->rssiC, bfee_notif->noise,
+> 				bfee_notif->agc, bfee_notif->antenna_sel,
+> 				bfee_notif->fake_rate_n_flags);
+> 
+> 		/* Increment counter */
+> 		bfee_count++;
+> 		bfee_notif->bfee_count = cpu_to_le16(bfee_count);
+> 	}
+> 
+> 	/* Log the bytes to a file */
+> 	if (priv->connector_log & IWL_CONN_BFEE_NOTIF_MSK)
+> 		connector_send_msg((void *)bfee_notif,
+> 			len + sizeof(struct iwl_bfee_notif),
+> 			IWL_CONN_BFEE_NOTIF);
+> 
+> 	/* Now print out that we got a notification, and the size of it */
+> 	Nrx = bfee_notif->Nrx;
+> 	Ntx = bfee_notif->Ntx;
+> 	/*
+> 	 * Each subcarrier uses Ntx * Nrx * 2 * 8 bits for matrix
+> 	 * (2 signed 8-bit I/Q vals) plus 3 bits for SNR. I think the hardware
+> 	 * always gives 0 for these 3 bits. See 802.11n spec section 7.3.1.28.
+> 	 */
+> 	IWL_DEBUG_RX(priv, "BFEE NOTIFICATION, Nrx=%u Ntx=%u "
+> 			"len=%u calc_len=%u\n",
+> 			Nrx, Ntx, len, (30*(3+2*Nrx*Ntx*8)+7)/8);
+> 	return 0;
+> }
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/main.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/main.c
+58a59
+> #include "connector.h"
+555c556
+< 		BIT(NL80211_IFTYPE_STATION);
+---
+> 		BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_AP);
+788a790,791
+> 	iwl_connector_set_priv(priv);
+> 
+1040a1044,1053
+> 	/* Dan's parameters */
+> 	priv->connector_log = iwlwifi_mod_params.connector_log;
+> 	priv->bf_enabled = 1;		/* Enabled */
+> 	priv->rotate_rates = 0;		/* Disabled */
+> 	priv->last_rotate_rate = 0;	/* Disabled */
+> 	priv->rotate_rate_total = 0;	/* Disabled */
+> 	priv->rotate_rate_array = NULL;	/* Disabled */
+> 	priv->monitor_tx_rate = 0;	/* Disabled */
+> 	priv->bcast_tx_rate = 0;	/* Disabled */
+> 
+1160a1174
+> 		REPLY_BFEE_NOTIFICATION,
+2073a2088,2093
+> 	ret = iwlagn_register_connector();
+> 	if (ret) {
+> 		pr_err("Unable to initialize connector: %d\n", ret);
+> 		goto error_connector_register;
+> 	}
+> 
+2077c2097
+< 		iwlagn_rate_control_unregister();
+---
+> 		goto error_opmode_register;
+2080a2101,2107
+> 
+> error_opmode_register:
+> 	iwlagn_unregister_connector();
+> error_connector_register:
+> 	iwlagn_rate_control_unregister();
+> 
+> 	return ret;
+2086a2114
+> 	iwlagn_unregister_connector();
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/rs.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/rs.c
+921a922,925
+> 	/* Exit if in a fixed-rate mode */
+> 	if (priv && priv->rotate_rates)
+> 		return;
+> 
+2749a2754,2760
+> 
+> 	/* Exit if in a fixed-rate mode */
+> 	if (priv && priv->rotate_rates) {
+> 		info->control.rates[0].flags = 0;
+> 		info->control.rates[0].idx = 0;
+> 		return;
+> 	}
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/rx.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/rx.c
+38a39
+> #include "connector.h"
+116a118
+> 	IWL_CMD_ENTRY(REPLY_BFEE_NOTIFICATION),
+375c377
+< 	if (num_active_rx)
+---
+> 	if (num_active_rx) {
+377c379,382
+< 	else
+---
+> 		if (priv->connector_log & IWL_CONN_NOISE_MSK)
+> 			connector_send_msg((void *)&last_rx_noise,
+> 					sizeof(last_rx_noise), IWL_CONN_NOISE);
+> 	} else
+378a384,387
+> 	priv->last_rx_noise = last_rx_noise;
+> 	priv->last_rx_noiseA = bcn_silence_a;
+> 	priv->last_rx_noiseB = bcn_silence_b;
+> 	priv->last_rx_noiseC = bcn_silence_c;
+661a671
+> 	struct iwl_rx_phy_res *rx_phy_res = (void *)pkt->data;
+666a677,678
+> 	memcpy(&priv->last_cfg_phy_buf, rx_phy_res->cfg_phy_buf,
+> 			rx_phy_res->cfg_phy_cnt * sizeof(u32));
+917a930,931
+> 	if (priv->connector_log & IWL_CONN_RX_MPDU_MSK)
+> 		connector_send_msg((void *)header, len, IWL_CONN_RX_MPDU);
+919,921c933,935
+< 	if ((unlikely(phy_res->cfg_phy_cnt > 20))) {
+< 		IWL_DEBUG_DROP(priv, "dsp size out of range [0,20]: %d\n",
+< 				phy_res->cfg_phy_cnt);
+---
+> 	if ((unlikely(phy_res->cfg_phy_cnt > IWLAGN_MAX_CFG_PHY_CNT))) {
+> 		IWL_DEBUG_DROP(priv, "dsp size out of range [0,%d]: %d\n",
+> 				IWLAGN_MAX_CFG_PHY_CNT, phy_res->cfg_phy_cnt);
+1093a1108,1110
+> 
+> 	/* Beamforming */
+> 	handlers[REPLY_BFEE_NOTIFICATION] = iwlagn_bfee_notif;
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/rxon.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/rxon.c
+532a533,559
+> int iwlagn_send_dsp_debug(struct iwl_priv *priv)
+> {
+> 	u32 count = 1;
+> 	size_t len = sizeof(struct iwl5000_dsp_debug) +
+> 		((count + 1) & ~1) * sizeof(u16);
+> 	struct iwl5000_dsp_debug *dsp_debug = kmalloc(len, GFP_ATOMIC);
+> 	u16 *mib_indices;
+> 	int ret;
+> 
+> 	if (!dsp_debug)
+> 		return -ENOMEM;
+> 
+> 	mib_indices = (u16 *) dsp_debug->mib_indices;
+> 
+> 	dsp_debug->mib_cnt = count;
+> 	dsp_debug->flags = DSP_DEBUG_OFDM_MSK;
+> 	dsp_debug->stat_id = 0;
+> 	dsp_debug->reserved = 0;
+> 	mib_indices[0] = OFDM_RX_ANT_OUT;
+> 
+> 	ret = iwl_dvm_send_cmd_pdu(priv, DSP_DEBUG_CMD, CMD_ASYNC, len,
+> 			dsp_debug);
+> 	kfree(dsp_debug);
+> 
+> 	return ret;
+> }
+> 
+1064a1092,1097
+> 	/* Enable beamforming */
+> 	if (priv->bf_enabled)
+> 		ctx->staging.flags |= RXON_FLG_BF_ENABLE_MSK;
+> 	else
+> 		ctx->staging.flags &= ~RXON_FLG_BF_ENABLE_MSK;
+> 
+1144a1178,1182
+> 	if (ret)
+> 		return ret;
+> 
+> 	/* DSP debug command makes sure we get antenna selection information */
+> 	ret = iwlagn_send_dsp_debug(priv);
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/sta.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/sta.c
+35a36
+> const u8 iwl_monitor_addr[ETH_ALEN] = { 0x00, 0x16, 0xEA, 0x12, 0x34, 0x56 };
+295a297,298
+> 	else if (is_monitor_ether_addr(addr))
+> 		sta_id = IWLAGN_MONITOR_ID;
+1345a1349,1373
+> 	/* Above: broadcast. Below: monitor */
+> 	spin_lock_bh(&priv->sta_lock);
+> 	sta_id = iwl_prep_station(priv, ctx, iwl_monitor_addr, false, NULL);
+> 	if (sta_id == IWL_INVALID_STATION) {
+> 		IWL_ERR(priv, "Unable to prepare monitor station\n");
+> 		spin_unlock_bh(&priv->sta_lock);
+> 
+> 		return -EINVAL;
+> 	}
+> 
+> 	priv->stations[sta_id].used |= IWL_STA_DRIVER_ACTIVE;
+> 	priv->stations[sta_id].used |= IWL_STA_BCAST;
+> 	spin_unlock_bh(&priv->sta_lock);
+> 
+> 	link_cmd = iwl_sta_alloc_lq(priv, ctx, sta_id);
+> 	if (!link_cmd) {
+> 		IWL_ERR(priv,
+> 			"Unable to initialize rate scaling for monitor station.\n");
+> 		return -ENOMEM;
+> 	}
+> 
+> 	spin_lock_bh(&priv->sta_lock);
+> 	priv->stations[sta_id].lq = link_cmd;
+> 	spin_unlock_bh(&priv->sta_lock);
+> 
+1371a1400,1416
+> 	priv->stations[sta_id].lq = link_cmd;
+> 	spin_unlock_bh(&priv->sta_lock);
+> 
+> 	/* Above: broadcast. Below: monitor */
+> 	sta_id = IWLAGN_MONITOR_ID;
+> 
+> 	link_cmd = iwl_sta_alloc_lq(priv, ctx, sta_id);
+> 	if (!link_cmd) {
+> 		IWL_ERR(priv, "Unable to initialize rate scaling for monitor station.\n");
+> 		return -ENOMEM;
+> 	}
+> 
+> 	spin_lock_bh(&priv->sta_lock);
+> 	if (priv->stations[sta_id].lq)
+> 		kfree(priv->stations[sta_id].lq);
+> 	else
+> 		IWL_DEBUG_INFO(priv, "Monitor station rate scaling has not been initialized yet.\n");
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/dvm/tx.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/dvm/tx.c
+159,161c159,175
+< 	/* DATA packets will use the uCode station table for rate/antenna
+< 	 * selection */
+< 	if (ieee80211_is_data(fc)) {
+---
+> 	/*
+> 	 * DATA packets will use the uCode station table for rate/antenna
+> 	 * selection.
+> 	 * ...
+> 	 * But handle some special experimental cases first
+> 	 */
+> 	if (ieee80211_is_data(fc) && priv->rotate_rates) {
+> 		tx_cmd->tx_flags &= ~TX_CMD_FLG_STA_RATE_MSK;
+> 		tx_cmd->rate_n_flags = cpu_to_le32(
+> 			priv->rotate_rate_array[priv->last_rotate_rate]);
+> 		priv->last_rotate_rate = (priv->last_rotate_rate + 1) %
+> 			priv->rotate_rate_total;
+> 		/* No retries in this mode */
+> 		tx_cmd->data_retry_limit = 0;
+> 		tx_cmd->rts_retry_limit = 0;
+> 		return;
+> 	} else if (ieee80211_is_data(fc)) {
+341a356,357
+> 	if (sta == NULL && is_monitor_ether_addr(hdr->addr1))
+> 		sta_id = IWLAGN_MONITOR_ID;
+383c399,411
+< 	iwlagn_tx_cmd_build_rate(priv, tx_cmd, info, sta, fc);
+---
+> 	/* If packet is to the monitor address, use the monitor rate; or
+> 	 * if packet is to the broadcast address, use the broadcast rate
+> 	 */
+> 	if ((IWLAGN_MONITOR_ID == sta_id) &&
+> 			(priv->monitor_tx_rate != 0)) {
+> 		tx_cmd->tx_flags &= ~TX_CMD_FLG_STA_RATE_MSK;
+> 		tx_cmd->rate_n_flags = cpu_to_le32(priv->monitor_tx_rate);
+> 	} else if ((ctx->bcast_sta_id == sta_id) &&
+> 			(priv->bcast_tx_rate != 0)) {
+> 		tx_cmd->tx_flags &= ~TX_CMD_FLG_STA_RATE_MSK;
+> 		tx_cmd->rate_n_flags = cpu_to_le32(priv->bcast_tx_rate);
+> 	} else
+> 		iwlagn_tx_cmd_build_rate(priv, tx_cmd, info, sta, fc);
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/iwl-5000.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/iwl-5000.c
+38c38
+< #define IWL5000_UCODE_API_OK 5
+---
+> #define IWL5000_UCODE_API_OK 2
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/iwl-drv.c linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/iwl-drv.c
+1168a1169,1174
+> 	 * Dan -- disable firmware version checks. Instead, verify
+> 	 * that the firmware has the size expected for the hacked firmware
+> 	 */
+> 	(void)api_min; /* Dan -- remove warning */
+> #if 0
+> 	/*
+1195a1202,1207
+> #endif
+> 
+> 	if (ucode_raw->size != 336252) {
+> 		IWL_ERR(drv,
+> 			"Firmware size does not match iwlwifi-5000-2.ucode.sigcomm2010. The UW 802.11n CSI Tool will not work.\n");
+> 	}
+1470a1483,1485
+> #ifdef CONFIG_IWLWIFI_DEBUG
+> 	.debug_level = IWL_DL_FW_ERRORS,
+> #endif
+1564a1580,1583
+> module_param_named(connector_log, iwlwifi_mod_params.connector_log, int,
+> 		S_IRUGO);
+> MODULE_PARM_DESC(connector_log,
+> 		"set connector log mask (default 0 [nothing])");
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/iwl-modparams.h linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/iwl-modparams.h
+97a98
+>  * @connector_log: which connector messages, default = 0
+103c104
+<  * @debug_level: levels are IWL_DL_*
+---
+>  * @debug_level: levels are IWL_DL_*, default = IWL_DL_FW_ERRORS
+113a115
+> 	int connector_log;
+diff -r linux-4.2/drivers/net/wireless/iwlwifi/iwl-trans.h linux-80211n-csitool-csitool-4.2/drivers/net/wireless/iwlwifi/iwl-trans.h
+319c319
+< #define MAX_NO_RECLAIM_CMDS	6
+---
+> #define MAX_NO_RECLAIM_CMDS	7

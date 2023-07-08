@@ -1,0 +1,152 @@
+Oct 15 20:56:06 flqu hostapd: wlp7s0: STA e2:dc:f9:6e:37:82 IEEE 802.11: did not acknowledge authentication response
+Oct 15 20:56:07 flqu hostapd: message repeated 2 times: [ wlp7s0: STA e2:dc:f9:6e:37:82 IEEE 802.11: did not acknowledge authentication response]
+
+Oct 15 20:56:10 flqu hostapd: wlp7s0: STA a6:7b:62:13:88:55 IEEE 802.11: authenticated
+Oct 15 20:56:10 flqu hostapd: wlp7s0: STA a6:7b:62:13:88:55 IEEE 802.11: associated (aid 1)
+Oct 15 20:56:10 flqu hostapd: wlp7s0: STA a6:7b:62:13:88:55 RADIUS: starting accounting session 634AADBF-00000001
+
+Oct 15 20:56:10 flqu dhcpd: DHCPDISCOVER from a6:7b:62:13:88:55 via wlp7s0
+Oct 15 20:56:11 flqu dhcpd: DHCPOFFER on 10.5.5.5 to a6:7b:62:13:88:55 (M2007J3SC) via wlp7s0
+Oct 15 20:56:11 flqu dhcpd: DHCPREQUEST for 10.5.5.5 (10.5.5.1) from a6:7b:62:13:88:55 (M2007J3SC) via wlp7s0
+Oct 15 20:56:11 flqu dhcpd: DHCPACK on 10.5.5.5 to a6:7b:62:13:88:55 (M2007J3SC) via wlp7s0
+Oct 15 20:56:11 flqu dhcpd: DHCPREQUEST for 10.5.5.5 (10.5.5.1) from a6:7b:62:13:88:55 (M2007J3SC) via wlp7s0
+Oct 15 20:56:11 flqu dhcpd: DHCPACK on 10.5.5.5 to a6:7b:62:13:88:55 via wlp7s0
+
+Oct 15 20:56:22 flqu com.canonical.Unity.Scope.Home[1189]: (unity-scope-home:6794): unity-scope-home-WARNING **: scope.vala:235: Failed to get list of remote scopes: Request failed with error 2
+
+Oct 15 20:58:47 flqu hostapd: wlp7s0: STA f2:0c:cc:49:b6:73 IEEE 802.11: authenticated
+Oct 15 20:58:47 flqu hostapd: wlp7s0: STA f2:0c:cc:49:b6:73 IEEE 802.11: associated (aid 2)
+Oct 15 20:58:47 flqu hostapd: wlp7s0: STA f2:0c:cc:49:b6:73 RADIUS: starting accounting session 634AADBF-00000003
+
+Oct 15 20:58:48 flqu dhcpd: DHCPDISCOVER from f2:0c:cc:49:b6:73 via wlp7s0
+Oct 15 20:58:49 flqu dhcpd: DHCPOFFER on 10.5.5.6 to f2:0c:cc:49:b6:73 (HUAWEI_P40-3d39243ee89d1a) via wlp7s0
+Oct 15 20:58:49 flqu dhcpd: DHCPREQUEST for 10.5.5.6 (10.5.5.1) from f2:0c:cc:49:b6:73 (HUAWEI_P40-3d39243ee89d1a) via wlp7s0
+Oct 15 20:58:49 flqu dhcpd: DHCPACK on 10.5.5.6 to f2:0c:cc:49:b6:73 (HUAWEI_P40-3d39243ee89d1a) via wlp7s0
+Oct 15 20:58:49 flqu dhcpd: DHCPREQUEST for 10.5.5.6 (10.5.5.1) from f2:0c:cc:49:b6:73 (HUAWEI_P40-3d39243ee89d1a) via wlp7s0
+Oct 15 20:58:49 flqu dhcpd: DHCPACK on 10.5.5.6 to f2:0c:cc:49:b6:73 via wlp7s0
+
+Oct 15 20:58:52 flqu hostapd: wlp7s0: STA f2:0c:cc:49:b6:73 IEEE 802.11: disassociated
+Oct 15 20:58:53 flqu hostapd: wlp7s0: STA f2:0c:cc:49:b6:73 IEEE 802.11: deauthenticated due to inactivity (timer DEAUTH/REMOVE)
+
+Oct 15 21:01:11 flqu dhcpd: DHCPREQUEST for 10.5.5.5 from a6:7b:62:13:88:55 via wlp7s0
+Oct 15 21:01:11 flqu dhcpd: DHCPACK on 10.5.5.5 to a6:7b:62:13:88:55 (M2007J3SC) via wlp7s0
+Oct 15 21:01:13 flqu hostapd: wlp7s0: STA 82:ba:0a:57:34:5c IEEE 802.11: disassociated due to inactivity
+Oct 15 21:01:14 flqu hostapd: wlp7s0: STA 82:ba:0a:57:34:5c IEEE 802.11: deauthenticated due to inactivity (timer DEAUTH/REMOVE)
+
+
+Oct 15 21:01:16 flqu kernel: [21852.564014] iwlwifi 0000:07:00.0: Microcode SW error detected.  Restarting 0x82000000.
+Oct 15 21:01:16 flqu kernel: [21852.564034] iwlwifi 0000:07:00.0: CSR values:
+Oct 15 21:01:16 flqu kernel: [21852.564035] iwlwifi 0000:07:00.0: (2nd byte of CSR_INT_COALESCING is CSR_INT_PERIODIC_REG)
+Oct 15 21:01:16 flqu kernel: [21852.564038] iwlwifi 0000:07:00.0:        CSR_HW_IF_CONFIG_REG: 0X00488304
+Oct 15 21:01:16 flqu kernel: [21852.564041] iwlwifi 0000:07:00.0:          CSR_INT_COALESCING: 0X00000040
+Oct 15 21:01:16 flqu kernel: [21852.564044] iwlwifi 0000:07:00.0:                     CSR_INT: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564047] iwlwifi 0000:07:00.0:                CSR_INT_MASK: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564050] iwlwifi 0000:07:00.0:           CSR_FH_INT_STATUS: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564052] iwlwifi 0000:07:00.0:                 CSR_GPIO_IN: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564055] iwlwifi 0000:07:00.0:                   CSR_RESET: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564058] iwlwifi 0000:07:00.0:                CSR_GP_CNTRL: 0X080403c5
+Oct 15 21:01:16 flqu kernel: [21852.564061] iwlwifi 0000:07:00.0:                  CSR_HW_REV: 0X00000024
+Oct 15 21:01:16 flqu kernel: [21852.564064] iwlwifi 0000:07:00.0:              CSR_EEPROM_REG: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564066] iwlwifi 0000:07:00.0:               CSR_EEPROM_GP: 0X90000004
+Oct 15 21:01:16 flqu kernel: [21852.564069] iwlwifi 0000:07:00.0:              CSR_OTP_GP_REG: 0X00060000
+Oct 15 21:01:16 flqu kernel: [21852.564072] iwlwifi 0000:07:00.0:                 CSR_GIO_REG: 0X00080044
+Oct 15 21:01:16 flqu kernel: [21852.564075] iwlwifi 0000:07:00.0:            CSR_GP_UCODE_REG: 0X00008006
+Oct 15 21:01:16 flqu kernel: [21852.564078] iwlwifi 0000:07:00.0:           CSR_GP_DRIVER_REG: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564080] iwlwifi 0000:07:00.0:           CSR_UCODE_DRV_GP1: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564083] iwlwifi 0000:07:00.0:           CSR_UCODE_DRV_GP2: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564086] iwlwifi 0000:07:00.0:                 CSR_LED_REG: 0X00000040
+Oct 15 21:01:16 flqu kernel: [21852.564089] iwlwifi 0000:07:00.0:        CSR_DRAM_INT_TBL_REG: 0X883f2ef7
+Oct 15 21:01:16 flqu kernel: [21852.564091] iwlwifi 0000:07:00.0:        CSR_GIO_CHICKEN_BITS: 0X27800200
+Oct 15 21:01:16 flqu kernel: [21852.564094] iwlwifi 0000:07:00.0:             CSR_ANA_PLL_CFG: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564097] iwlwifi 0000:07:00.0:      CSR_MONITOR_STATUS_REG: 0X43f7f7d7
+Oct 15 21:01:16 flqu kernel: [21852.564100] iwlwifi 0000:07:00.0:           CSR_HW_REV_WA_REG: 0X0001001a
+Oct 15 21:01:16 flqu kernel: [21852.564102] iwlwifi 0000:07:00.0:        CSR_DBG_HPET_MEM_REG: 0Xffff0000
+Oct 15 21:01:16 flqu kernel: [21852.564103] iwlwifi 0000:07:00.0: FH register values:
+Oct 15 21:01:16 flqu kernel: [21852.564114] iwlwifi 0000:07:00.0:         FH_RSCSR_CHNL0_STTS_WPTR_REG: 0X4594c500
+Oct 15 21:01:16 flqu kernel: [21852.564124] iwlwifi 0000:07:00.0:        FH_RSCSR_CHNL0_RBDCB_BASE_REG: 0X033de720
+Oct 15 21:01:16 flqu kernel: [21852.564151] iwlwifi 0000:07:00.0:                  FH_RSCSR_CHNL0_WPTR: 0X000000f8
+Oct 15 21:01:16 flqu kernel: [21852.564161] iwlwifi 0000:07:00.0:         FH_MEM_RCSR_CHNL0_CONFIG_REG: 0X80801114
+Oct 15 21:01:16 flqu kernel: [21852.564172] iwlwifi 0000:07:00.0:          FH_MEM_RSSR_SHARED_CTRL_REG: 0X000000fc
+Oct 15 21:01:16 flqu kernel: [21852.564182] iwlwifi 0000:07:00.0:            FH_MEM_RSSR_RX_STATUS_REG: 0X07030000
+Oct 15 21:01:16 flqu kernel: [21852.564192] iwlwifi 0000:07:00.0:    FH_MEM_RSSR_RX_ENABLE_ERR_IRQ2DRV: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564203] iwlwifi 0000:07:00.0:                FH_TSSR_TX_STATUS_REG: 0X07ff0001
+Oct 15 21:01:16 flqu kernel: [21852.564213] iwlwifi 0000:07:00.0:                 FH_TSSR_TX_ERROR_REG: 0X00000000
+Oct 15 21:01:16 flqu kernel: [21852.564214] iwlwifi 0000:07:00.0: Loaded firmware version: 8.24.2.12
+Oct 15 21:01:16 flqu kernel: [21852.564332] iwlwifi 0000:07:00.0: Start IWL Error Log Dump:
+Oct 15 21:01:16 flqu kernel: [21852.564332] iwlwifi 0000:07:00.0: Status: 0x0000004C, count: 5
+Oct 15 21:01:16 flqu kernel: [21852.564333] iwlwifi 0000:07:00.0: 0x00000005 | SYSASSERT                   
+Oct 15 21:01:16 flqu kernel: [21852.564334] iwlwifi 0000:07:00.0: 0x0001AE84 | uPc
+Oct 15 21:01:16 flqu kernel: [21852.564335] iwlwifi 0000:07:00.0: 0x0001AE72 | branchlink1
+Oct 15 21:01:16 flqu kernel: [21852.564335] iwlwifi 0000:07:00.0: 0x0001AE72 | branchlink2
+Oct 15 21:01:16 flqu kernel: [21852.564336] iwlwifi 0000:07:00.0: 0x000008B2 | interruptlink1
+Oct 15 21:01:16 flqu kernel: [21852.564337] iwlwifi 0000:07:00.0: 0x00000000 | interruptlink2
+Oct 15 21:01:16 flqu kernel: [21852.564337] iwlwifi 0000:07:00.0: 0x00000000 | data1
+Oct 15 21:01:16 flqu kernel: [21852.564338] iwlwifi 0000:07:00.0: 0x00000000 | data2
+Oct 15 21:01:16 flqu kernel: [21852.564338] iwlwifi 0000:07:00.0: 0x0000012A | line
+Oct 15 21:01:16 flqu kernel: [21852.564339] iwlwifi 0000:07:00.0: 0x54418FBC | beacon time
+Oct 15 21:01:16 flqu kernel: [21852.564340] iwlwifi 0000:07:00.0: 0x14CE9044 | tsf low
+Oct 15 21:01:16 flqu kernel: [21852.564340] iwlwifi 0000:07:00.0: 0x00000000 | tsf hi
+Oct 15 21:01:16 flqu kernel: [21852.564341] iwlwifi 0000:07:00.0: 0x00000000 | time gp1
+Oct 15 21:01:16 flqu kernel: [21852.564342] iwlwifi 0000:07:00.0: 0x14CF0603 | time gp2
+Oct 15 21:01:16 flqu kernel: [21852.564342] iwlwifi 0000:07:00.0: 0x00000000 | time gp3
+Oct 15 21:01:16 flqu kernel: [21852.564343] iwlwifi 0000:07:00.0: 0x00010818 | uCode version
+Oct 15 21:01:16 flqu kernel: [21852.564344] iwlwifi 0000:07:00.0: 0x00000000 | hw version
+Oct 15 21:01:16 flqu kernel: [21852.564344] iwlwifi 0000:07:00.0: 0x00488304 | board version
+Oct 15 21:01:16 flqu kernel: [21852.564345] iwlwifi 0000:07:00.0: 0x04B6001C | hcmd
+Oct 15 21:01:16 flqu kernel: [21852.564346] iwlwifi 0000:07:00.0: 0x67863040 | isr0
+Oct 15 21:01:16 flqu kernel: [21852.564346] iwlwifi 0000:07:00.0: 0x0102E000 | isr1
+Oct 15 21:01:16 flqu kernel: [21852.564347] iwlwifi 0000:07:00.0: 0x00000002 | isr2
+Oct 15 21:01:16 flqu kernel: [21852.564348] iwlwifi 0000:07:00.0: 0x0043FCC3 | isr3
+Oct 15 21:01:16 flqu kernel: [21852.564348] iwlwifi 0000:07:00.0: 0x00080110 | isr4
+Oct 15 21:01:16 flqu kernel: [21852.564349] iwlwifi 0000:07:00.0: 0x0000E72C | isr_pref
+Oct 15 21:01:16 flqu kernel: [21852.564350] iwlwifi 0000:07:00.0: 0x00000080 | wait_event
+Oct 15 21:01:16 flqu kernel: [21852.564350] iwlwifi 0000:07:00.0: 0x00000000 | l2p_control
+Oct 15 21:01:16 flqu kernel: [21852.564351] iwlwifi 0000:07:00.0: 0x0000003F | l2p_duration
+Oct 15 21:01:16 flqu kernel: [21852.564352] iwlwifi 0000:07:00.0: 0x00000200 | l2p_mhvalid
+Oct 15 21:01:16 flqu kernel: [21852.564352] iwlwifi 0000:07:00.0: 0x00000005 | l2p_addr_match
+Oct 15 21:01:16 flqu kernel: [21852.564353] iwlwifi 0000:07:00.0: 0x00000000 | lmpm_pmg_sel
+Oct 15 21:01:16 flqu kernel: [21852.564354] iwlwifi 0000:07:00.0: 0x00000000 | timestamp
+Oct 15 21:01:16 flqu kernel: [21852.564354] iwlwifi 0000:07:00.0: 0x00000200 | flow_handler
+Oct 15 21:01:16 flqu kernel: [21852.564400] iwlwifi 0000:07:00.0: Start IWL Event Log Dump: display last 20 entries
+Oct 15 21:01:16 flqu kernel: [21852.564414] iwlwifi 0000:07:00.0: EVT_LOGT:0349109585:0x0000f004:0332
+Oct 15 21:01:16 flqu kernel: [21852.564422] iwlwifi 0000:07:00.0: EVT_LOGT:0349109586:0x0000a101:1475
+Oct 15 21:01:16 flqu kernel: [21852.564430] iwlwifi 0000:07:00.0: EVT_LOGT:0349109587:0x08002000:1475
+Oct 15 21:01:16 flqu kernel: [21852.564438] iwlwifi 0000:07:00.0: EVT_LOGT:0349109637:0x0000010f:0106
+Oct 15 21:01:16 flqu kernel: [21852.564446] iwlwifi 0000:07:00.0: EVT_LOGT:0349109638:0x0000a100:1475
+Oct 15 21:01:16 flqu kernel: [21852.564454] iwlwifi 0000:07:00.0: EVT_LOGT:0349109639:0x00000000:0332
+Oct 15 21:01:16 flqu kernel: [21852.564462] iwlwifi 0000:07:00.0: EVT_LOGT:0349109640:0x00000000:0302
+Oct 15 21:01:16 flqu kernel: [21852.564470] iwlwifi 0000:07:00.0: EVT_LOGT:0349109662:0x00000440:0323
+Oct 15 21:01:16 flqu kernel: [21852.564478] iwlwifi 0000:07:00.0: EVT_LOGT:0349109666:0x00001000:1475
+Oct 15 21:01:16 flqu kernel: [21852.564486] iwlwifi 0000:07:00.0: EVT_LOGT:0349109667:0x00001a00:1475
+Oct 15 21:01:16 flqu kernel: [21852.564495] iwlwifi 0000:07:00.0: EVT_LOGT:0349109667:0x00001fff:1475
+Oct 15 21:01:16 flqu kernel: [21852.564503] iwlwifi 0000:07:00.0: EVT_LOGT:0349109668:0x80000001:0332
+Oct 15 21:01:16 flqu kernel: [21852.564512] iwlwifi 0000:07:00.0: EVT_LOGT:0349109669:0x00000468:0367
+Oct 15 21:01:16 flqu kernel: [21852.564537] iwlwifi 0000:07:00.0: EVT_LOGT:0349109679:0x0000f006:0332
+Oct 15 21:01:16 flqu kernel: [21852.564546] iwlwifi 0000:07:00.0: EVT_LOGT:0349109680:0x0000a101:1475
+Oct 15 21:01:16 flqu kernel: [21852.564555] iwlwifi 0000:07:00.0: EVT_LOGT:0349109681:0x08002000:1475
+Oct 15 21:01:16 flqu kernel: [21852.564563] iwlwifi 0000:07:00.0: EVT_LOGT:0349111761:0xbbbbbbbb:1475
+Oct 15 21:01:16 flqu kernel: [21852.564571] iwlwifi 0000:07:00.0: EVT_LOGT:0349111800:0x00010088:0250
+Oct 15 21:01:16 flqu kernel: [21852.564579] iwlwifi 0000:07:00.0: EVT_LOGT:0349111801:0x08000200:1475
+Oct 15 21:01:16 flqu kernel: [21852.564587] iwlwifi 0000:07:00.0: EVT_LOGT:0349111815:0x00000000:0125
+Oct 15 21:01:16 flqu kernel: [21852.564781] ieee80211 phy13: Hardware restart was requested
+
+Oct 15 21:01:16 flqu kernel: [21852.564787] iwlwifi 0000:07:00.0: ***fflq set sta_id=15.
+Oct 15 21:01:16 flqu kernel: [21852.564788] iwlwifi 0000:07:00.0: ***fflq set station id/15 addr[ff:ff].
+Oct 15 21:01:16 flqu kernel: [21852.564789] iwlwifi 0000:07:00.0: ***fflq set sta_id=13.
+Oct 15 21:01:16 flqu kernel: [21852.564790] iwlwifi 0000:07:00.0: ***fflq set station id/13 addr[34:56].
+Oct 15 21:01:16 flqu kernel: [21852.564818] iwlwifi 0000:07:00.0: L1 Disabled - LTR Disabled
+Oct 15 21:01:16 flqu kernel: [21852.567717] iwlwifi 0000:07:00.0: Radio type=0x0-0x2-0x0
+Oct 15 21:01:16 flqu kernel: [21852.706862] iwlwifi 0000:07:00.0: L1 Disabled - LTR Disabled
+Oct 15 21:01:16 flqu kernel: [21852.709758] iwlwifi 0000:07:00.0: Radio type=0x0-0x2-0x0
+Oct 15 21:01:16 flqu kernel: [21852.741099] iwlwifi 0000:07:00.0: ***fflq set monitor id.
+Oct 15 21:01:16 flqu kernel: [21852.745122] iwlwifi 0000:07:00.0: ***fflq set monitor id.
+Oct 15 21:01:16 flqu kernel: [21852.745369] iwlwifi 0000:07:00.0: ***fflq set monitor id.
+Oct 15 21:01:16 flqu kernel: [21852.745643] iwlwifi 0000:07:00.0: ***fflq set monitor id.
+Oct 15 21:01:16 flqu kernel: [21852.746283] iwlwifi 0000:07:00.0: ***fflq set sta_id=2.
+Oct 15 21:01:16 flqu kernel: [21852.746284] iwlwifi 0000:07:00.0: ***fflq set station id/2 addr[88:55].
+
+Oct 15 21:07:51 flqu dbus[678]: [system] Activating via systemd: service name='org.freedesktop.hostname1' unit='dbus-org.freedesktop.hostname1.service'
+Oct 15 21:07:51 flqu systemd[1]: Starting Hostname Service...
+Oct 15 21:07:51 flqu dbus[678]: [system] Successfully activated service 'org.freedesktop.hostname1'
+Oct 15 21:07:51 flqu systemd[1]: Started Hostname Service.
+

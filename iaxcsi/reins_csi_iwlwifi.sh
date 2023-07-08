@@ -1,1 +1,0 @@
-../tools/reins_csi_iwlwifi.sh

@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "iwl_connector.h": "c",
+        "connector_users.h": "c"
+    }
+}
