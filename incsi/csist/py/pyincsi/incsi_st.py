@@ -29,7 +29,12 @@ class incsi_st:
 
     def get_scaled_csi(self):
         csi_sq = self.csist.csi * np.conj(self.csist.csi)
-        csi_pwr = sum(csi_sq)
+        csi_pwr = np.sum(csi_sq)
+        if (csi_pwr == 0):
+            print("******* csi_pwr 0")
+            print(csi_sq)
+            print(self.csist.csi)
+            input()
         rssi_pwr = self.dbinv(self.get_total_rss())
         scale = rssi_pwr / (csi_pwr / 30)
 
