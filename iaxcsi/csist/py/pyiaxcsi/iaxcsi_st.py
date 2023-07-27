@@ -99,6 +99,9 @@ class iaxcsi_st:
         RATE_MCS_CHAN_WIDTH_320: 320, 
     }
 
+    chan_type_str_set = [ "NOHT", "HT20", "HT40", "VHT20", "VHT40", 
+                         "VHT80", "VHT160", "HE20", "HE40", "HE80", "HE160"]
+
 
     def __init__(self, csi_hdr, csi_data, endian='little'):
         self.csi_hdr = csi_hdr
@@ -114,6 +117,10 @@ class iaxcsi_st:
         self.handle_csi_hdr(csi_hdr, self.endian)
         # rnf
         self.handle_rate_n_flags(self.csist.rnf)
+        if (self.chan_type_str_set.count(self.csist.chan_type_str) <= 0):
+            print("* wrong chan_type_str(%s)" % (self.csist.chan_type_str))
+            self.csist = None
+            return
         print(self.csist.__dict__)
         print("rnf(%x)" % (self.csist.rnf))
         # csi

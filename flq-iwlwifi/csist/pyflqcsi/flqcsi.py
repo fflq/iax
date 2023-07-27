@@ -103,7 +103,7 @@ class flqcsi:
 
 
     def incsist_callback(self, incsist: incsi_st.csi_st):
-        if (self.csist_callback):
+        if (self.csist_callback and (incsist is not None)):
             self.csist_callback(self.convert_incsist_to_flqcsist(incsist))
 
 
@@ -132,7 +132,7 @@ class flqcsi:
  
 
     def iaxcsist_callback(self, iaxcsist: iaxcsi_st):
-        if (self.csist_callback):
+        if (self.csist_callback and (iaxcsist is not None)):
             self.csist_callback(self.convert_iaxcsist_to_flqcsist(iaxcsist))
 
 

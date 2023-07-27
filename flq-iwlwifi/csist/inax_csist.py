@@ -6,6 +6,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from realtime_ploter import realtime_ploter
 
 from pyflqcsi.flqcsi_pool import flqcsi_pool
 from pyflqcsi.flqcsi import flqcsi, flqcsi_st, flqcsi_type
@@ -17,55 +18,23 @@ def plot_mag(csist: flqcsi_st):
         sns.lineplot(np.abs(csist.csi[0,i]))
 
 
-class realtime_ploter:
-    def __init__(self, fid=1, max_display_size=100):
-        self.fid = fid
-        self.max_display_size = max_display_size
-        self.fig, self.ax = plt.subplots()
-        self.xs = []
-        self.ys = []
-        self.line = self.ax.plot(self.xs, self.ys, '-o', lw=2, marker='.')[0]
-        self.yranges = [0, 0]
-        self.idx = -1
-        plt.tight_layout()
+def plot_cir(csist: flqcsi_st):
+    cfr = csist.csi[0] 
+    cir = np.fft.ifft(cfr)
+    #sameto, cir = np.array([cir1, cir2])
+    cir = cir[:,0:20]
+    dt = 1e9 / (csist.chan_width * 1e6) #ns
+    xs = np.arange(0, cir.shape[1])*dt 
+    #i = np.argmax(np.real(cir)) 
+    #print("t({}) d({})".format(xs[i], xs[i]*0.3))
+    sns.lineplot(x=xs, y=np.abs(cir[0]))
+    sns.scatterplot(x=xs, y=np.abs(cir[0]))
+    sns.lineplot(x=xs, y=20+np.abs(cir[1]))
+    sns.scatterplot(x=xs, y=20+np.abs(cir[1]))
+    #input()
+     
 
-    def add_points(self, y, x = None):
-        if x == None:
-            x = 1
-            if (len(self.xs) > 0):
-                x = self.xs[-1] + 1
-
-        self.xs.append(x)
-        self.ys.append(y)
-        self.idx = self.idx + 1
-    
-        #select ranges
-        #ys_norm = self.ys / np.linalg.norm(self.ys)
-        ys_norm = (self.ys - np.mean(self.ys)) / np.std(self.ys)
-        ys_norm = self.ys
-        self.line.set_data(self.xs, ys_norm)
-        #self.line.set_data(self.xs, self.ys)
-
-        ixb, ixe = max(0, self.idx - self.max_display_size), self.idx
-        #ixb, ixe = 0, -1
-        self.ax.set_xlim(self.xs[ixb], self.xs[ixe])
-        yreds = abs(max(self.ys)) * 0.2 + 10
-        self.ax.set_ylim(min(self.ys)-yreds, max(self.ys)+yreds)
-        #self.ax.set_ylim(-5, 5)
-
-        #truncate(when all/2 blocks full, truncate first block)
-        #cache more data for norm
-        if self.idx > 100*self.max_display_size:
-            self.idx = self.idx - self.max_display_size
-            self.xs = self.xs[self.max_display_size:]
-            self.ys = self.ys[self.max_display_size:]
-        #print(self.xs)
-
-        #plt.pause(0.01)
-        
-
-
-grp = realtime_ploter(9)
+#grp = realtime_ploter(9)
 def plot_breath(csist: flqcsi_st):
     csi = csist.csi
     s = np.mean(np.abs(csi[0,1] * np.conj(csi[0,0])))
@@ -73,17 +42,39 @@ def plot_breath(csist: flqcsi_st):
     grp.add_points(s)
 
 
+grp8 = realtime_ploter(8)
+def plot_attack(csist: flqcsi_st):
+    avgmag = (np.mean(np.abs(csist.csi[0,0])) + np.mean(np.abs(csist.csi[0,1]))) / 2 
+    avgmag = (np.abs(csist.csi[0,0,0]) + np.abs(csist.csi[0,1,0])) / 2 
+    grp8.add_points(avgmag, move_axis=False)
+
+
+def csist_filter(csist:flqcsi_st):
+    if csist is None:
+        return False
+    return True
+    if not csist.smac.startswith("0:16:ea:12:34:56"):
+        return False
+
+    print("*******************")
+    return True
+
+
 gn = 0
 def csist_callback(csist: flqcsi_st):
+    if not csist_filter(csist):
+        return
+
     global gn
     gn = gn + 1
-    ranges = [1000, 2000]
+    ranges = [500, 1600]
     if (gn < ranges[0] or gn > ranges[1]):
         pass
         #return
 
     #plot_mag(csist)
-    plot_breath(csist)
+    #plot_breath(csist)
+    plot_attack(csist)
     plt.pause(0.01)
 
 
