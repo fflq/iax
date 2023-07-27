@@ -31,7 +31,7 @@ class subcs_st:
 		self.pilot_subcs = pilot_subcs
 		self.dc_subcs = dc_subcs
 		self.gen_subc_common()
-		print(self.__dict__)
+		#print(self.__dict__)
 
 	def gen_subc_common(self):
 		self.subcs = np.arange(-self.subcs_radius,self.subcs_radius+subcarry_st.range_end) 

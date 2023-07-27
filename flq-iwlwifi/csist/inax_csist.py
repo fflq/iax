@@ -12,18 +12,77 @@ from pyflqcsi.flqcsi import flqcsi, flqcsi_st, flqcsi_type
 
 
 def plot_mag(csist: flqcsi_st):
+    plt.figure(1)
     for i in range(csist.nrx):
         sns.lineplot(np.abs(csist.csi[0,i]))
 
-fig, ax = plt.subplots()
-line, = ax.plot([], [], '-o')
-ax.set_xlim(-10, 10)
+
+class realtime_ploter:
+    def __init__(self, fid=1, max_display_size=100):
+        self.fid = fid
+        self.max_display_size = max_display_size
+        self.fig, self.ax = plt.subplots()
+        self.xs = []
+        self.ys = []
+        self.line = self.ax.plot(self.xs, self.ys, '-o', lw=2, marker='.')[0]
+        self.yranges = [0, 0]
+        self.idx = -1
+        plt.tight_layout()
+
+    def add_points(self, y, x = None):
+        if x == None:
+            x = 1
+            if (len(self.xs) > 0):
+                x = self.xs[-1] + 1
+
+        self.xs.append(x)
+        self.ys.append(y)
+        self.idx = self.idx + 1
+    
+        #select ranges
+        #ys_norm = self.ys / np.linalg.norm(self.ys)
+        ys_norm = (self.ys - np.mean(self.ys)) / np.std(self.ys)
+        ys_norm = self.ys
+        self.line.set_data(self.xs, ys_norm)
+        #self.line.set_data(self.xs, self.ys)
+
+        ixb, ixe = max(0, self.idx - self.max_display_size), self.idx
+        #ixb, ixe = 0, -1
+        self.ax.set_xlim(self.xs[ixb], self.xs[ixe])
+        yreds = abs(max(self.ys)) * 0.2 + 10
+        self.ax.set_ylim(min(self.ys)-yreds, max(self.ys)+yreds)
+        #self.ax.set_ylim(-5, 5)
+
+        #truncate(when all/2 blocks full, truncate first block)
+        #cache more data for norm
+        if self.idx > 100*self.max_display_size:
+            self.idx = self.idx - self.max_display_size
+            self.xs = self.xs[self.max_display_size:]
+            self.ys = self.ys[self.max_display_size:]
+        #print(self.xs)
+
+        #plt.pause(0.01)
+        
+
+
+grp = realtime_ploter(9)
 def plot_breath(csist: flqcsi_st):
+    csi = csist.csi
+    s = np.mean(np.abs(csi[0,1] * np.conj(csi[0,0])))
+    #s = np.mean(np.angle(csi[0,1] * np.conj(csi[0,0])))
+    grp.add_points(s)
 
 
-
+gn = 0
 def csist_callback(csist: flqcsi_st):
-    plot_mag(csist)
+    global gn
+    gn = gn + 1
+    ranges = [1000, 2000]
+    if (gn < ranges[0] or gn > ranges[1]):
+        pass
+        #return
+
+    #plot_mag(csist)
     plot_breath(csist)
     plt.pause(0.01)
 

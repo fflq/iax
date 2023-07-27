@@ -84,7 +84,7 @@ class flqcsi:
 
     def convert_incsist_to_flqcsist(self, incsist: incsi_st.csi_st):
         flqcsist = flqcsi_st()
-        flqcsist.csi_type = int(self.csi_type)
+        flqcsist.csi_type = self.csi_type
         flqcsist.rssis = np.array([incsist.rssi_a, incsist.rssi_b, incsist.rssi_c])
         flqcsist.ntx = incsist.ntx
         flqcsist.nrx = incsist.nrx
@@ -109,7 +109,7 @@ class flqcsi:
 
     def convert_iaxcsist_to_flqcsist(self, iaxcsist: iaxcsi_st.csi_st):
         flqcsist = flqcsi_st()
-        flqcsist.csi_type = int(self.csi_type)
+        flqcsist.csi_type = self.csi_type
         flqcsist.rssis = np.array([iaxcsist.rssi1, iaxcsist.rssi2])
         flqcsist.ntx = iaxcsist.ntx
         flqcsist.nrx = iaxcsist.nrx
@@ -121,9 +121,9 @@ class flqcsi:
         flqcsist.rate = iaxcsist.rnf
         flqcsist.bw = iaxcsist.chan_width
         flqcsist.chan_type_str = iaxcsist.chan_type_str
+        print(flqcsist.__dict__)
         flqcsist.subcs = iaxcsist.subc.subcs
 
-        print(flqcsist.__dict__)
         flqcsist.csi = np.zeros([flqcsist.ntx, flqcsist.nrx, flqcsist.ntone], dtype=complex)
         for itx in range(flqcsist.ntx):
             for irx in range(flqcsist.nrx):
