@@ -8,7 +8,8 @@ g_perms = [] ;
 angles = [] ;
 
 %server = CSIFile('./data/csi.dat') ;
-server = CSIFile('./data/oft12.dat') ;
+%server = CSIFile('./data/oft12.dat') ;
+server = CSIFile('/tmp/a');
 %server = CSIFile('/flqtmp/csi.dat') ;
 %server = CSIServer() ;
 n = 0 ;
@@ -21,12 +22,13 @@ while true
 	end
 	n = n+1 ;
 
-	%test_pci(csist)
+	test_pci(csist, n)
 
 	input('-') ;
 end
 
-function test_pci(csist)
+function test_pci(csist, n)
+	csist.pci = 4000;
 	fprintf("* %d, pci(%d), %s\n", n, csist.pci, mat2str(csist.perm)) ;
 	if (csist.pci == 4000)
 		%r = calc_rc12(csist) ;

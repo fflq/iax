@@ -9,7 +9,7 @@ import seaborn as sns
 
 
 class realtime_ploter:
-    def __init__(self, fid=1, max_display_size=100):
+    def __init__(self, fid=1, max_display_size=200):
         self.fid = fid
         self.max_display_size = max_display_size
         self.fig, self.ax = plt.subplots()

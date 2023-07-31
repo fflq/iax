@@ -8,7 +8,8 @@ g_perms = [] ;
 angles = [] ;
 
 %server = CSIFile('./data/csi.dat') ;
-server = CSIFile('./data/oft12.dat') ;
+%server = CSIFile('./data/oft12.dat') ;
+server = CSIFile('/tmp/a') ;
 %server = CSIFile('/flqtmp/csi.dat') ;
 %server = CSIServer() ;
 n = 0 ;

@@ -64,8 +64,6 @@ def dl_test_phase_offset(csist: csi_st):
 
 
 def plot_mag(csist, gn=0):
-    if csist.chan_type_str == "NOHT20":
-        return
     csi = csist.csi
     subcs = np.arange(len(csi[0,0]))-len(csi[0,0])/2
     #sns.lineplot(y=abs(csi[0,0,:])/1, x=subcs)
@@ -77,6 +75,7 @@ def plot_mag(csist, gn=0):
     #sns.lineplot(np.abs(csi.reshape((-1))))
     #return
     sns.lineplot(y=00+abs(csi[0,0,:])/1, x=subcs)
+    #sns.scatterplot(y=00+abs(csi[0,0,:])/1, x=subcs)
     #sns.lineplot(y=00+abs(csi[1,0,:])/1, x=subcs)
     plt.xlabel("Subcarrier index")
     plt.ylabel("Magnitude")
@@ -410,16 +409,16 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
 
     print("* gn {}".format(gn))
     #preprocess(csist)
-    #plot_mag(csist, gn)
+    plot_mag(csist, gn)
     #plot_phase(csist)
     #plot_phase_offset(csist)
-    plot_attack(csist)
+    #plot_attack(csist)
     #plot_cir(csist)
     #plot_ft(csist)
     #dl_phase_offset(csist)
     #dl_test_phase_offset(csist)
     #do_spotfi(csist)
-    send_csist(iaxcsist); #time.sleep(1) 
+    #send_csist(iaxcsist); #time.sleep(1) 
     #return 
     #input()
     
@@ -431,7 +430,7 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
         plt.pause(0.01)
         #plt.show()
     if not gn % 100:
-        plt.clf()
+        #plt.clf()
         pass
 
 

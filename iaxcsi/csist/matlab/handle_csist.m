@@ -3,6 +3,7 @@ close all;
 
 addpath('/home/flq/ws/git/SpotFi')
 addpath('/home/flq/ws/git/CSI/algorithm/iaa')
+addpath('/flqtmp')
 addpath('E:\GitCodes\CSI\algorithm\music')
 addpath('E:\GitCodes\SpotFi')
 addpath('E:\GitCodes\paper')
@@ -21,6 +22,7 @@ inputname='/flqtmp/paper/ax210_40ht40_split.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40he160_split.csi'; use_net = false;
 inputname='127.0.0.1:7120'; use_net = true;
+inputname='/flqtmp/ax210_40ht20_-60.csi'; use_net=false;
 
 %handle_aoa_cdf(); return;
 
@@ -61,9 +63,9 @@ function handle_csist_func(csist)
 	%plot_phase_offset(csist) ;
 	%plot_cir(csist) ;
 	%save_calib(csist);
-	%do_aoa(csist) ;
+	do_aoa(csist) ;
 	%stats_macs(csist, false) ;
-	plot_breath(csist) ;
+	%plot_breath(csist) ;
 end
 
 

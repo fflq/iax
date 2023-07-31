@@ -59,11 +59,11 @@ methods (Access='public')
 			end
 			msg = fread(self.fd, msg_len, 'uint8') ;
 			st = iaxcsi.read_axcsi_st(msg) ;
-			len = 4 + msg_len ;
 		catch ME
 			ME.identifier
 			st = [] ;
 		end
+		len = 4 + msg_len ;
 	end
 
 	function [st, len] = read_net_once(self)

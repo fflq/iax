@@ -18,7 +18,7 @@ fi
 
 #[function handle args]
 chtype=NOHT
-interval_us=100000
+interval_us=10000
 #macs=00:16:ea:12:34:56
 
 if [ $# -ge 1 ]; then
@@ -37,9 +37,9 @@ chtype=${chtype^^};
 
 
 #[function get_pci]
-pci_ids=$(lspci -D | grep '2725\|210' | awk '{print $1}') ; 
+pci_ids=$(lspci -D | grep 'AX200\|AX201\|2725\|AX210\|AX211' | awk '{print $1}') ; 
 if [ "$pci_ids" == "" ]; then
-	echo "* no find ax210 pciid, exit." ;
+	echo "* no find iax pciid, exit." ;
 	exit -1 ;
 fi
 echo "* for pci_ids($pci_ids) $interval_us $chtype $macs" ;

@@ -34,19 +34,28 @@ def plot_cir(csist: flqcsi_st):
     #input()
      
 
-#grp = realtime_ploter(9)
+grp9 = realtime_ploter(9)
 def plot_breath(csist: flqcsi_st):
     csi = csist.csi
     s = np.mean(np.abs(csi[0,1] * np.conj(csi[0,0])))
     #s = np.mean(np.angle(csi[0,1] * np.conj(csi[0,0])))
-    grp.add_points(s)
+    grp9.add_points(s)
 
 
-grp8 = realtime_ploter(8)
+#grp8 = realtime_ploter(8)
 def plot_attack(csist: flqcsi_st):
     avgmag = (np.mean(np.abs(csist.csi[0,0])) + np.mean(np.abs(csist.csi[0,1]))) / 2 
     avgmag = (np.abs(csist.csi[0,0,0]) + np.abs(csist.csi[0,1,0])) / 2 
     grp8.add_points(avgmag, move_axis=False)
+
+
+def plot_phase(csist: flqcsi_st):
+    csi = csist.csi[0];
+    #csi[:] = csi[csist.perm-1]
+    #phaoff12 = np.unwrap(np.angle(csi[1] * np.conj(csi[0])))
+    phaoff12 = np.unwrap(np.angle(csi[2] * np.conj(csi[0])))
+    sns.lineplot(phaoff12)
+    #sns.scatterplot(phaoff12)
 
 
 def csist_filter(csist:flqcsi_st):
@@ -72,10 +81,13 @@ def csist_callback(csist: flqcsi_st):
         pass
         #return
 
-    #plot_mag(csist)
+    #plot_phase(csist)
+    plot_mag(csist)
     #plot_breath(csist)
-    plot_attack(csist)
-    plt.pause(0.01)
+    #plot_attack(csist)
+
+    if 0 == (gn % 1):
+        plt.pause(0.01)
 
 
 if len(sys.argv) < 4:
