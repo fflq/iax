@@ -1,13 +1,13 @@
 clear all;
 close all;
 
-addpath('/home/flq/ws/git/SpotFi')
-addpath('/home/flq/ws/git/CSI/algorithm/iaa')
 addpath('/flqtmp')
-addpath('E:\GitCodes\CSI\algorithm\music')
-addpath('E:\GitCodes\SpotFi')
-addpath('E:\GitCodes\paper')
-addpath('E:\GitCodes\paper\aoa')
+addpath('C:/Users/flq/OneDrive/papers/iax/data/paper/aoa');
+algorithm_dir = '../../../algorithm/';
+addpath([algorithm_dir, 'dbf']);
+addpath([algorithm_dir, 'music']);
+addpath([algorithm_dir, 'iaa']);
+addpath([algorithm_dir, 'spotfi']);
 
 
 inputname='/flqtmp/attack_5m_20spm_130-3400.csi'; use_net = false;
@@ -23,6 +23,9 @@ inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40he160_split.csi'; use_net = false;
 inputname='127.0.0.1:7120'; use_net = true;
 inputname='/flqtmp/ax210_40ht20_-60.csi'; use_net=false;
+inputname='ax210_40ht20_0.csi'; use_net=false;
+inputname='ax210_40ht20_-30.csi'; use_net=false;
+inputname='ax210_40ht20_-60.csi'; use_net=false;
 
 %handle_aoa_cdf(); return;
 
@@ -150,7 +153,8 @@ function save_calib(csist)
 		po = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
 		if (mean(po) > 0)
 			phaoffs = po;
-			savename = join(['/flqtmp/', csist.chan_type_str, 'phaoffs12.mat'], '')
+			%savename = join(['/flqtmp/', csist.chan_type_str, 'phaoffs12.mat'], '')
+			savename = join([csist.chan_type_str, 'phaoffs12.mat'], '')
 			%save("/flqtmp/phaoffs12.mat", "phaoffs");
 			save(savename, "phaoffs");
 			input("ok?")
@@ -159,22 +163,27 @@ end
 
 function [aoa1, aoa2] = do_aoa(csist)
 	persistent aoas;
-	calc_aoa = @do_spotfi ;
 	calc_aoa = @do_iaa ;
+	calc_aoa = @do_spotfi ;
+	calc_aoa = @do_music ;
+	calc_aoa = @do_dbf ;
 
     %csist = calib_scsi_by_delta(csist, 0.0, 0.32) ; 
     csist = calib_scsi_by_file(csist) ;
-	plot_phase_offset(csist) ;
+	%plot_phase_offset(csist) ;
 	aoa1 = calc_aoa(csist) ;
+	pause
     csist = calib_scsi_by_phaoff12(csist, pi) ; 
 	aoa2 = calc_aoa(csist) ;
-	plot_aoa(aoa1, 11, false); plot_aoa(aoa2, 11, true); 
+	%plot_aoa(aoa1, 11, false); plot_aoa(aoa2, 11, true); 
+	pause
 
 	truthaoa = -60 ;
 	aoas(end+1) = min(abs(aoa1-truthaoa), abs(aoa2-truthaoa));
 	if ~ mod(length(aoas), 50)
 		figure(99); p=cdfplot(abs(aoas(end-49:end))); p.LineWidth=2;
-		save(['/flqtmp/aoas', num2str(truthaoa),'.mat'], "aoas");
+		%save(['/flqtmp/aoas', num2str(truthaoa),'.mat'], "aoas");
+		save(['aoas', num2str(truthaoa),'.mat'], "aoas");
 		pause(0.1)
 	end
 
@@ -248,8 +257,7 @@ end
 
 
 function aoa = do_music(csist)
-	aoa = do_spotfi(csist, true);
-	return;
+	%aoa = do_spotfi(csist, true); return;
 	envs = music_envs(2) ;
 	envs.nrx = csist.nrx ;
 	envs.ntx = csist.ntx ;
@@ -258,6 +266,13 @@ function aoa = do_music(csist)
 
 	aoa = music(squeeze(csist.scsi(:,1,:)), envs) 
 	return ;
+end
+
+
+function aoa = do_dbf(csist)
+	st = csist;
+	st.csi = squeeze(csist.scsi(:,1,:));
+	aoa = dbf(st)
 end
 
 
@@ -274,7 +289,7 @@ function aoa = do_spotfi(csist, music)
 	envs.ntone = csist.nstone ;
 	envs.ntone_sm = floor(envs.ntone/2) ;
 	envs.subc_idxs = csist.subc.subcs ;
-	%envs.pmufig = true;
+	envs.pmufig = true;
 	envs.niter = 1 ;
 	envs.music = music ;
 
