@@ -27,7 +27,8 @@ methods (Access='public')
 				self.sfd = tcpclient(self.ip, self.port);
 			else
 				self.is_net = false;
-				self.fd = fopen(inputname, 'rb') ;
+				self.filename = inputname;
+				self.fd = fopen(self.filename, 'rb') ;
 				self.file_len = iaxcsi.get_file_len(self.fd) ;
 				self.pos = 0; 
 			end
@@ -48,7 +49,6 @@ methods (Access='public')
 			self.sfd = -1;
 		end
 	end
-
 
 	%
 	function [st, len] = read_file_once(self)
@@ -98,14 +98,8 @@ methods (Access='public')
 		end
 	end
 
-	function [st, len] = read(self, savename)
-		if (nargin < 2); savename = '' ; end
-		[st, len] = self.read_once(savename);
-	end
 
-
-	%
-	function sts = read_file_all(self)
+	function sts = read_file(self)
 		sts = {} ;
 		while self.pos < self.file_len
 			if ~mod(length(sts),100)
@@ -120,7 +114,7 @@ methods (Access='public')
 		end
 	end
 
-	function sts = read_net_all(self)
+	function sts = read_net(self)
 		sts = {} ;
 		while true
 			if ~mod(length(sts),100)
@@ -133,13 +127,24 @@ methods (Access='public')
 		end
 	end
 
-	function sts = read_all(self, savename)
+	function sts = read_cached(self)
+		cached_mat = strcat(self.filename, ".cached.mat") ;
+		if exist(cached_mat, 'file')
+			sts = load(cached_mat).sts ;
+		else
+			sts = self.read();
+			save(cached_mat, "sts");
+		end
+	end
+
+
+	function sts = read(self, savename)
 		if (nargin < 2); savename = '' ; end
 
 		if (self.is_net)
-			sts = self.read_net_all() ;
+			sts = self.read_net() ;
 		else 
-			sts = self.read_file_all() ;
+			sts = self.read_file() ;
 		end
 
 		if ~isempty(savename)
@@ -178,7 +183,7 @@ methods (Static)
 
 	function sts = static_read_all(inputname, savename)
 		if (nargin < 2); savename = '' ; end
-		sts = iaxcsi(inputname).read_all(savename);
+		sts = iaxcsi(inputname).read(savename);
 	end
 
 
@@ -261,11 +266,14 @@ methods (Static)
 		b = z(2) ;
 		%fprintf("* k(%f) b(%f)\n", k, b) ;
 		%pha = uwphase - k*xs - b;
-		%pha = uwphase - b;
-		pha = uwphase - k*xs*0.2;
+		%pha = uwphase - k*xs*0.2; %prev 
+		%pha = uwphase - k*xs;
+		pha = uwphase - b;
 		%plot(xs, pha); hold on;
 		%plot(xs, uwphase, ':o'); hold on;
+		%plot(xs, unwrap(angle(tones))-b); hold on;
 		tones = mag.*exp(1j*pha);
+		%plot(xs, unwrap(angle(tones)),':o'); hold on;
 	end
 
 
@@ -276,12 +284,18 @@ methods (Static)
 		st.perm = [1,2] ;
 		pw1 = sum(abs(st.csi(1,1,:))) ;
 		pw2 = sum(abs(st.csi(2,1,:))) ;
+		[st.rssi(1), st.rssi(2), pw1, pw2]
+		%{
+		pause
 		[a,b,st.scsi(1,1,:)] = iaxcsi.fit_csi(st.scsi(1,1,:), st.subc.subcs) ;
 		[a,b,st.scsi(2,1,:)] = iaxcsi.fit_csi(st.scsi(2,1,:), st.subc.subcs) ;
 		[dk, deltab, tones] = iaxcsi.fit_csi(st.scsi(2,1,:) .* conj(st.scsi(1,1,:)), st.subc.subcs);
-		if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2))
-		%if mod(st.us, 3)
-			st.perm = [2,1] ;
+		%}
+		%if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2)) %no
+		%if (pw1 < pw2) %no
+		if st.rssi(1) < st.rssi(2)
+			st.perm = [2,1] ; 
+			%pause;
 			for i = 1:st.ntx
 				st.scsi(:,i,:) = st.scsi(st.perm,i,:) ;
 			end

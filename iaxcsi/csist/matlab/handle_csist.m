@@ -2,7 +2,9 @@ clear all;
 close all;
 
 addpath('/flqtmp')
-addpath('C:/Users/flq/OneDrive/papers/iax/data/paper/aoa');
+root_dir = 'C:/Users/flq/OneDrive/papers/iax/data/paper/';
+addpath(root_dir);
+addpath([root_dir, 'aoa']);
 algorithm_dir = '../../../algorithm/';
 addpath([algorithm_dir, 'dbf']);
 addpath([algorithm_dir, 'music']);
@@ -20,13 +22,28 @@ inputname='/tmp/a'; use_net = false;
 inputname='/flqtmp/mon2.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40ht40_split.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
-inputname='/flqtmp/paper/ax210_40he160_split.csi'; use_net = false;
 inputname='127.0.0.1:7120'; use_net = true;
-inputname='/flqtmp/ax210_40ht20_-60.csi'; use_net=false;
-inputname='ax210_40ht20_0.csi'; use_net=false;
-inputname='ax210_40ht20_-30.csi'; use_net=false;
+inputname='ax210_40ht20_split.csi'; use_net = false;
+inputname='ax210_40vht80_split.csi'; use_net = false;
+inputname='ax210_40he20_split.csi'; use_net = false;
+inputname='iax200_40ht20.csi'; use_net = false;
+inputname='iax200_40vht160.csi'; use_net = false;
+inputname='ax210_40vht160_air_noatt.csi'; use_net = false;
+inputname='ax210_40ht40_split.csi'; use_net = false;
+inputname='ax210_40ht20_60.csi'; use_net=false;
 inputname='ax210_40ht20_-60.csi'; use_net=false;
+inputname='ax210_40ht20_-30.csi'; use_net=false;
+inputname='ax210_40ht20_0.csi'; use_net=false;
+inputname='ax210_40ht20_30.csi'; use_net=false;
+inputname='ax210_40ht20_45.csi'; use_net=false;
 
+handle_all = true;
+handle_all = false;
+if handle_all
+	sts = iaxcsi(inputname).read_cached();
+	handle_all_csist_func(sts);
+	return;
+end
 %handle_aoa_cdf(); return;
 
 gn = 1 ;
@@ -34,7 +51,7 @@ ax = [] ;
 while true
 	try
 		if isempty(ax); ax = iaxcsi(inputname) ; end
-		st = ax.read() ;
+		st = ax.read_once() ;
 	catch ME
 		ME.identifier
 		if isempty(ax) || ax.test()
@@ -45,12 +62,23 @@ while true
 		pause(3); continue;
 	end
 
+	if isempty(st); break; end
 	handle_csist_func(st) ;
 	if ~mod(gn, 100)
 		fprintf("*** gn %d\n", gn) ;
 		%figure(3); close 3;
 	end
 	gn = gn + 1;
+end
+
+
+function set_style(h)
+	if nargin < 1; return; end
+	h.LineWidth = 1.5;
+	set(gca,'FontName','Times New Roman','FontSize',15,'FontWeight','bold','LineWidth',1.5); 
+	return;
+	%margin 0
+	set(gca, 'LooseInset', [0.01,0.01,0.01,0.01]); box on;
 end
 
 
@@ -64,11 +92,136 @@ function handle_csist_func(csist)
 	%plot_mag(csist) ;
 	%plot_phase(csist) ;
 	%plot_phase_offset(csist) ;
-	%plot_cir(csist) ;
+	%do_cir(csist) ;
 	%save_calib(csist);
 	do_aoa(csist) ;
 	%stats_macs(csist, false) ;
 	%plot_breath(csist) ;
+	%do_pdd(csist);
+end
+
+
+function handle_all_csist_func(sts)
+	nsts = {} ;
+	for i = 1:length(sts)
+		%if ~csi_filter(sts{i}); fprintf("*** pass\n"); continue; end
+		%if strcmpi(sts{i}.chan_type_str, "HT20")
+		if true
+			%remove -b, cause dont effect in cir.
+			st = sts{i};
+			csi1 = squeeze(st.scsi(1,1,:));
+			[k, b, csi1] = iaxcsi.fit_csi(csi1, st.subc.subcs);
+			st.scsi(1,1,:) = csi1;
+			%plot(unwrap(angle(csi1)),'-o'); hold on;
+			csi2 = squeeze(st.scsi(2,1,:));
+			[k, b, csi2] = iaxcsi.fit_csi(csi2, st.subc.subcs);
+			st.scsi(2,1,:) = csi2;
+			%plot(10+unwrap(angle(csi2)),'-o'); hold on;
+			nsts{end+1} = st;
+		end
+	end
+	sts = nsts;
+
+	%do_pdd_sts(sts);
+	do_sfo_sts(sts);
+end
+
+
+function do_pdd_sts(sts)
+	sumk = 0;
+	ks = [];
+	%for i = 1:length(sts)-1
+	for i = 1:100
+		csi1 = squeeze(sts{i}.scsi(1,1,:));
+		%[k, b, csi1] = iaxcsi.fit_csi(csi1, sts{i}.subc.subcs);
+		csi2 = squeeze(sts{i+1}.scsi(1,1,:));
+		%[k, b, csi2] = iaxcsi.fit_csi(csi2, sts{i}.subc.subcs);
+		uwa = unwrap(angle(csi2 .* conj(csi1)).');
+		[uwa,k,~] = fit(uwa, sts{i}.subc.subcs);
+		figure(41); hold on; set_style(plot(uwa)); title("packet diff");
+
+		ks(end+1) = k;
+		figure(42); hold on; set_style(scatter(i, mean(ks))); title("mean");
+		figure(43); hold on; set_style(scatter(i, var(ks))); title("var");
+		sumk = sumk + k;
+		fprintf("* no.%d: k %f, sumk/n %f\n", i, k, sumk/i);
+		%pause
+	end
+	[mean(ks), var(ks)]
+end
+
+
+function do_sfo_sts(sts)
+	csis = {};
+	csis2 = {};
+	for i = 1:length(sts)
+		csi = squeeze(sts{i}.scsi(1,1,:));
+		csis{end+1} = csi.';
+		csi2 = squeeze(sts{i}.scsi(2,1,:));
+		csis2{end+1} = csi.';
+		if i > 50
+			set_style(plot(fit(unwrap(angle(csi).')))); hold on;
+		end
+	end
+	csis = mean_csis(csis, 20);
+	csis2 = mean_csis(csis2, 20);
+	%for i = 1:length(sts)
+	for i = 1:20
+		%plot_cir(squeeze(sts{i}.scsi(:,1,:)), sts{1}.chan_width); continue;
+		plot_cir(csis{i}, sts{1}.chan_width);
+		plot_cir(csis2{i}, sts{1}.chan_width);
+	end
+
+	for e = -0.1:0.2/200:0.1
+		ee = exp(1j*e);
+	end
+end
+
+
+function rcsis = mean_csis(csis, w)
+	rcsis = {};
+	mags = [];
+	angs = [];
+	for i = 1:length(csis)
+		csi = csis{i};
+		mags(end+1,:) = abs(csi);
+		angs(end+1,:) = unwrap(angle(csi));
+		if i > w
+			mag = mean(mags(i-w:i,:));
+			ang = mean(angs(i-w:i,:));
+			ncsi = mag.*exp(1j*ang);
+			set_style(plot(10+fit(unwrap(angle(ncsi).')), '-o')); hold on;
+			rcsis{end+1} = ncsi; 
+		end
+	end
+end
+
+
+function [ys,k,b] = fit(ys, xs)
+	if nargin < 2; xs = 1:length(ys); end
+	z = polyfit(xs, ys, 1) ;
+	k = z(1) ;
+	b = z(2) ;
+	ys = ys - b;
+end
+
+
+function do_pdd(csist)
+	csist
+	csi = squeeze(csist.scsi(:,1,:));
+	if (false)
+		[k, b, csi(1,:)] = iaxcsi.fit_csi(csi(1,:), csist.subc.subcs);
+		[k, b, csi(2,:)] = iaxcsi.fit_csi(csi(2,:), csist.subc.subcs);
+		uwa = unwrap(angle(csi.'));
+		figure(30); plot(uwa); hold on;
+		plot_phase_offset(csist);
+	end
+	%aoa = do_spotfi(csist) 
+	csist.scsi(:,1,:) = csi;
+	do_cir(csist);
+	%amp and phase dont effect cir relative. so noneed fit_csi to -b.
+	%csist.scsi(:,1,:) = csi*5*exp(1j*3); plot_cir(csist,25);
+	pause
 end
 
 
@@ -170,10 +323,11 @@ function [aoa1, aoa2] = do_aoa(csist)
 
     %csist = calib_scsi_by_delta(csist, 0.0, 0.32) ; 
     csist = calib_scsi_by_file(csist) ;
-	%plot_phase_offset(csist) ;
+	plot_phase_offset(csist) ;
 	aoa1 = calc_aoa(csist) ;
 	pause
     csist = calib_scsi_by_phaoff12(csist, pi) ; 
+	plot_phase_offset(csist) ;
 	aoa2 = calc_aoa(csist) ;
 	%plot_aoa(aoa1, 11, false); plot_aoa(aoa2, 11, true); 
 	pause
@@ -502,18 +656,30 @@ function r = csi_filter(csist)
 	r = true ;
 end
 
-function plot_cir(csist)
+function do_cir(csist, fid)
+	if nargin < 2; fid = 15; end
 	cfr = squeeze(csist.scsi(:,1,:)) ;
+	plot_cir(cfr, csist.chan_width, fid);
+end
+
+%cfr = [nrx,ntone]
+function plot_cir(cfr, bw, fid)
+	if nargin < 3; fid = 15; end
 	cir = ifft(cfr, [], 2) ;
-	%cir = cir(:, 1:100) ;
-	dt = 1e9 / (csist.chan_width * 1e6) ; %ns
-	xs = (0:size(cir,2)-1)*dt ; 
+	cir = cir(:, 1:min(100,size(cir,2))) ;
+	dt = 1e9 / (bw * 1e6) ; %ns
+	%xs = (0:size(cir,2)-1)*dt ; 
+	%xs = (0:length(cir)-1)*dt ; 
+	xs = (1:length(cir))*dt ; 
 	[v, i] = max(abs(cir(1,:))) ;
 	[111, xs(i), xs(i)*0.3]
 	%hold on ; plot(xs, abs(cir), ':o', 'LineWidth', 2) ;
-	figure(15);
-	hold off ; plot(xs, abs(cir(1,:)), ':o', 'LineWidth', 2) ;
-	hold on ; plot(xs, 20+abs(cir(2,:)), ':o', 'LineWidth', 2) ;
+	figure(fid);
+	%hold off ; 
+	plot(xs, abs(cir(1,:)), '-o', 'LineWidth', 2) ; hold on ; 
+	if size(cir,1) > 1
+		plot(xs, 0+abs(cir(2,:)), ':o', 'LineWidth', 2) ;
+	end
 	xlabel('Time(ns)');
 	ylabel('Magnitude');
 end
