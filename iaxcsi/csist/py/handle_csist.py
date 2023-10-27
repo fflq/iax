@@ -19,6 +19,8 @@ from pyiaxcsi.iaxcsi_st import iaxcsi_st, csi_st
 
 from spotfi import spotfi
 
+#from realtime_ploter import realtime_ploter
+
 
 def dl_phase_offset(csist: csi_st):
     if not len(gploty):
@@ -214,19 +216,37 @@ def plot_phase_offset(csist: csi_st, adjust=False):
     #sns.lineplot(x=subcs, y=-phaoff12)
 
 
+g_ns1 = []
+g_ns2 = []
+#grp = realtime_ploter(10)
 def plot_cir(csist: csi_st):
     cfr = csist.scsi[:,0] 
     cir = np.fft.ifft(cfr)
     #sameto, cir = np.array([cir1, cir2])
-    cir = cir[:,0:20]
+    cir = cir[:,0:60]
     dt = 1e9 / (csist.chan_width * 1e6) #ns
     xs = np.arange(0, cir.shape[1])*dt 
     #i = np.argmax(np.real(cir)) 
     #print("t({}) d({})".format(xs[i], xs[i]*0.3))
     sns.lineplot(x=xs, y=np.abs(cir[0]))
     sns.scatterplot(x=xs, y=np.abs(cir[0]))
-    sns.lineplot(x=xs, y=20+np.abs(cir[1]))
-    sns.scatterplot(x=xs, y=20+np.abs(cir[1]))
+    sns.lineplot(x=xs, y=100+np.abs(cir[1]))
+    sns.scatterplot(x=xs, y=100+np.abs(cir[1]))
+
+    g_ns = g_ns1
+    max_x1 = np.argmax(np.abs(cir[0])) * dt
+    g_ns.append(max_x1)
+    m = np.mean(g_ns[max(0, len(g_ns)-100):-1])
+    print("ns1------------", m)
+
+    g_ns = g_ns2
+    max_x2 = np.argmax(np.abs(cir[1])) * dt
+    g_ns.append(max_x2)
+    m = np.mean(g_ns[max(0, len(g_ns)-100):-1])
+    print("ns2============", m)
+
+    #grp.add_points(max_x2-max_x1)
+
     #input()
      
 
@@ -409,11 +429,11 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
 
     print("* gn {}".format(gn))
     #preprocess(csist)
-    plot_mag(csist, gn)
+    #plot_mag(csist, gn)
     #plot_phase(csist)
     #plot_phase_offset(csist)
     #plot_attack(csist)
-    #plot_cir(csist)
+    plot_cir(csist)
     #plot_ft(csist)
     #dl_phase_offset(csist)
     #dl_test_phase_offset(csist)
@@ -424,25 +444,24 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
     
 
     loopn = 1
-    loopn = 20
+    loopn = 10
     if not gn % loopn:
         plt.title(gn)
         plt.pause(0.01)
         #plt.show()
-    if not gn % 100:
-        #plt.clf()
+    if not gn % loopn:
+        plt.clf()
         pass
 
 
 
-exit
 sns.set_style("whitegrid", {'axes.linewidth':0.2})    
 
 #plt.ion()
-plt.figure(1)
+#plt.figure(1)
 if sys.argv[1] == 'file':
     iaxcsi_file(sys.argv[2], None, iaxcsist_callback).start()
 else:
     iaxcsi_netlink(sys.argv[1], sys.argv[2], None, iaxcsist_callback).start()
-plt.ioff()
+#plt.ioff()
 #plt.show()
