@@ -23,8 +23,8 @@ methods (Access='public')
 				addr = strsplit(inputname,":") ;
 				self.ip = addr{1};
 				self.port = str2num(addr{2}) ;
-				%self.sfd = tcpclient(self.ip, self.port, "Timeout",5) ;
-				self.sfd = tcpclient(self.ip, self.port);
+				self.sfd = tcpclient(self.ip, self.port, "Timeout",5) ;
+				%self.sfd = tcpclient(self.ip, self.port);
 			else
 				self.is_net = false;
 				self.filename = inputname;
@@ -80,7 +80,7 @@ methods (Access='public')
 			st = [] ;
 		end
 		%fflqdbg
-		st
+		%st
 	end
 
 	function [st, len] = read_once(self, savename)
@@ -235,6 +235,8 @@ methods (Static)
 		st.seq = hdr_st.seq ;
 		st.us = hdr_st.us ;
 		%st.ftm = hdr_st.ftm ;
+		st.ts = hdr_st.ts;
+		st.datetime = iaxcsi.ts_to_dt(st.ts);
 
 		st.rnf = dec2hex(hdr_st.rnf) ;
 		%st.mod_type_str = rnf_st.mod_type_str ;
@@ -282,18 +284,18 @@ methods (Static)
 			return
 		end
 		st.perm = [1,2] ;
-		pw1 = sum(abs(st.csi(1,1,:))) ;
-		pw2 = sum(abs(st.csi(2,1,:))) ;
-		[st.rssi(1), st.rssi(2), pw1, pw2]
+		pw1 = sum(abs(st.scsi(1,1,:))) ;
+		pw2 = sum(abs(st.scsi(2,1,:))) ;
+		%[111, st.rssi(1), st.rssi(2), pw1, pw2]
 		%{
 		pause
 		[a,b,st.scsi(1,1,:)] = iaxcsi.fit_csi(st.scsi(1,1,:), st.subc.subcs) ;
 		[a,b,st.scsi(2,1,:)] = iaxcsi.fit_csi(st.scsi(2,1,:), st.subc.subcs) ;
 		[dk, deltab, tones] = iaxcsi.fit_csi(st.scsi(2,1,:) .* conj(st.scsi(1,1,:)), st.subc.subcs);
 		%}
-		%if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2)) %no
+		%if ~(st.rssi(1) > st.rssi(2) && pw1 > pw2)
+		if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2)) %no
 		%if (pw1 < pw2) %no
-		if st.rssi(1) < st.rssi(2)
 			st.perm = [2,1] ; 
 			%pause;
 			for i = 1:st.ntx
@@ -422,6 +424,8 @@ methods (Static)
 		hdr_st.seq = iaxcsi.le_uint(hdrbuf(77)) ;
 		hdr_st.us = uint64(iaxcsi.le_uint(hdrbuf(89:92))) ;
 		hdr_st.rnf = iaxcsi.le_uint(hdrbuf(93:96)) ;
+		%custom
+		hdr_st.ts = iaxcsi.le_uint(hdrbuf(272-8+1:272));
 	end
 
 
@@ -484,6 +488,12 @@ methods (Static)
 
 	function r = be_intn(s, nbits)
 		r = iaxcsi.uintn_to_intn(iaxcsi.be_uintn(s), nbits) ;
+	end
+
+	function dt = ts_to_dt(ts) 
+		ts = double(ts) ;
+		dt = datetime(ts, 'ConvertFrom', 'posixtime', 'TimeZone', 'Asia/Shanghai', 'Format', 'yyyy-MM-dd HH:mm:ss.SSS') ;
+		%dt = string(datestr(dt, 'YYYY-mm-dd HH:MM:ss')) ;
 	end
 
 end
