@@ -6,6 +6,9 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from scipy import stats
+
 from realtime_ploter import realtime_ploter
 
 from pyflqcsi.flqcsi_pool import flqcsi_pool
@@ -25,7 +28,7 @@ def plot_cir(csist: flqcsi_st):
     cfr = csist.csi[0] 
     cir = np.fft.ifft(cfr)
     #sameto, cir = np.array([cir1, cir2])
-    cir = cir[:,0:60]
+    cir = cir[:,0:50]
     dt = 1e9 / (csist.bw * 1e6) #ns
     xs = np.arange(0, cir.shape[1])*dt 
     #i = np.argmax(np.real(cir)) 
@@ -34,23 +37,28 @@ def plot_cir(csist: flqcsi_st):
 
     #plot
     plt.figure(2)
+    plt.xticks(range(0,500,50))
     sns.lineplot(x=xs, y=np.abs(cir[0]))
     sns.scatterplot(x=xs, y=np.abs(cir[0]))
     if cir.shape[0] > 1:
-        sns.lineplot(x=xs, y=100+np.abs(cir[1]))
-        sns.scatterplot(x=xs, y=100+np.abs(cir[1]))
+        cir2_offs = 100
+        cir2_offs = 0
+        sns.lineplot(x=xs, y=cir2_offs+np.abs(cir[1]))
+        sns.scatterplot(x=xs, y=cir2_offs+np.abs(cir[1]))
 
     gns = gns1
     max_x1 = np.argmax(np.abs(cir[0])) * dt
     gns.append(max_x1)
     m = np.mean(gns[max(0, len(gns)-100):-1])
-    print("ns1------------", m)
+    print("ns1------------", m, ", ", max_x1)
+    p = stats.kstest(gns, 'norm', (np.mean(gns), np.std(gns)))
+    print("p---", p)
 
     gns = gns2
     max_x2 = np.argmax(np.abs(cir[1])) * dt
     gns.append(max_x2)
     m = np.mean(gns[max(0, len(gns)-100):-1])
-    print("ns2============", m)
+    print("ns2============", m, ", ", max_x2)
 
     print("*******", max_x2-max_x1)
     grp12.add_points(max_x2-max_x1)
@@ -62,6 +70,46 @@ def plot_cir(csist: flqcsi_st):
 
     #input()
      
+
+def fit_csi(tones, xs):
+    mag = np.abs(tones)
+    ang = np.angle(tones)
+    uwphase = np.unwrap(ang)
+    #xs = np.arange(len(tones))
+    z = np.polyfit(xs, uwphase, 1)
+    k, b = z[0], z[1]
+    print("* k(%f) b(%f)" % (k, b))
+    pha = uwphase - k*xs
+    pha = uwphase - k*xs - b
+    pha = uwphase - b
+    #sns.lineplot(x=xs, y=pha)
+    tones = mag*np.exp(1j*pha)
+    return [k,b,tones]
+    return pha
+
+
+gns13 = []
+grp13 = realtime_ploter(13)
+def plot_tof(csist: flqcsi_st):
+    fc = 5.21e9
+    subc_freq_range = np.arange(5.17e9, 5.25e9, 312.5e3)
+    subc_freq_range = subc_freq_range[0:len(csist.subcs)]
+    [k, b, _] = fit_csi(csist.csi[0,0], subc_freq_range)
+    tpdd = b / fc / (2*np.pi)
+    tall = k / (-2*np.pi)
+    ttof = tall - tpdd
+    dist = ttof * 3e8
+    print("***", k, b)
+    print("***", tall, tpdd, ttof, dist)
+    grp13.add_points(dist)
+
+
+def plot_pll(csist: flqcsi_st):
+    subc0_idx = int(np.floor(len(csist.subcs)/2))
+    rx1subc0 = csist.csi[0,0,subc0_idx]
+    rx2subc0 = csist.csi[0,1,subc0_idx]
+    print("***", np.angle(rx1subc0), np.angle(rx2subc0))
+
 
 #grp9 = realtime_ploter(9)
 def plot_breath(csist: flqcsi_st):
@@ -82,9 +130,11 @@ def plot_phase(csist: flqcsi_st):
     csi = csist.csi[0];
     #csi[:] = csi[csist.perm-1]
     #phaoff12 = np.unwrap(np.angle(csi[1] * np.conj(csi[0])))
-    phaoff12 = np.unwrap(np.angle(csi[2] * np.conj(csi[0])))
-    sns.lineplot(phaoff12)
+    #phaoff12 = np.unwrap(np.angle(csi[2] * np.conj(csi[0])))
+    #sns.lineplot(phaoff12)
     #sns.scatterplot(phaoff12)
+    sns.lineplot(np.unwrap(np.angle(csi[0])))
+    sns.lineplot(np.unwrap(np.angle(csi[1])))
 
 
 gploty = [0]
@@ -141,12 +191,16 @@ def csist_callback(csist: flqcsi_st):
     #plot_mag(csist)
     #plot_breath(csist)
     #plot_attack(csist)
-    plot_cir(csist)
+    #plot_cir(csist)
+    #plot_tof(csist)
+    plot_pll(csist)
 
-    loopn = 10
+    loopn = 1
+    loopn = 5
     if not gn % loopn:
         plt.title(gn)
         plt.pause(0.01)
+    if not gn % 100:
         plt.clf()
         pass
 

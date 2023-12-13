@@ -429,11 +429,11 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
 
     print("* gn {}".format(gn))
     #preprocess(csist)
-    #plot_mag(csist, gn)
+    plot_mag(csist, gn)
     #plot_phase(csist)
     #plot_phase_offset(csist)
     #plot_attack(csist)
-    plot_cir(csist)
+    #plot_cir(csist)
     #plot_ft(csist)
     #dl_phase_offset(csist)
     #dl_test_phase_offset(csist)

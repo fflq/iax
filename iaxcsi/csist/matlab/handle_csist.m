@@ -10,19 +10,18 @@ addpath([algorithm_dir, 'dbf']);
 addpath([algorithm_dir, 'music']);
 addpath([algorithm_dir, 'iaa']);
 addpath([algorithm_dir, 'spotfi']);
+addpath("/home/flq/ws/git/SpotFi");
 
 
 inputname='/flqtmp/attack_5m_20spm_130-3400.csi'; use_net = false;
 inputname='/flqtmp/data/ax210_40ht20_air_10cm_same_rx.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40vht160_cir.csi'; use_net=false;
-inputname='192.168.1.10:7120'; use_net = true;
 inputname='/flqtmp/ax210_40ht20_-60.csi'; use_net=false;
 inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
 inputname='/tmp/a'; use_net = false;
 inputname='/flqtmp/mon2.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40ht40_split.csi'; use_net = false;
 inputname='/flqtmp/paper/ax210_40vht160_split.csi'; use_net = false;
-inputname='127.0.0.1:7120'; use_net = true;
 inputname='ax210_40ht20_split.csi'; use_net = false;
 inputname='ax210_40vht80_split.csi'; use_net = false;
 inputname='ax210_40he20_split.csi'; use_net = false;
@@ -36,6 +35,8 @@ inputname='ax210_40ht20_-30.csi'; use_net=false;
 inputname='ax210_40ht20_0.csi'; use_net=false;
 inputname='ax210_40ht20_30.csi'; use_net=false;
 inputname='ax210_40ht20_45.csi'; use_net=false;
+inputname='192.168.1.10:7120'; use_net = true;
+inputname='127.0.0.1:7120'; use_net = true;
 
 handle_all = true;
 handle_all = false;
@@ -84,9 +85,13 @@ end
 
 function handle_csist_func(csist)
 	%csist 
-	%if ~csi_filter(csist); fprintf("*** pass\n"); return; end
-
-	%csist = preprocess(csist) ;
+	if ~csi_filter(csist); 
+		%fprintf("*** pass\n"); 
+		return; 
+	end
+	
+	csist
+	%csist = preprocess(csist) ; %nouse
 	%plot_attack(csist) ;
 	%plot_csi(csist.csi);
 	%plot_mag(csist) ;
@@ -316,21 +321,27 @@ end
 
 function [aoa1, aoa2] = do_aoa(csist)
 	persistent aoas;
-	calc_aoa = @do_iaa ;
-	calc_aoa = @do_spotfi ;
 	calc_aoa = @do_music ;
 	calc_aoa = @do_dbf ;
+	calc_aoa = @do_iaa ;
+	calc_aoa = @do_spotfi ;
 
+	plot_phase_offset(csist) ;
     %csist = calib_scsi_by_delta(csist, 0.0, 0.32) ; 
     csist = calib_scsi_by_file(csist) ;
 	plot_phase_offset(csist) ;
 	aoa1 = calc_aoa(csist) ;
-	pause
+	%pause
     csist = calib_scsi_by_phaoff12(csist, pi) ; 
 	plot_phase_offset(csist) ;
 	aoa2 = calc_aoa(csist) ;
-	%plot_aoa(aoa1, 11, false); plot_aoa(aoa2, 11, true); 
-	pause
+
+	fid = 11;
+	ch = char(csist.smac);
+	fid = hex2dec(ch(1:2));
+	plot_aoa(aoa1, fid, csist.smac, false); 
+	plot_aoa(aoa2, fid, csist.smac, true); 
+	%pause
 
 	truthaoa = -60 ;
 	aoas(end+1) = min(abs(aoa1-truthaoa), abs(aoa2-truthaoa));
@@ -443,7 +454,7 @@ function aoa = do_spotfi(csist, music)
 	envs.ntone = csist.nstone ;
 	envs.ntone_sm = floor(envs.ntone/2) ;
 	envs.subc_idxs = csist.subc.subcs ;
-	envs.pmufig = true;
+	%envs.pmufig = true;
 	envs.niter = 1 ;
 	envs.music = music ;
 
@@ -473,8 +484,9 @@ function aoa = do_spotfi(csist, music)
 	end
 end
 
-function plot_aoa(aoa, fid, holdon)
-	if nargin < 3; holdon = false; end
+function plot_aoa(aoa, fid, fig_title, holdon)
+	if nargin < 3; fig_title = fid; end
+	if nargin < 4; holdon = false; end
 	figaoa = 90 - aoa ;
 	figure(fid) ;
 	if holdon; hold on; else; hold off; end
@@ -482,6 +494,7 @@ function plot_aoa(aoa, fid, holdon)
 	c.LineWidth = 6 ;
 	if holdon; c.LineWidth=3; end
 	axis([-1, 1, 0, 1]) ;
+	title(fig_title);
 end
 
 
@@ -527,7 +540,7 @@ function csist = calib_scsi_by_file(csist)
 		%savename = join(['/flqtmp/', csist.chan_type_str, 'phaoffs12.mat'], '')
 		savename = join([csist.chan_type_str, 'phaoffs12.mat'], '')
 		phaoffs = load(savename).phaoffs.';
-		figure(29); plot(phaoffs);
+		%figure(29); plot(phaoffs);
 		fprintf("***** load phaoffs %f\n", mean(phaoffs)); %pause;
 	end
     csist = calib_scsi_by_phaoffs(csist, phaoffs);
@@ -588,38 +601,53 @@ end
 
 
 function csist = preprocess(csist)
+	for itx = 1:csist.ntx
+		for irx = 1:csist.nrx
+			subc0 = csist.scsi(irx,itx,ceil(end/2));
+			csist.scsi(irx,itx,:) = csist.scsi(irx,itx,:) * conj(subc0);
+		end
+	end
+
+	return;
     scsi = csist.scsi;
     subcs = csist.subc.subcs;
+	calib_type = 2;
 
-	phaoff12 = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
-	fprintf("* prep phaoff12 %f\n", mean(phaoff12))
+	if calib_type == 1
+		phaoff12 = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
+		fprintf("* prep phaoff12 %f\n", mean(phaoff12))
 
-	%csist = calib_by_last_delta_kb(csist, 3.5) ;
-	%csist = calib_by_last_delta_kb(csist, 2.7) ;
-	%csist = calib_by_last_delta_kb(csist, pi) ;
+		%csist = calib_by_last_delta_kb(csist, 3.5) ;
+		%csist = calib_by_last_delta_kb(csist, 2.7) ;
+		%csist = calib_by_last_delta_kb(csist, pi) ;
 
-	phaoff12 = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
-	fprintf("* prep phaoff12 %f\n", mean(phaoff12))
-	return 
+		phaoff12 = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
+		fprintf("* prep phaoff12 %f\n", mean(phaoff12))
+		%return 
+	elseif calib_type == 2 
+		%new
+		persistent last_deltab;
+		if isempty(last_deltab); last_deltab = deltab; end
+		fprintf("****** last_deltab(%f) deltab(%f) %f\n", last_deltab, deltab, angle_mod(last_deltab-deltab));
+		if ~ (abs(angle_mod(last_deltab - deltab)) < pi/2)
+			fprintf("* last_deltab(%f) - deltab(%f) > x\n", last_deltab, deltab) ;
+			deltab = deltab - pi ;
+			%calib_phaoff = calib_phaoff - pi ;
+			offs = pi ;
+		end
+		last_deltab = deltab ;
 
-	%new
-    persistent last_deltab;
-	if isempty(last_deltab); last_deltab = deltab; end
-    fprintf("****** last_deltab(%f) deltab(%f) %f\n", last_deltab, deltab, angle_mod(last_deltab-deltab));
-    if ~ (abs(angle_mod(last_deltab - deltab)) < pi/2)
-        fprintf("* last_deltab(%f) - deltab(%f) > x\n", last_deltab, deltab) ;
-        deltab = deltab - pi ;
-        %calib_phaoff = calib_phaoff - pi ;
-		offs = pi ;
-	end
-    last_deltab = deltab ;
-
-	%% calib by file
-    csist = calib_scsi_by_phaoff12(csist, calib_phaoff, offs) ; return ;
-	init_phaoff12_file = ('/tmp/init_phaoff12.mat') ;
-	if exist(init_phaoff12_file)
-		phaoff12 = load(init_phaoff12_file).phaoff12 ;
-		csist = calib_scsi_by_phaoffs(csist, phaoff12.', offs) ; return ;
+		%% calib by file
+		%csist = calib_scsi_by_phaoff12(csist, calib_phaoff, offs) ; return ;
+		%init_phaoff12_file = ('/tmp/init_phaoff12.mat') ;
+		init_phaoff12_file = ('./VHT160phaoffs12.mat') ;
+		if exist(init_phaoff12_file)
+			fprintf("* calib by file\n");
+			phaoff12 = load(init_phaoff12_file).phaoffs ;
+			csist = calib_scsi_by_phaoffs(csist, phaoff12.', offs) ; return ;
+		end
+	else 
+		warning('* error invalid calib_type');
 	end
 end
 
@@ -635,19 +663,42 @@ end
 function r = csi_filter(csist)
 	r = false;
 	if (csist.nrx < 2); return; end
+	if (csist.ntx < 2); return; end
+	%test
+	%if (csist.ntx > 1); return; end
+	%if (csist.chan_type_str ~= "VHT80"); return; end
+	%if (csist.chan_type_str ~= "NOHT20"); return; end
+	if (csist.chan_type_str ~= "HT40"); return; end
+	%if (csist.smac ~= "90:CC:DF:6C:9E:09"); return; end
+	%if (csist.smac ~= "3A:96:C4:F6:C6:5D"); return; end
+	%if (csist.smac ~= "56:E7:B5:F7:42:55"); return; end
+	samsung_laptop_mac = "90:CC:DF:6C:9E:09";
+	%if (csist.smac ~= samsung_laptop_mac); return; end
+	iphone_mac = "3A:96:C4:F6:C6:5D";
+	ipad_mac = "56:E7:B5:F7:42:55";
+	%if (csist.smac ~= ipad_mac); return; end
+	if (csist.smac ~= iphone_mac && csist.smac ~= ipad_mac); return; end
 
 	persistent pw1_sum pw2_sum ;
 	if isempty(pw1_sum)
 		pw1_sum = 0; pw2_sum = 0; 
 	end
-    pw1 = sum(abs(csist.csi(1,1,:)).^2)/1e4;
-    pw2 = sum(abs(csist.csi(2,1,:)).^2)/1e4;
-	[pw1, pw2]
+    pw1 = sum(abs(csist.scsi(1,1,:)).^2)/1e4;
+    pw2 = sum(abs(csist.scsi(2,1,:)).^2)/1e4;
+	pw1 = sum(abs(csist.scsi(1,1,:)))/1e2 ;
+	pw2 = sum(abs(csist.scsi(2,1,:)))/1e2 ;
+	[csist.rssi(1), csist.rssi(2), pw1, pw2]
 	%pw1_sum = pw1_sum + pw1 ; pw2_sum = pw2_sum + pw2 ;
 	%[pw1_sum, pw2_sum]
-    if (abs(pw1-pw2)/min(pw1,pw2) < 0.2); return; end
-    if abs(csist.rssi(1)-csist.rssi(2)) < 3; return; end 
+	%assume rssi1 > rssi2
+    %if (abs(pw1-pw2)/min(pw1,pw2) < 0.2); return; end
+    %if abs(csist.rssi(1)-csist.rssi(2)) < 3; return; end 
+    %if ((pw1-pw2)/min(pw1,pw2) < 0.1); return; end
+	fprintf("* check1 ok\n");
+    if (csist.rssi(1)-csist.rssi(2)) < 3; return; end 
+	fprintf("* check2 ok\n");
     if (csist.rssi(1) <= csist.rssi(2) || pw1 <= pw2); return; end
+	fprintf("* check3 ok\n");
 
 	[deltabk, deltab] = iaxcsi.fit_csi(csist.scsi(2,1,:) .* conj(csist.scsi(1,1,:)), csist.subc.subcs);
     %if abs(deltabk) > 0.1; return ; end
@@ -735,11 +786,15 @@ function plot_phase_offset(csist)
 	fprintf("* phaoff12 %f\n", mean(phaoff12))
 	%phaseoffs(end+1) = mean(phaoff12) ;
 	%phaseoffs(end+1) = phaoff12(1) ;
-	phaseoffs(end+1,:) = phaoff12 ;
+	%%phaseoffs(end+1,:) = phaoff12 ;
 	%fprintf("- %d, %d, 12(%f)\n", i, length(phaseoffs), mean(phaseoffs)) ;
 	%Util.plot_realtime1(1, phaseoffs) ;
-	figure(3); hold on;
+	fid = 3;
+	ch = char(csist.smac);
+	fid = hex2dec(ch(1));
+	figure(fid); hold on;
 	plot(csist.subc.subcs, phaoff12, 'LineWidth',2) ;
+	title(csist.smac);
 	%csist
 	%input('-')
 	return
