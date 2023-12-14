@@ -2,15 +2,17 @@ clear all;
 close all;
 
 addpath('/flqtmp')
-root_dir = 'C:/Users/flq/OneDrive/papers/iax/data/paper/';
-addpath(root_dir);
-addpath([root_dir, 'aoa']);
+paper_data_dir = 'C:/Users/flq/OneDrive/papers/iax/data/paper/';
+addpath(paper_data_dir);
+addpath([paper_data_dir, 'aoa']);
 algorithm_dir = '../../../algorithm/';
 addpath([algorithm_dir, 'dbf']);
 addpath([algorithm_dir, 'music']);
 addpath([algorithm_dir, 'iaa']);
 addpath([algorithm_dir, 'spotfi']);
 addpath("/home/flq/ws/git/SpotFi");
+
+addpath([paper_data_dir, 'aoa-ap']);
 
 
 inputname='/flqtmp/attack_5m_20spm_130-3400.csi'; use_net = false;
@@ -38,6 +40,23 @@ inputname='ax210_40ht20_45.csi'; use_net=false;
 inputname='192.168.1.10:7120'; use_net = true;
 inputname='127.0.0.1:7120'; use_net = true;
 
+global gbeg gend;
+%aoa-ap
+%iphone, 60w+
+inputname='ax210-ap_ipad-60_iphone-60_149ht40_range200-900.csi'; use_net=false;
+inputname='ax210-ap_ipad0_iphone-30_149ht40.csi'; use_net=false;
+inputname='ax210-ap_ipad0_iphone0_149ht40.csi'; use_net=false;
+inputname='ax210-ap_ipad-30_iphone30_149ht40_range200-1200.csi'; use_net=false;
+inputname='ax210-ap_ipad-30_iphone60_149ht40_range200-900.csi'; use_net=false;
+%ipad
+inputname='ax210-ap_ipad0_iphone0_149ht40.csi'; use_net=false;
+inputname='ax210-ap_ipad-30_iphone-30_149ht40.csi'; use_net=false;
+inputname='ax210-ap_ipad60_iphone-30_149ht40.csi'; use_net=false;
+inputname='ax210-ap_ipad-60_iphone-60_149ht40_range200-900.csi'; use_net=false;
+gbeg = 200; gend = 900;
+inputname='ax210-ap_ipad-30_iphone30_149ht40_range200-1200.csi'; use_net=false;
+
+
 handle_all = true;
 handle_all = false;
 if handle_all
@@ -64,12 +83,15 @@ while true
 	end
 
 	if isempty(st); break; end
-	handle_csist_func(st) ;
-	if ~mod(gn, 100)
+	if ~mod(gn, 10)
 		fprintf("*** gn %d\n", gn) ;
 		%figure(3); close 3;
 	end
 	gn = gn + 1;
+	if gn < gbeg; continue; end
+	if gn > gend; break; end
+
+	handle_csist_func(st) ;
 end
 
 
@@ -99,7 +121,8 @@ function handle_csist_func(csist)
 	%plot_phase_offset(csist) ;
 	%do_cir(csist) ;
 	%save_calib(csist);
-	do_aoa(csist) ;
+	%do_aoa(csist) ;
+	do_aoa_ap(csist) ;
 	%stats_macs(csist, false) ;
 	%plot_breath(csist) ;
 	%do_pdd(csist);
@@ -319,12 +342,48 @@ function save_calib(csist)
 		end
 end
 
+function [aoa1, aoa2] = do_aoa_ap(csist)
+	persistent aoas;
+	calc_aoa = @do_dbf ; algo_name = "dbf";
+	calc_aoa = @do_iaa ; algo_name = "iaa";
+	calc_aoa = @do_music ; algo_name = "music";
+	calc_aoa = @do_spotfi ; algo_name = "spotfi";
+
+	plot_phase_offset(csist) ;
+    csist = calib_scsi_by_file(csist) ;
+	plot_phase_offset(csist) ;
+	aoa1 = calc_aoa(csist) ;
+	save("csist.mat", "csist");
+	%pause
+    csist = calib_scsi_by_phaoff12(csist, pi) ; 
+	plot_phase_offset(csist) ;
+	aoa2 = calc_aoa(csist) ;
+
+	fid = 11;
+	ch = char(csist.smac);
+	fid = hex2dec(ch(1:2));
+	plot_aoa(aoa1, fid, csist.smac, false, 'b'); 
+	plot_aoa(aoa2, fid, csist.smac, true, 'r'); 
+	pause
+
+	truthaoa = -60 ;
+	aoas(end+1) = min(abs(aoa1-truthaoa), abs(aoa2-truthaoa));
+	cdf_step = 50;
+	cdf_step = 10;
+	if ~mod(length(aoas), cdf_step)
+		figure(99); p=cdfplot(abs(aoas(end-cdf_step+1:end))); p.LineWidth=2;
+		save([char(algo_name), '-aoas', num2str(truthaoa), '-cdf-', ch(1:2), '.mat'], "aoas");
+		pause(0.1)
+	end
+end
+
+
 function [aoa1, aoa2] = do_aoa(csist)
 	persistent aoas;
-	calc_aoa = @do_music ;
-	calc_aoa = @do_dbf ;
-	calc_aoa = @do_iaa ;
-	calc_aoa = @do_spotfi ;
+	calc_aoa = @do_music ; algo_name = "music";
+	calc_aoa = @do_dbf ; algo_name = "dbf";
+	calc_aoa = @do_iaa ; algo_name = "iaa";
+	calc_aoa = @do_spotfi ; algo_name = "spotfi";
 
 	plot_phase_offset(csist) ;
     %csist = calib_scsi_by_delta(csist, 0.0, 0.32) ; 
@@ -343,7 +402,7 @@ function [aoa1, aoa2] = do_aoa(csist)
 	plot_aoa(aoa2, fid, csist.smac, true); 
 	%pause
 
-	truthaoa = -60 ;
+	truthaoa = 0 ;
 	aoas(end+1) = min(abs(aoa1-truthaoa), abs(aoa2-truthaoa));
 	if ~ mod(length(aoas), 50)
 		figure(99); p=cdfplot(abs(aoas(end-49:end))); p.LineWidth=2;
@@ -484,13 +543,14 @@ function aoa = do_spotfi(csist, music)
 	end
 end
 
-function plot_aoa(aoa, fid, fig_title, holdon)
+function plot_aoa(aoa, fid, fig_title, holdon, color)
 	if nargin < 3; fig_title = fid; end
 	if nargin < 4; holdon = false; end
+	if nargin < 5; color = 'b'; end
 	figaoa = 90 - aoa ;
 	figure(fid) ;
 	if holdon; hold on; else; hold off; end
-	c = compass(cosd(figaoa), sind(figaoa)) ;
+	c = compass(cosd(figaoa), sind(figaoa), color) ;
 	c.LineWidth = 6 ;
 	if holdon; c.LineWidth=3; end
 	axis([-1, 1, 0, 1]) ;
@@ -675,6 +735,7 @@ function r = csi_filter(csist)
 	samsung_laptop_mac = "90:CC:DF:6C:9E:09";
 	%if (csist.smac ~= samsung_laptop_mac); return; end
 	iphone_mac = "3A:96:C4:F6:C6:5D";
+	%if (csist.smac ~= iphone_mac); return; end
 	ipad_mac = "56:E7:B5:F7:42:55";
 	%if (csist.smac ~= ipad_mac); return; end
 	if (csist.smac ~= iphone_mac && csist.smac ~= ipad_mac); return; end
