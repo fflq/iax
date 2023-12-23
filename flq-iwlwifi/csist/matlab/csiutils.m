@@ -15,9 +15,34 @@ end
 
 methods (Static)
     %{
+	    plot_cir(squeeze(csi(1,1,:)), 20, 11);
+    %}
+    function plot_cir(cfr, bw, fid, spec)
+        if nargin < 3; fid = 15; end
+        if nargin < 4; spec = '-o'; end
+
+        cir = ifft(cfr);
+        cir = cir(1:min(20,length(cir))) ;
+        dt = 1e9 / (bw * 1e6) ; %ns
+        %xs = (0:size(cir,2)-1)*dt ; 
+        %xs = (0:length(cir)-1)*dt ; 
+        xs = (1:length(cir))*dt ; 
+        [v, i] = max(abs(cir)) ;
+        [111, xs(i), xs(i)*0.3];
+        %hold on ; plot(xs, abs(cir), ':o', 'LineWidth', 2) ;
+        figure(fid);
+        %hold off ;  
+        hold on; plot(xs, abs(cir), spec, 'LineWidth', 2);
+
+        xlabel('Time(ns)');
+        ylabel('Magnitude');
+    end
+
+
+    %{
 	    plot_cir(squeeze(csi(:,1,:)), 20, 11);
     %}
-    function plot_cir(cfr, bw, fid)
+    function plot_cir_old(cfr, bw, fid)
         if nargin < 3; fid = 15; end
         cir = ifft(cfr, [], 2) ;
         cir = cir(:, 1:min(20,size(cir,2))) ;
