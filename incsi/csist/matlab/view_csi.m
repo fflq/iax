@@ -9,8 +9,8 @@ addpath('./csilibs') ;
 
 
 %server = CSIFile('./data/csi.dat') ;
-%server = CSIServer() ;
-server = CSIFile('/tmp/a.csi')
+server = CSIServer() ;
+%server = CSIFile('/tmp/a.csi')
 while true
 	csi_st = server.read_csi_st() 
 	if (isempty(csi_st))

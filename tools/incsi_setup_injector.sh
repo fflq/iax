@@ -1,6 +1,8 @@
 #!/usr/bin/sudo /bin/bash
 #set -x ;
 
+#chn 40 cant, 64 can
+
 tools_dir=$(dirname ${BASH_SOURCE[0]})
 
 echo "* $0 $*"
