@@ -13,14 +13,20 @@ if use_iax
 	mat_name = "attack_5m_20spm_130-3400.mat";
 	mat_name = "ax210_40vht160_split.mat";
 	mat_name = "ax210_40ht20_split.mat";
-	sts = load(mat_name).sts;
-	sts{1}
-	sts = csietr().convert_from_sts_iax(sts);
+	%sts = load(mat_name).sts;
+	%sts = csietr().convert_from_sts_iax(sts);
+	filename = "/tmp/iax.csi";
+	sts = csietr().read_file(filename, csietr.Type.IAX);
 else
 	filename = "in.csi";
 	filename = "in2.csi";
+	filename = "/flqtmp/in-40ht40-add10m.csi";
+	filename = "/flqtmp/in-40ht40.csi";
+	filename = "/flqtmp/in-40ht40-add15m.csi";
+	filename = "/flqtmp/in-40ht40-add-0m-5m-10m-15m.csi";
 	sts = csietr().read_file(filename, csietr.Type.I53);
 	sts = reproc_sts_i53(sts);
+	sts = sts(10:end);
 end
 
 do_pdd(sts);
@@ -30,11 +36,13 @@ do_pdd(sts);
 
 function do_pdd(sts)
 	st = sts{1};
+	s = [];
 
 	fc = 5.21e9;
+	fc = 5.31e9;
 	[subc_freq_range, fc_idx] = csiutils.get_subc_freq_range(fc, st.bw, length(st.subcs));
-	xs = st.subcs; scale = 1;
-	xs = subc_freq_range; scale = 1e9;
+	xs = subc_freq_range; scale = 1e9; use_fk = true;%b will with pdd, so random
+	xs = st.subcs; scale = 1; use_fk = false;%b no pdd but tof
 
 	csi = squeeze(st.csi(1,1,:));
 	csi2 = squeeze(st.csi(1,2,:));
@@ -43,45 +51,52 @@ function do_pdd(sts)
 	fc_idx = 1:length(xs); % better effect
 	last_phase = angle(csi(fc_idx)); last_phase2 = angle(csi2(fc_idx));
 	[last_phase, last_phase2];
-	for i = 1:length(sts)
+	for i = 2:5:length(sts)
 		i
 		scsi = sts{i}.csi;
 		csi = squeeze(scsi(1,1,:));
 		csi2 = squeeze(scsi(1,2,:));
-		csiutils.plot_cir(csi, 40, 12, 'b-o');
+		[k, b, tones] = csiutils.fit_csi(csi, xs);
+		[k2, b2, tones2] = csiutils.fit_csi(csi2, xs);
+		[k*scale, b, k2*scale, b2]
+
+		s = [s, wrapToPi(b - last_phase)];
+		utils.plot_realtime1(13, unwrap(s));
+
 		cur_phase = angle(csi(fc_idx));
 		cur_phase2 = angle(csi2(fc_idx));
-		csi = csi .* exp(-1j*last_phase);
-		csi2 = csi2 .* exp(-1j*last_phase2);
+		%csi = csi .* exp(-1j*last_phase);
+		%csi2 = csi2 .* exp(-1j*last_phase2);
 		last_phase = cur_phase; last_phase2 = cur_phase2;
 		mean(wrapToPi(last_phase2-last_phase))
 
-		%figure(11); plot(xs, unwrap(angle(csi))); hold on;
-		[k, b, tones] = csiutils.fit_csi(csi, xs);
-		[k2, b2, tones2] = csiutils.fit_csi(csi2, xs);
-		%[k*scale, b, k2*scale, b2]
+		csiutils.plot_cir(csi, 40, 12, 'b-o');
 		off_to_first_pdd = -(b - firstb) / (-2*pi) / fc;
 		off_to_first_pdd
 		csi = csi .* conj(exp(-1j*2*pi*xs*off_to_first_pdd).');
-		csi = csi .* exp(-1j*2*pi*xs.'*50e-9*i); %move i*20ns
+		%csi = csi .* exp(-1j*2*pi*xs.'*50e-9*i); %move i*20ns
 		csiutils.plot_cir(5*csi, 40, 12, 'r-o');
 
 		phaoffs12 = unwrap(angle(csi2 .* conj(csi)));
 		%save("phaoffs.mat", "phaoffs12"); %save calib
-		%figure(22); plot(xs, unwrap(angle(csi2 .* conj(csi))),'-o'); hold on;
+		%figure(22); plot(st.subcs, phaoffs12,'-o'); hold on;
 
 		%验证截距b
 		%xs = 0:312.5e3:fc; ys = k*xs + b; plot(xs, ys,'-.'); hold on;
 
-		%when xs == freq_range
-		tpdd = b / (2*pi) / fc;
-		tall = k / (-2*pi);
-		ttof = tall - tpdd;
-		%when xs == subcs
-		%ttof = b / (-2*pi) / fc;
+		tall = 0; tpdd = 0;
+		if use_fk
+			%when xs == freq_range
+			tpdd = b / (2*pi) / fc;
+			tall = k / (-2*pi);
+			ttof = tall - tpdd;
+		else
+			%when xs == subcs
+			ttof = b / (-2*pi) / fc;
+		end
 		dist = ttof * 2e8;
-		[k*scale, b];
-		[tall*scale, tpdd*scale, ttof*1e9, dist]
+		%[k*scale, b];
+		[tall*1e9, tpdd*1e9, ttof*1e9, dist]
 
 		pause;
 	end		
@@ -91,7 +106,7 @@ end
 function sts = reproc_sts_i53(sts)
 	bw = 40;
 	subcs = -58:58;
-	phaoffs12 = load('phaoffs').phaoffs12;
+	%phaoffs12 = load('phaoffs').phaoffs12;
     for i = 1:length(sts)
         st = sts{i};
         st.bw = bw;
@@ -128,6 +143,7 @@ function do_pll(sts)
 	subc_freq_range = subc_freq_range(16:45);
 	%}
 	fc = 5.21e9;
+	fc = 5.31e9;
 	[subc_freq_range, fc_idx] = csiutils.get_subc_freq_range(fc, st.bw, length(st.subcs));
 	s = [];
 	s1 = [];

@@ -6,6 +6,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import math
 
 from scipy import stats
 
@@ -89,26 +90,49 @@ def fit_csi(tones, xs):
 
 
 gns13 = []
-grp13 = realtime_ploter(13)
+#grp13 = realtime_ploter(13)
 def plot_tof(csist: flqcsi_st):
-    fc = 5.21e9
-    subc_freq_range = np.arange(5.17e9, 5.25e9, 312.5e3)
+    #fc = 5.21e9
+    #subc_freq_range = np.arange(5.17e9, 5.25e9, 312.5e3)
+    fc = 5.25e9
+    subc_freq_range = np.arange(fc-80e6, fc+80e6, 312.5e3)
     subc_freq_range = subc_freq_range[0:len(csist.subcs)]
     [k, b, _] = fit_csi(csist.csi[0,0], subc_freq_range)
     tpdd = b / fc / (2*np.pi)
     tall = k / (-2*np.pi)
     ttof = tall - tpdd
-    dist = ttof * 3e8
+    dist = ttof * 2e8
     print("***", k, b)
     print("***", tall, tpdd, ttof, dist)
-    grp13.add_points(dist)
+    #grp13.add_points(dist)
+    uwphase = np.unwrap(np.angle(csist.csi[0,0]))
+    sns.lineplot(x=subc_freq_range, y=uwphase)
 
 
 def plot_pll(csist: flqcsi_st):
     subc0_idx = int(np.floor(len(csist.subcs)/2))
-    rx1subc0 = csist.csi[0,0,subc0_idx]
-    rx2subc0 = csist.csi[0,1,subc0_idx]
-    print("***", np.angle(rx1subc0), np.angle(rx2subc0))
+    subc0_phase1 = np.angle(csist.csi[0,0,subc0_idx])
+    subc0_phase1 = math.remainder(subc0_phase1, math.tau)
+    subc0_phase2 = np.angle(csist.csi[0,1,subc0_idx])
+    subc0_phase2 = math.remainder(subc0_phase2, math.tau)
+    phaseoff = math.remainder(subc0_phase2-subc0_phase1, math.tau)
+    print("***subc0", subc0_phase1, subc0_phase2, phaseoff)
+
+    phase_plls = [0, 0]
+    for i in range(csist.nrx):
+        subc0_phase = np.angle(csist.csi[0,i,subc0_idx])
+        f0 = 5.2e9
+        wire_dist = 2.1
+        wire_c = 2e8
+        #t = wire_dist / wire_c
+        #phase = -2*np.pi*f0*t
+        #approx 25
+        phase = -2*np.pi*wire_dist*(f0/wire_c)
+        phase_pll = subc0_phase - phase
+        phase_plls[i] = math.remainder(phase_pll, math.tau)
+        print("***phase", subc0_phase, phase, phase_pll, phase_plls[i])
+    phaseoff_pll = math.remainder(phase_plls[1]-phase_plls[0], math.tau)
+    print("***phase_pll", phase_plls[0], phase_plls[1], phaseoff_pll)
 
 
 #grp9 = realtime_ploter(9)
@@ -187,13 +211,13 @@ def csist_callback(csist: flqcsi_st):
         #return
 
     #plot_phase(csist)
-    #plot_phase_offset(csist)
+    plot_phase_offset(csist)
     #plot_mag(csist)
     #plot_breath(csist)
     #plot_attack(csist)
     #plot_cir(csist)
     #plot_tof(csist)
-    plot_pll(csist)
+    #plot_pll(csist)
 
     loopn = 1
     loopn = 5

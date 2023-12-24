@@ -147,7 +147,7 @@ methods (Access='public')
 			sts = self.read_file_i53(filename);
 			sts = self.convert_from_sts_i53(sts);
 		case csietr.Type.IAX
-			sts = self.read_file_iax();
+			sts = self.read_file_iax(filename);
 			sts = self.convert_from_sts_iax(sts);
 		otherwise
 			error("* unknown type");
@@ -161,6 +161,7 @@ methods (Access='public')
 		end
 		self.type = type;
 		self.is_net = true;
+		%{
 		try
 			addrs = strsplit(addr_str,":") ;
 			self.ip = addrs{1};
@@ -170,6 +171,16 @@ methods (Access='public')
 		catch ME
 			ME.identifier
 			%self = [];
+		end
+		%}
+		addpath("../../../incsi/csist/matlab/csilibs/");
+		addpath("../../../incsi/csist/matlab/");
+		server = CSIServer() ;
+		while true
+			st = server.read_csi_st() 
+			if (isempty(st)); continue; end
+			sts = self.convert_from_sts_i53({st});
+			st = sts{1};
 		end
 
 		st = [];

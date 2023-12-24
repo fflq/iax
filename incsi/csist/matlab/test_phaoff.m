@@ -2,7 +2,8 @@ clear all;
 close all;
 addpath('./csilibs') ;
 
-server = CSIFile('/tmp/a') ;
+%server = CSIFile('/tmp/a') ;
+server = CSIServer() ;
 n = 0 ;
 while true
 	csist = server.read_csi_st()  
@@ -14,10 +15,10 @@ while true
 	n = n+1 ;
 
 	csi = squeeze(csist.csi(1,:,:));
-    csi(:,:) = csi(csist.perm,:);
+    %csi(:,:) = csi(csist.perm,:);
     phaoff12 = unwrap(angle(csi(2,:) .* conj(csi(1,:))));
 	plot(phaoff12); hold on;
-
+    draw on;
 end
 
 
