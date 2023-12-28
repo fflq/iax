@@ -22,7 +22,7 @@ methods (Static)
         if nargin < 4; spec = '-o'; end
 
         cir = ifft(cfr);
-        cir = cir(1:min(20,length(cir))) ;
+        cir = cir(1:min(35,length(cir))) ;
         dt = 1e9 / (bw * 1e6) ; %ns
         %xs = (0:size(cir,2)-1)*dt ; 
         %xs = (0:length(cir)-1)*dt ; 
@@ -79,7 +79,7 @@ methods (Static)
 
     %{
     %}
-    function [k, b, tones] = fit_csi(tones, xs)
+    function [k, b, tones] = fit_csi_phase(tones, xs)
 		tones = tones(:) ;
 		xs = xs(:) ;
 		mag = abs(tones) ;

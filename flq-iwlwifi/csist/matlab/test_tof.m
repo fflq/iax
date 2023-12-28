@@ -1,12 +1,18 @@
 close all;
 
-addpath("C:/Users/flq/OneDrive/papers/iax/data/paper")
+addpath("C:/Users/flq/OneDrive/papers/iax/data/paper");
+addpath("N:\winhome\2023\data");
+addpath("/tmp");
+addpath("D:\Data\csi\iax-rx-hop");
 
 %global gs
 %gs.subc_freq_range = -10e6:312.5e3:10e6;
 %gs.subc_freq_range = 5.2e9:312.5e3:5.22e9;
 
+global sts filename;
 sts = {};
+filename = "";
+
 use_iax = true;
 use_iax = false;
 if use_iax
@@ -16,22 +22,118 @@ if use_iax
 	%sts = load(mat_name).sts;
 	%sts = csietr().convert_from_sts_iax(sts);
 	filename = "/tmp/iax.csi";
+	filename = "iax-40vht80vht160-5250.csi";
+	filename = "iax-40vht80vht80-5210.csi";
 	sts = csietr().read_file(filename, csietr.Type.IAX);
 else
 	filename = "in.csi";
 	filename = "in2.csi";
-	filename = "/flqtmp/in-40ht40-add10m.csi";
-	filename = "/flqtmp/in-40ht40.csi";
-	filename = "/flqtmp/in-40ht40-add15m.csi";
-	filename = "/flqtmp/in-40ht40-add-0m-5m-10m-15m.csi";
+	filename = "in-64ht40-add10m.csi";
+	filename = "in-64ht40-add15m.csi";
+	filename = "in-64ht40-add-0m-5m-10m-15m.csi";
+	filename = "in-64ht40.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-500us-12m-splitter.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-100us-7m-splitter.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-200us-7m-splitter-restart2.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-1000us-7m-splitter.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-1000us-7m-splitter-restart2.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-500us-7m-splitter.csi";
+	filename = "/tmp/in2.csi";
+	filename = "/tmp/in.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-200us-7m-splitter.csi";
 	sts = csietr().read_file(filename, csietr.Type.I53);
 	sts = reproc_sts_i53(sts);
 	sts = sts(10:end);
 end
 
-do_pdd(sts);
+%simu_cir();
+do_fc(sts);
+%do_pdd(sts);
 %do_hk_div_h0(sts);
 %do_pll(sts);
+
+
+function simu_cir()
+	fc = 5.21e9;
+	fd = 3.125e5; 
+	bw = 160;
+	bw = 320;
+	%bw = fd*20/1e6;
+	len = 64*(bw/20)+1;
+	[fks, fc_idx] = csiutils.get_subc_freq_range(fc, bw, len);
+	fks = 5.2e9:fd:5.2e9+(len-1)*fd;
+	csi = zeros(1, len);
+	tau = 10e-9; csi = csi + exp(-1j*2*pi*fks*tau);
+	tau = 50e-9; csi = csi + exp(-1j*2*pi*fks*tau);
+	tau = 100e-9; csi = csi + exp(-1j*2*pi*fks*tau);
+    ds = 1e9 / (bw * 1e6) ; %ns
+	csiutils.plot_cir(csi, bw);
+end
+
+
+function do_fc(sts)
+	global sts filename;
+	subcs0 = [];
+	uss = [];
+	fc = 5.25e9;
+	fc = 5.21e9;
+	st = sts{10};
+	if st.us > 1e10
+		%error("* error st.us(%f)\n", st.us);
+	end
+	[subc_freq_range, fc_idx] = csiutils.get_subc_freq_range(fc, st.bw, length(st.subcs));
+	[fc_idx, length(st.subcs)]
+	for i = 101:min(2000,length(sts))
+		st = sts{i};
+		csi = squeeze(st.csi(1,1,:));
+		csi2 = squeeze(st.csi(1,2,:));
+		%if st.bw < 80; continue; end
+		pw1 = sum(abs(csi))/1e3;
+		pw2 = sum(abs(csi2))/1e3;
+		[st.rssi(1), st.rssi(2), pw1, pw2]
+		if (st.rssi(1) > st.rssi(2)) ~= (pw1 > pw2)
+			st
+			%pause;
+		end
+		%subcs0(end+1,:) = squeeze(st.csi(1,:,fc_idx));
+		subcs0(end+1,:) = [csi(fc_idx), csi2(fc_idx)];
+		uss(end+1) = st.us;
+
+		%figure(11); plot(unwrap(angle(csi)), '-o'); hold on;
+		phaoffs12 = unwrap(angle(csi2 .* conj(csi)));
+		%figure(12); plot(phaoffs12, '-o'); hold on; %phaoff=3
+		z = polyfit(st.subcs, phaoffs12, 1);
+		%pause
+	end
+	mean(phaoffs12)
+	size(subcs0)
+	%return;
+
+	us_offs = uss(2:end) - uss(1:end-1);
+	idxs = 1:length(us_offs);
+	idxs = find(us_offs == 202);
+	us_offs = us_offs(idxs);
+	figure(13); plot(us_offs, '-*'); hold on; grid on; title("adj pac us offs");
+	figure(31); plot(normalize(us_offs), 'm:*'); hold on; grid on;
+
+	%figure(21); plot(abs(subcs0), '-o'); hold on;
+	%figure(22); plot(wrapToPi(angle(subcs0)), '-o'); hold on; title("s0 pha");
+
+	%pac_ho_phaoffs1 = wrapToPi(angle(subcs0(2:end,1) .* conj(subcs0(1:end-1,1))));
+	pac_fc_phaoffs = angle(subcs0(2:end,:) .* conj(subcs0(1:end-1,:)));
+	pac_fc_phaoffs = pac_fc_phaoffs(idxs,:);
+	pac_fc_phaoffs = wrapToPi(pac_fc_phaoffs);
+	midx = (find(pac_fc_phaoffs < -pi/2));
+	%pac_fc_phaoffs(midx) = pac_fc_phaoffs(midx) + 2*pi;
+	figure(32); plot(pac_fc_phaoffs(:,1), 'bo'); hold on;
+	figure(31); plot(pac_fc_phaoffs(:,1), 'b:o'); hold on;
+	%figure(31); plot(pac_fc_phaoffs(:,2), 'r:x'); hold on;
+	plot_title = sprintf("incsi adj pac s0 phaoffs and us-offs-norm,\n %s",filename);
+	title(plot_title);
+
+	ns_offs1 = 1e9* pac_fc_phaoffs / (2*pi) / 1e5;
+	%figure(41); plot(ns_offs1, 'b-o'); hold on;
+end
 
 
 function do_pdd(sts)
@@ -48,7 +150,7 @@ function do_pdd(sts)
 	csi2 = squeeze(st.csi(1,2,:));
 	[k, b, tones] = csiutils.fit_csi(csi, xs);
 	firstb = b;
-	fc_idx = 1:length(xs); % better effect
+	%fc_idx = 1:length(xs); % better effect
 	last_phase = angle(csi(fc_idx)); last_phase2 = angle(csi2(fc_idx));
 	[last_phase, last_phase2];
 	for i = 2:5:length(sts)
@@ -60,8 +162,9 @@ function do_pdd(sts)
 		[k2, b2, tones2] = csiutils.fit_csi(csi2, xs);
 		[k*scale, b, k2*scale, b2]
 
-		s = [s, wrapToPi(b - last_phase)];
-		utils.plot_realtime1(13, unwrap(s));
+		%s = [s, wrapToPi(b - last_phase)];
+		s = [s, wrapToPi(angle(csi(fc_idx)) - last_phase)];
+		utils.plot_realtime1(13, (s));
 
 		cur_phase = angle(csi(fc_idx));
 		cur_phase2 = angle(csi2(fc_idx));
@@ -70,12 +173,12 @@ function do_pdd(sts)
 		last_phase = cur_phase; last_phase2 = cur_phase2;
 		mean(wrapToPi(last_phase2-last_phase))
 
-		csiutils.plot_cir(csi, 40, 12, 'b-o');
+		%csiutils.plot_cir(csi, 40, 12, 'b-o');
 		off_to_first_pdd = -(b - firstb) / (-2*pi) / fc;
 		off_to_first_pdd
 		csi = csi .* conj(exp(-1j*2*pi*xs*off_to_first_pdd).');
 		%csi = csi .* exp(-1j*2*pi*xs.'*50e-9*i); %move i*20ns
-		csiutils.plot_cir(5*csi, 40, 12, 'r-o');
+		%csiutils.plot_cir(5*csi, 40, 12, 'r-o');
 
 		phaoffs12 = unwrap(angle(csi2 .* conj(csi)));
 		%save("phaoffs.mat", "phaoffs12"); %save calib
