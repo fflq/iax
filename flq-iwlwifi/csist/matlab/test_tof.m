@@ -21,10 +21,17 @@ if use_iax
 	mat_name = "ax210_40ht20_split.mat";
 	%sts = load(mat_name).sts;
 	%sts = csietr().convert_from_sts_iax(sts);
-	filename = "/tmp/iax.csi";
 	filename = "iax-40vht80vht160-5250.csi";
 	filename = "iax-40vht80vht80-5210.csi";
-	sts = csietr().read_file(filename, csietr.Type.IAX);
+	filename = "/tmp/iax.csi";
+	stsa = csietr().read_file(filename, csietr.Type.IAX);
+	sts = {};
+	for i = 1:length(stsa)
+		st = stsa{i};
+		if st.chan_type == "HE20"
+			sts{end+1} = st;
+		end
+	end
 else
 	filename = "in.csi";
 	filename = "in2.csi";
@@ -32,14 +39,14 @@ else
 	filename = "in-64ht40-add15m.csi";
 	filename = "in-64ht40-add-0m-5m-10m-15m.csi";
 	filename = "in-64ht40.csi";
-	filename = "/flqtmp/tof/incsi-64ht40-500us-12m-splitter.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-100us-7m-splitter-restart2.csi";
 	filename = "/flqtmp/tof/incsi-64ht40-100us-7m-splitter.csi";
-	filename = "/flqtmp/tof/incsi-64ht40-200us-7m-splitter-restart2.csi";
-	filename = "/flqtmp/tof/incsi-64ht40-1000us-7m-splitter.csi";
-	filename = "/flqtmp/tof/incsi-64ht40-1000us-7m-splitter-restart2.csi";
-	filename = "/flqtmp/tof/incsi-64ht40-500us-7m-splitter.csi";
 	filename = "/tmp/in2.csi";
 	filename = "/tmp/in.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-200us-7m-splitter-restart2.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-500us-12m-splitter.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-1000us-7m-splitter.csi";
+	filename = "/flqtmp/tof/incsi-64ht40-500us-7m-splitter.csi";
 	filename = "/flqtmp/tof/incsi-64ht40-200us-7m-splitter.csi";
 	sts = csietr().read_file(filename, csietr.Type.I53);
 	sts = reproc_sts_i53(sts);
@@ -75,28 +82,31 @@ function do_fc(sts)
 	global sts filename;
 	subcs0 = [];
 	uss = [];
+	maxis = [];
 	fc = 5.25e9;
 	fc = 5.21e9;
 	st = sts{10};
 	if st.us > 1e10
 		%error("* error st.us(%f)\n", st.us);
 	end
-	[subc_freq_range, fc_idx] = csiutils.get_subc_freq_range(fc, st.bw, length(st.subcs));
+	st.subcs
+	[subc_freq_range, fc_idx] = csiutils.get_subc_freq_range(fc, st.bw, ...
+			length(st.subcs), st.protocol==3);
 	[fc_idx, length(st.subcs)]
-	for i = 101:min(2000,length(sts))
+	for i = 11:min(500,length(sts))
 		st = sts{i};
 		csi = squeeze(st.csi(1,1,:));
 		csi2 = squeeze(st.csi(1,2,:));
-		%if st.bw < 80; continue; end
+		%maxis(end+1) = csiutils.plot_cir(csi+csi2, 160, -1);
 		pw1 = sum(abs(csi))/1e3;
 		pw2 = sum(abs(csi2))/1e3;
 		[st.rssi(1), st.rssi(2), pw1, pw2]
+		st
 		if (st.rssi(1) > st.rssi(2)) ~= (pw1 > pw2)
-			st
 			%pause;
 		end
-		%subcs0(end+1,:) = squeeze(st.csi(1,:,fc_idx));
-		subcs0(end+1,:) = [csi(fc_idx), csi2(fc_idx)];
+		%subcs0(end+1,:) = [csi(fc_idx), csi2(fc_idx)];
+		subcs0(end+1,:) = [csi(fc_idx)+csi2(fc_idx), csi2(fc_idx)];
 		uss(end+1) = st.us;
 
 		%figure(11); plot(unwrap(angle(csi)), '-o'); hold on;
@@ -111,10 +121,13 @@ function do_fc(sts)
 
 	us_offs = uss(2:end) - uss(1:end-1);
 	idxs = 1:length(us_offs);
-	idxs = find(us_offs == 202);
+	idxs = find(us_offs == 200);
+	%idxs = find(abs(us_offs-1000) < 10);
 	us_offs = us_offs(idxs);
 	figure(13); plot(us_offs, '-*'); hold on; grid on; title("adj pac us offs");
 	figure(31); plot(normalize(us_offs), 'm:*'); hold on; grid on;
+	%maxis = maxis(idxs);
+	%figure(15); plot(normalize(maxis), 'c:*'); hold on; grid on;
 
 	%figure(21); plot(abs(subcs0), '-o'); hold on;
 	%figure(22); plot(wrapToPi(angle(subcs0)), '-o'); hold on; title("s0 pha");
@@ -123,13 +136,16 @@ function do_fc(sts)
 	pac_fc_phaoffs = angle(subcs0(2:end,:) .* conj(subcs0(1:end-1,:)));
 	pac_fc_phaoffs = pac_fc_phaoffs(idxs,:);
 	pac_fc_phaoffs = wrapToPi(pac_fc_phaoffs);
-	midx = (find(pac_fc_phaoffs < -pi/2));
-	%pac_fc_phaoffs(midx) = pac_fc_phaoffs(midx) + 2*pi;
+	midx = (find(pac_fc_phaoffs < pi/2));
+	pac_fc_phaoffs(midx) = pac_fc_phaoffs(midx) + pi;
 	figure(32); plot(pac_fc_phaoffs(:,1), 'bo'); hold on;
 	figure(31); plot(pac_fc_phaoffs(:,1), 'b:o'); hold on;
 	%figure(31); plot(pac_fc_phaoffs(:,2), 'r:x'); hold on;
 	plot_title = sprintf("incsi adj pac s0 phaoffs and us-offs-norm,\n %s",filename);
 	title(plot_title);
+
+	fcfos = pac_fc_phaoffs/(-2*pi)/2e-4;
+	figure(33); plot(fcfos(:,1), '-o'); hold on;
 
 	ns_offs1 = 1e9* pac_fc_phaoffs / (2*pi) / 1e5;
 	%figure(41); plot(ns_offs1, 'b-o'); hold on;

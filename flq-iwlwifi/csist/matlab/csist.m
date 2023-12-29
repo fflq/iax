@@ -11,6 +11,8 @@ properties (Access='public')
 	ts = -1;
 	protocol = -1;
 	bw = -1; 
+	chan = -1;
+	chan_type = "";
 	nrx = -1; ntx = -1; ntone = -1;
 	rnf = -1; noise = -1; agc = -1;
 	smac = ""; dmac = "";

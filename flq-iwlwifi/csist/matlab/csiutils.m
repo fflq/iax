@@ -17,7 +17,7 @@ methods (Static)
     %{
 	    plot_cir(squeeze(csi(1,1,:)), 20, 11);
     %}
-    function plot_cir(cfr, bw, fid, spec)
+    function maxi = plot_cir(cfr, bw, fid, spec)
         if nargin < 3; fid = 15; end
         if nargin < 4; spec = '-o'; end
 
@@ -27,12 +27,13 @@ methods (Static)
         %xs = (0:size(cir,2)-1)*dt ; 
         %xs = (0:length(cir)-1)*dt ; 
         xs = (1:length(cir))*dt ; 
-        [v, i] = max(abs(cir)) ;
-        [111, xs(i), xs(i)*0.3];
+        [v, maxi] = max(abs(cir)) ;
+        [111, xs(maxi), xs(maxi)*0.3];
         %hold on ; plot(xs, abs(cir), ':o', 'LineWidth', 2) ;
-        figure(fid);
         %hold off ;  
-        hold on; plot(xs, abs(cir), spec, 'LineWidth', 2);
+        if fid > 0
+            figure(fid); hold on; plot(xs, abs(cir), spec, 'LineWidth', 2);
+        end
 
         xlabel('Time(ns)');
         ylabel('Magnitude');
@@ -67,8 +68,10 @@ methods (Static)
     	fc = 5.21e9;
 	    subc_freq_range = get_subc_freq_range(fc, st.chan_width, length(st.subc.subcs));
     %}
-    function [subc_freq_range, fc_idx] = get_subc_freq_range(fc, bw, len)
+    function [subc_freq_range, fc_idx] = get_subc_freq_range(fc, bw, len, is_he)
+        if nargin < 4; is_he = false; end
         fd = 312.5e3;
+        if is_he; fd = fd/4; end
         bw = bw * 1e6;
         subc_freq_range = fc - bw/2 : fd : fc + bw/2;
         fc_idx = find(subc_freq_range == fc);

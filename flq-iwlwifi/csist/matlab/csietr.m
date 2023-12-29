@@ -197,6 +197,7 @@ methods (Access='public')
 			st.ntx = in_st.Ntx;
 			st.nrx = in_st.Nrx;
 			st.ntone = size(in_st.csi, 3);
+			st.protocol = 1;
 			st.rssi = [in_st.rssi_a, in_st.rssi_b, in_st.rssi_c];
 			st.agc = in_st.agc;
 			st.noise = in_st.noise;
@@ -233,6 +234,13 @@ methods (Access='public')
 			st.ntx = in_st.ntx;
 			st.nrx = in_st.nrx;
 			st.ntone = in_st.nstone;
+			st.chan_type = in_st.chan_type_str;
+			prot = char(st.chan_type);
+			if prot(2) == 'E'; st.protocol = 3;
+			elseif prot(1) == 'V'; st.protocol = 2;
+			elseif prot(2) == 'T'; st.protocol = 1;
+			elseif prot(1) == 'N'; st.protocol = 0;
+			end
 			st.rssi = [in_st.rssi(1), in_st.rssi(2)];
 			st.perm = in_st.perm;
 			st.bw = in_st.chan_width;
