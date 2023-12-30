@@ -13,7 +13,7 @@ from pyiaxcsi.utils import utils
 
 
 class csi_st:
-    csi_len:int; seq:int; us:int; ftm:int
+    csi_len:int; seq:int; us:int; us2:int; ts:int; ftm:int
     smac: str
 
     rnf:int; chan_width:int; ant_sel:int; ldpc:int; mcs_index:int
@@ -109,7 +109,7 @@ class iaxcsi_st:
         self.endian = endian
         self.csist = csi_st()
         self.handle_nmsg_csi(csi_hdr, csi_data)
-        #utils.output_hexs(csi_hdr)
+        utils.output_hexs(csi_hdr)
 
 
     def handle_nmsg_csi(self, csi_hdr, csi_data):
@@ -131,23 +131,6 @@ class iaxcsi_st:
         self.handle_chain_perm()
 
 
-    def fit_csi(self, tones, xs):
-        mag = np.abs(tones)
-        ang = np.angle(tones)
-        uwphase = np.unwrap(ang)
-        #xs = np.arange(len(tones))
-        z = np.polyfit(xs, uwphase, 1)
-        k, b = z[0], z[1]
-        print("* k(%f) b(%f)" % (k, b))
-        pha = uwphase - k*xs
-        pha = uwphase - k*xs - b
-        pha = uwphase - b
-        #sns.lineplot(x=xs, y=pha)
-        tones = mag*np.exp(1j*pha)
-        return [k,b,tones]
-        return pha
-
-
     # nocertain(always chain1-pw > chain2-pw, ant-map-chain by ant pw).
     # wrong(rssin is in chain order, so always (chain1-pw==rssi1) > (chain2-pw==rssi2)).
     # 20230210
@@ -167,7 +150,7 @@ class iaxcsi_st:
 
         phaoff12 = np.unwrap(np.angle(self.csist.scsi[1,0] 
                         * np.conj(self.csist.scsi[0,0])))
-        print("* phaoff12 ", np.mean(phaoff12))
+
         # use csi not scsi, no interp
         pw1 = np.sum(np.abs(self.csist.csi[0,0])**2)/1e4
         pw2 = np.sum(np.abs(self.csist.csi[1,0])**2)/1e4
@@ -187,8 +170,6 @@ class iaxcsi_st:
         # way4: may test_perm field in csi_hdr
         #if self.csist.test == 1:
 
-        scsi, subcs = self.csist.scsi, self.csist.subc.subcs
-        [dk, db, dtone] = self.fit_csi(scsi[1,0] * np.conj(scsi[0,0]), subcs)
         #20230320:but always somes against rssi or pw conds
         #if all(pws1 > pws2) != (self.csist.rssi1 > self.csist.rssi2):
         if (pw1 > pw2) != (self.csist.rssi1 > self.csist.rssi2):
@@ -196,9 +177,9 @@ class iaxcsi_st:
             self.csist.perm = np.array([2, 1])
             # change to ant-order
             for i in range(self.csist.ntx):
-                #pass; print("***********8")
-                self.csist.scsi[:,i] = self.csist.scsi[self.csist.perm-1,i]
-        print(pw1, pw2, self.csist.rssi1, self.csist.rssi2, self.csist.perm)
+                pass; print("*********** pass perm")
+                #self.csist.scsi[:,i] = self.csist.scsi[self.csist.perm-1,i]
+        print("* pw rssi perm:", pw1, pw2, self.csist.rssi1, self.csist.rssi2, self.csist.perm)
         #here nerver (pw1 >= pw2) != (self.csist.rssi1 >= self.csist.rssi2):
 
 
@@ -300,7 +281,27 @@ class iaxcsi_st:
         self.csist.seq = int(csi_hdr[76])
         self.csist.us = int.from_bytes(csi_hdr[88:92], endian)
         self.csist.rnf = int.from_bytes(csi_hdr[92:96], endian)
+        self.csist.us2 = int.from_bytes(csi_hdr[200:204], endian)
+        self.csist.ts = int.from_bytes(csi_hdr[208:216], endian)
 
         self.csist.test_perm = int(csi_hdr[180])
 
  
+    #def fit_csi(self, tones, xs):
+    def fit_csi(tones, xs):
+        mag = np.abs(tones)
+        ang = np.angle(tones)
+        uwphase = np.unwrap(ang)
+        #xs = np.arange(len(tones))
+        z = np.polyfit(xs, uwphase, 1)
+        k, b = z[0], z[1]
+        print("* k(%f) b(%f)" % (k, b))
+        pha = uwphase - k*xs
+        pha = uwphase - k*xs - b
+        pha = uwphase - b
+        #sns.lineplot(x=xs, y=pha)
+        tones = mag*np.exp(1j*pha)
+        return [k,b,tones]
+        return pha
+
+

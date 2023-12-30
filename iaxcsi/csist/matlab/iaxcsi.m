@@ -425,7 +425,7 @@ methods (Static)
 		hdr_st.us = uint64(iaxcsi.le_uint(hdrbuf(89:92))) ;
 		hdr_st.rnf = iaxcsi.le_uint(hdrbuf(93:96)) ;
 		%custom
-		hdr_st.ts = iaxcsi.le_uint(hdrbuf(272-8+1:272));
+		hdr_st.ts = iaxcsi.le_uint(hdrbuf(209:216));
 	end
 
 

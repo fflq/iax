@@ -2149,10 +2149,21 @@ void flq_calib_csi_hdr(struct iwl_mvm *mvm, void *csi_hdr)
 	}
 	//memcpy(hmac, fmac, ETH_ALEN) ;
 
+	//[208,240) is zeros
+	int i, sum_from_208_to_240 = 0;
+	for (i = 208; i < 240; i += 4) {
+		sum_from_208_to_240 += le32_to_cpu(csi_hdr+i);
+	}
+	if (sum_from_208_to_240) {
+		printk(KERN_ERR "***fflq %s, csi_hdr[208,240) not zero\n");
+	}
+
+	int pos = 208;
 	//timestamp
-	u_int64_t unix_ts = ktime_get_real_seconds();
+	time64_t unix_ts = ktime_get_real_seconds();
 	//printk(KERN_ERR "*********** %llu\n", unix_ts);
-	memcpy(csi_hdr+272-8, &unix_ts, sizeof(unix_ts));
+	memcpy(csi_hdr+pos, &unix_ts, sizeof(unix_ts)); 
+	pos += sizeof(unix_ts);
 }
 
 static void iwl_mvm_csi_complete(struct iwl_mvm *mvm)

@@ -102,7 +102,7 @@ def plot_phase(csist: csi_st):
     subcs = csist.subc.subcs
     #subcs = subcs[0:5]
     sz = len(subcs)
-    sz = 2
+    plt.figure(12)
     sns.lineplot(y=00+np.unwrap(np.angle(csi[0,0,0:sz])), x=subcs[0:sz])
     #sns.lineplot(y=00+np.unwrap(np.angle(csi[1,0,0:sz])), x=subcs)
     sns.scatterplot(y=00+np.unwrap(np.angle(csi[1,0,0:sz])), x=subcs[0:sz])
@@ -196,7 +196,10 @@ def plot_phase_offset(csist: csi_st, adjust=False):
     csi = csist.scsi
     subcs = csist.subc.subcs
 
+    [dk, db, dtone] = iaxcsi_st.fit_csi(csi[1,0] * np.conj(csi[0,0]), subcs)
     phaoff12 = np.unwrap(np.angle(csi[1,0] * np.conj(csi[0,0])))
+    print("* phaoff12 ", np.mean(phaoff12))
+    '''
     #calc_ft_theta(phaoff12)
     #phaoff12 = np.unwrap(np.angle(csi[1,0] * (csi[0,0])))
     avg_phaoff12 = np.mean(phaoff12)
@@ -211,7 +214,8 @@ def plot_phase_offset(csist: csi_st, adjust=False):
     if len(gploty)>1 and abs(gploty[-1]-gploty[-2]) > 0.5:
         pass
         #input('-change')
-    plt.figure(1)
+    '''
+    plt.figure(13)
     sns.lineplot(x=subcs, y=phaoff12)
     #sns.lineplot(x=subcs, y=-phaoff12)
 
@@ -429,9 +433,9 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
 
     print("* gn {}".format(gn))
     #preprocess(csist)
-    plot_mag(csist, gn)
+    #plot_mag(csist, gn)
     #plot_phase(csist)
-    #plot_phase_offset(csist)
+    plot_phase_offset(csist)
     #plot_attack(csist)
     #plot_cir(csist)
     #plot_ft(csist)
@@ -440,7 +444,6 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
     #do_spotfi(csist)
     #send_csist(iaxcsist); #time.sleep(1) 
     #return 
-    #input()
     
 
     loopn = 1
@@ -450,8 +453,10 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
         plt.pause(0.01)
         #plt.show()
     if not gn % loopn:
-        plt.clf()
+        #plt.clf()
         pass
+
+    #input()
 
 
 
@@ -464,4 +469,4 @@ if sys.argv[1] == 'file':
 else:
     iaxcsi_netlink(sys.argv[1], sys.argv[2], None, iaxcsist_callback).start()
 #plt.ioff()
-#plt.show()
+plt.show()
