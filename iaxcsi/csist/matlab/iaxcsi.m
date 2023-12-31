@@ -130,10 +130,11 @@ methods (Access='public')
 	function sts = read_cached(self)
 		cached_mat = strcat(self.filename, ".cached.mat") ;
 		if exist(cached_mat, 'file')
+			fprintf("* load cached_mat %s\n", cached_mat);
 			sts = load(cached_mat).sts ;
 		else
-			sts = self.read();
-			save(cached_mat, "sts");
+			sts = self.read(cached_mat);
+			%save(cached_mat, "sts");
 		end
 	end
 

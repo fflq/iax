@@ -25,7 +25,7 @@ if [ $# -ge 1 ]; then
 	chtype=$1 ;
 	shift
 fi
-if [ $# -ge 1 ]; then
+if [ $# -ge 0 ]; then
 	interval_us=$1 ;
 	shift
 fi
