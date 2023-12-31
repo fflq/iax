@@ -136,22 +136,31 @@ methods (Access='public')
 		end
 	end
 
-	function sts = read_file(self, filename, type)
+	function sts = read_file(self, filename, type, once)
 		if nargin < 3
 			type = csietr.Type.I53;
 		end
+		if nargin < 4
+			once = false;
+		end
 		self.type = type;
 		self.is_net = false;
+
+		sts = {};
 		switch self.type
 		case csietr.Type.I53
 			sts = self.read_file_i53(filename);
 			sts = self.convert_from_sts_i53(sts);
 		case csietr.Type.IAX
-			sts = self.read_file_iax(filename);
+			sts = self.read_file_iax(filename, once);
 			sts = self.convert_from_sts_iax(sts);
 		otherwise
 			error("* unknown type");
 		end
+	end
+
+	function sts = read_file_cached(self, filename, type)
+		sts = self.read_file(filename, type, true);
 	end
 
 	%127.0.0.1:12345
@@ -217,10 +226,19 @@ methods (Access='public')
 		end
 	end 
 
-	function sts = read_file_iax(self, filename)
+	function sts = read_file_iax(self, filename, once)
+		if nargin < 3
+			once = false;
+		end
+		sts = {};
+
 		addpath("../../../iaxcsi/csist/matlab/");
 		self.filename = filename;
-		sts = iaxcsi(self.filename).read_file();
+		if once
+			sts = iaxcsi(self.filename).read_cached();
+		else
+			sts = iaxcsi(self.filename).read();
+		end
 	end
 
 	function sts = convert_from_sts_iax(self, in_sts)
@@ -244,6 +262,7 @@ methods (Access='public')
 			st.rssi = [in_st.rssi(1), in_st.rssi(2)];
 			st.perm = in_st.perm;
 			st.bw = in_st.chan_width;
+			st.smac = in_st.smac;
 			st.subcs = in_st.subc.subcs;
 			st.csi = zeros(in_st.ntx, in_st.nrx, in_st.nstone);
 			for j = 1:in_st.ntx

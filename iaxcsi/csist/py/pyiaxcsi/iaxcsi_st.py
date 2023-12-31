@@ -109,7 +109,7 @@ class iaxcsi_st:
         self.endian = endian
         self.csist = csi_st()
         self.handle_nmsg_csi(csi_hdr, csi_data)
-        utils.output_hexs(csi_hdr)
+        #utils.output_hexs(csi_hdr)
 
 
     def handle_nmsg_csi(self, csi_hdr, csi_data):

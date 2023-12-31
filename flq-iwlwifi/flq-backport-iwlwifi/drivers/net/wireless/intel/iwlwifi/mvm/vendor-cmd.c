@@ -2025,8 +2025,8 @@ void fflq_send_test(struct iwl_mvm *mvm,
 	unsigned int data_len = 0;
 	struct sk_buff *msg;
 	struct nlattr *dattr;
-	u8 *pos;
-	int i;
+	//u8 *pos;
+	//int i;
 
 	msg = cfg80211_vendor_event_alloc_ucast(mvm->hw->wiphy, NULL,
 						0, 100 + hdr_len + data_len,
@@ -2061,7 +2061,7 @@ iwl_mvm_send_csi_event(struct iwl_mvm *mvm,
 		//fflq_send_test(mvm, hdr, hdr_len) ;
 		//fflqkey will wrong
 		//int csid = cfg80211_vendor_cmd_get_sender(mvm->hw->wiphy);
-		int csid = mvm->csi_portid ;
+		//int csid = mvm->csi_portid ;
 		//printk(KERN_ERR "***fflq %s, csi_portid%d hdr_len%u(0 is unregister)\n", __func__, csid, hdr_len) ;
 	}
 
@@ -2136,31 +2136,42 @@ void iwl_mvm_rx_csi_header(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 //fflq
 // because csi_hdr/chunk call by schedule_work(&mvm->async_handlers_wk);
 // so call here asyncly, and flq_src_mac is not realtime and reorder.
-void flq_calib_csi_hdr(struct iwl_mvm *mvm, void *csi_hdr)
+// ef:be:ad:de:ad:de
+void flq_calib_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr)
 {
-	u8 *mac, *fmac = mvm->flq_src_mac, *hmac = csi_hdr+68;
-	if ((hmac[5] != 0xde) && (fmac[5] != hmac[5])) {
-		mac = fmac;
-		printk(KERN_ERR "***fflq %s, flq_mac %x:%x:%x:%x:%x:%x\n", __func__, 
-				mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-		mac = hmac;
-		printk(KERN_ERR "***fflq %s, csi_hdr %x:%x:%x:%x:%x:%x\n", __func__, 
-				mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	//u32 i, sum_from_208_to_240 = 0;
+	time64_t unix_ts;
+	int pos = 208;
+
+	u8 *mac, *flq_smac = mvm->flq_src_mac, *csi_smac = csi_hdr+68;
+	u64 invalid_smac_tag = 0xdeaddeadbeef;
+	u64 csi_smac_tag = *(u64*)csi_smac;
+	//u64 flq_smac_tag = *(u64*)flq_smac;
+
+	//if ((csi_smac[5] != 0xde) && (flq_smac[5] != csi_smac[5])) {
+	if (csi_smac_tag == invalid_smac_tag) {
+		mac = flq_smac;
+		printk(KERN_ERR "***fflq %s, flq_smac %02x:%02x:%02x:%02x:%02x:%02x\n", 
+				__func__, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+		mac = csi_smac;
+		printk(KERN_ERR "***fflq %s, csi_smac %02x:%02x:%02x:%02x:%02x:%02x\n", 
+				__func__, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
-	//memcpy(hmac, fmac, ETH_ALEN) ;
+	//memcpy(csi_smac, flq_smac, ETH_ALEN) ;
 
 	//[208,240) is zeros
-	int i, sum_from_208_to_240 = 0;
+	/*
 	for (i = 208; i < 240; i += 4) {
-		sum_from_208_to_240 += le32_to_cpu(csi_hdr+i);
+		sum_from_208_to_240 += *(u32*)(csi_hdr+i);
 	}
 	if (sum_from_208_to_240) {
-		printk(KERN_ERR "***fflq %s, csi_hdr[208,240) not zero\n");
+		printk(KERN_ERR "***fflq %s, csi_hdr[208,240) not zero %d\n", 
+				__func__, sum_from_208_to_240);
 	}
+	*/
 
-	int pos = 208;
 	//timestamp
-	time64_t unix_ts = ktime_get_real_seconds();
+	unix_ts = ktime_get_real_seconds();
 	//printk(KERN_ERR "*********** %llu\n", unix_ts);
 	memcpy(csi_hdr+pos, &unix_ts, sizeof(unix_ts)); 
 	pos += sizeof(unix_ts);

@@ -1,6 +1,8 @@
 #!/usr/bin/sudo /bin/bash
 #set -x ;
 
+#params: wlp8s0 40 HT20 
+
 tools_dir=$(dirname ${BASH_SOURCE[0]})
 
 echo "* $0 $*"

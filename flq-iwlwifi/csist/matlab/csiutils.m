@@ -17,9 +17,10 @@ methods (Static)
     %{
 	    plot_cir(squeeze(csi(1,1,:)), 20, 11);
     %}
-    function maxi = plot_cir(cfr, bw, fid, spec)
+    function peak_ts = plot_cir(cfr, bw, fid, spec, hold_off)
         if nargin < 3; fid = 15; end
         if nargin < 4; spec = '-o'; end
+        if nargin < 5; hold_off = false; end
 
         cir = ifft(cfr);
         cir = cir(1:min(35,length(cir))) ;
@@ -27,12 +28,19 @@ methods (Static)
         %xs = (0:size(cir,2)-1)*dt ; 
         %xs = (0:length(cir)-1)*dt ; 
         xs = (1:length(cir))*dt ; 
-        [v, maxi] = max(abs(cir)) ;
+        [maxv, maxi] = max(abs(cir)) ;
+        peak_ts = xs(maxi);
         [111, xs(maxi), xs(maxi)*0.3];
         %hold on ; plot(xs, abs(cir), ':o', 'LineWidth', 2) ;
         %hold off ;  
+        if fid > 0; figure(fid); end
+        if hold_off; 
+            hold off; 
+        else
+            hold on;
+        end
         if fid > 0
-            figure(fid); hold on; plot(xs, abs(cir), spec, 'LineWidth', 2);
+            plot(xs, abs(cir), spec, 'LineWidth', 2);
         end
 
         xlabel('Time(ns)');

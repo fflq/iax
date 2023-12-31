@@ -54,13 +54,13 @@ else
 	sts = sts(10:end);
 end
 
-test_pdd_us(sts);
+%test_pdd_us(sts);
 %test_adj_macs(sts);
 %simu_cir();
 %do_fc(sts);
 %do_pdd(sts);
 %do_hk_div_h0(sts);
-%do_pll(sts);
+do_pll(sts);
 
 
 function test_pdd_us(sts)
