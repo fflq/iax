@@ -2,130 +2,152 @@
 classdef iaxcsi < handle
 
 properties (Access='public')
+	input_name_ = "";
+	debug_ = false;
+	file_handler_ = [];
+	tcp_handler_ = [];
+	is_net_ = false ;
 	%file
-	filename = "" ;
-	fd = -1 ;
-	file_len = -1 ;
-	pos = 0 ;
-	is_net = false ;
-	%net
-	sfd = -1 ;
-	ip = "" ;
-	port = 0 ;
+	%filename = "" ;
+	%fd = -1 ;
+	%file_len = -1 ;
+	%pos = 0 ;
+	%is_net_ = false ;
+	%%net
+	%sfd = -1 ;
+	%ip = "" ;
+	%port = 0 ;
 end
 	
 
 methods (Access='public')
-	function self = iaxcsi(inputname)
-		try
-			if contains(inputname, ':') && ~contains(inputname, '/')
-				self.is_net = true;
-				addr = strsplit(inputname,":") ;
-				self.ip = addr{1};
-				self.port = str2num(addr{2}) ;
-				self.sfd = tcpclient(self.ip, self.port, "Timeout",5) ;
+	function self = iaxcsi(input_name, debug)
+		if nargin < 2
+			debug = false;
+		end
+		self.input_name_ = input_name;
+		self.debug_ = debug;
+		self.build_handler(self.input_name_);
+	end
+
+	function build_handler(self, input_name)
+			if contains(input_name, ':') && ~contains(input_name, '/')
+				self.is_net_ = true;
+				self.tcp_handler_ = tcp_handler(input_name);
+				%addr = strsplit(input_name,":") ;
+				%self.ip = addr{1};
+				%self.port = STR2DOUBLE(addr{2}) ;
+				%self.sfd = tcpclient(self.ip, self.port, "Timeout",5) ;
 				%self.sfd = tcpclient(self.ip, self.port);
 			else
-				self.is_net = false;
-				self.filename = inputname;
-				self.fd = fopen(self.filename, 'rb') ;
-				self.file_len = iaxcsi.get_file_len(self.fd) ;
-				self.pos = 0; 
+				self.is_net_ = false;
+				self.file_handler_ = file_handler(input_name);
+				%self.filename = input_name;
+				%self.fd = fopen(self.filename, 'rb') ;
+				%self.file_len = iaxcsi.get_file_len(self.fd) ;
+				%self.pos = 0; 
 			end
+		try
 		catch ME
 			ME.identifier
 			%self = [];
 		end
+
 	end
 
-	function delete(self)
-		if (self.fd > 0)
-			fclose(self.fd) ;
-			self.fd = -1;
-		end
-
-		if (self.sfd > 0)
-			fclose(self.sfd) ;
-			self.sfd = -1;
-		end
+	function close(self)
+		self.input_name_ = "";
+		self.tcp_handler_.close();
+		self.tcp_handler_ = [];
+		self.file_handler_.close();
+		self.file_handler_ = [];
 	end
 
 	%
-	function [st, len] = read_file_once(self)
+	function [st, len] = read_file_next(self)
+		st = []; len = 0;
+			%msg_len = fread(self.fd, 1, 'int32', 'b') ;
+			msg_len = endian.be32i(self.file_handler_.read(4));
+			if isempty(msg_len); return ; end
+
+			%msg = fread(self.fd, msg_len, 'uint8') ;
+			msg = self.file_handler_.read(msg_len);
+			st = self.read_st(msg) ;
 		try
-			msg_len = fread(self.fd, 1, 'int32', 'b') ;
-			if isempty(msg_len)
-				st = [] ; len = 0 ; return ;
-			end
-			msg = fread(self.fd, msg_len, 'uint8') ;
-			st = iaxcsi.read_axcsi_st(msg) ;
 		catch ME
 			ME.identifier
-			st = [] ;
 		end
 		len = 4 + msg_len ;
 	end
 
-	function [st, len] = read_net_once(self)
-		try
-			msg_len = iaxcsi.be_uintn(double(read(self.sfd, 4, 'uint8'))) ;
-			if isempty(msg_len)
-				st = [] ; len = 0 ; return ;
-			end
-			msg = double(read(self.sfd, msg_len, 'uint8')) ;
-			st = iaxcsi.read_axcsi_st(msg) ;
+	function [st, len] = read_net_next(self)
+		st = []; len = 0;
+			%msg_len = iaxcsi.be_uintn(double(read(self.sfd, 4, 'uint8'))) ;
+			msg_len = endian.be32i(self.tcp_handler_.read(4));
+			if isempty(msg_len); return ; end
+
+			%msg = double(read(self.sfd, msg_len, 'uint8')) ;
+			msg = double(self.tcp_handler_.read(msg_len));
+			st = self.read_st(msg) ;
 			len = 4 + msg_len ;
+		try
 		catch ME
 			ME.identifier
-			st = [] ;
 		end
 		%fflqdbg
 		%st
 	end
 
-	function [st, len] = read_once(self, savename)
-		if (nargin < 2); savename = '' ; end
-
-		if (self.is_net)
-			[st, len] = self.read_net_once();
+	function [st, len] = read_next(self)
+		if (self.is_net_)
+			[st, len] = self.read_net_next();
 		else 
-			[st, len] = self.read_file_once();
-		end
-
-		sts = st;
-		if ~isempty(savename)
-			save(savename, "sts");
+			[st, len] = self.read_file_next();
 		end
 	end
 
 
 	function sts = read_file(self)
 		sts = {} ;
-		while self.pos < self.file_len
+		while self.file_handler_.has_data()
 			if ~mod(length(sts),100)
-				fprintf("* read %.2f %%\n", 100*self.pos/self.file_len) ;
+				fprintf("* read %.2f %%\n", self.file_handler_.percent());
 			end
 
-			[st, len] = self.read_file_once();
-			self.pos = self.pos + len ;
+			st = self.read_file_next();
 			if isempty(st); break; end
+
 			sts{end+1} = st ;
-			%test_st(st) ;
 		end
 	end
 
 	function sts = read_net(self)
 		sts = {} ;
-		while true
+		while self.tcp_handler_.sfd > 0
 			if ~mod(length(sts),100)
-				fprintf("* read %.2f %%\n", 100*self.pos/self.file_len) ;
+				fprintf("* read %d\n", length(sts));
 			end
 
-			st = self.read_net_once() ;
+			st = self.read_net_next() ;
 			if isempty(st); break; end
 			sts{end+1} = st ;
 		end
 	end
+
+	function sts = read(self, save_name)
+		if (nargin < 2); save_name = '' ; end
+
+		if (self.is_net_)
+			sts = self.read_net() ;
+		else 
+			sts = self.read_file() ;
+		end
+
+		if ~isempty(save_name)
+			save(save_name, "sts");
+		end
+	end
+
 
 	function sts = read_cached(self)
 		cached_mat = strcat(self.filename, ".cached.mat") ;
@@ -139,25 +161,44 @@ methods (Access='public')
 	end
 
 
-	function sts = read(self, savename)
-		if (nargin < 2); savename = '' ; end
+	function st = read_st(self, buf)
+		pos = 1 ;
+		st = [] ;
 
-		if (self.is_net)
-			sts = self.read_net() ;
-		else 
-			sts = self.read_file() ;
-		end
+			hdr_len = endian.be32u(buf(pos:pos+3)); pos = pos + 4;
+			if (hdr_len ~= 272)
+				warning("* err hdr_len %d!=272, skip\n", hdr_len) ;
+				return ;
+			end
+			hdr_buf = buf(pos:pos+hdr_len-1); pos = pos + hdr_len ;
 
-		if ~isempty(savename)
-			save(savename, "sts");
+			hdr_st = iaxcsi.get_csi_hdr_st(hdr_buf) ; 
+			rnf_st = iaxcsi.get_rnf_st(hdr_st.rnf) ;
+			%utils.print_hexs(hdr_buf, true);
+
+			csi_len = endian.be32u(buf(pos:pos+3)); pos = pos + 4 ;
+			csi_buf = buf(pos:pos+csi_len-1); pos = pos + csi_len ;
+
+			csi = iaxcsi.get_csi(csi_buf, hdr_st) ;
+
+			%[hdr_len, csi_len, 111111, hdr_st.csi_len, hdr_st.ntone] 
+			st = iaxcsi.fill_csist(hdr_st, rnf_st, csi) ;  
+			if self.debug_
+				st.hdr_buf = hdr_buf;
+			end
+		try
+		catch ME
+			ME.identifier
 		end
 	end
 
 
 	%test
 	function r = test(self)
+		addpath("../../../libs/matlab-libs/");
+
 		r = true ;
-		if (self.is_net)
+		if (self.is_net_)
 			try
 				write(self.sfd, [0]) ;
 			catch ME
@@ -172,49 +213,14 @@ end
 
 methods (Static)
 
-	function [st, len] = static_read_once(inputname, savename)
-		if (nargin < 2); savename = '' ; end
-		[st, len] = iaxcsi(inputname).read_once(savename) 
+	function st = sread_next(input_name, save_name)
+		if (nargin < 2); save_name = '' ; end
+		st = iaxcsi(input_name).read_next(save_name);
 	end
 
-	function [st, len] = static_read(inputname, savename)
-		if (nargin < 2); savename = '' ; end
-		[st, len] = iaxcsi.static_read_once(inputname, savename);
-	end
-
-	function sts = static_read_all(inputname, savename)
-		if (nargin < 2); savename = '' ; end
-		sts = iaxcsi(inputname).read(savename);
-	end
-
-
-	function st = read_axcsi_st(buf)
-		pos = 1 ;
-		st = [] ;
-
-		try
-			hdr_len = iaxcsi.be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
-			if (hdr_len ~= 272)
-				fprintf("*err hdr_len %d!=272\n", hdr_len) ;
-				return ;
-			end
-			hdr_buf = buf(pos:pos+hdr_len-1); pos = pos + hdr_len ;
-			hdr_st = iaxcsi.get_csi_hdr_st(hdr_buf) ; 
-			rnf_st = iaxcsi.get_rnf_st(hdr_st.rnf) ;
-
-			csi_len = iaxcsi.be_uintn(buf(pos:pos+3)); pos = pos + 4 ;
-			csi_buf = buf(pos:pos+csi_len-1); pos = pos + csi_len ;
-			if length(buf) ~= pos-1
-				fprintf("* buf len err: %d %d-1\n", length(buf), pos) ;
-				pause ;
-			end
-			csi = iaxcsi.get_csi(csi_buf, hdr_st) ;
-
-			%[hdr_len, csi_len, 111111, hdr_st.csi_len, hdr_st.ntone] 
-			st = iaxcsi.fill_csist(hdr_st, rnf_st, csi) ;  
-		catch ME
-			ME.identifier
-		end
+	function sts = sread(input_name, save_name)
+		if (nargin < 2); save_name = '' ; end
+		sts = iaxcsi(input_name).read(save_name);
 	end
 
 	function test_st(st)
@@ -237,7 +243,7 @@ methods (Static)
 		st.us = hdr_st.us ;
 		%st.ftm = hdr_st.ftm ;
 		st.ts = hdr_st.ts;
-		st.datetime = iaxcsi.ts_to_dt(st.ts);
+		st.datetime = utils.ts_to_dt(st.ts);
 
 		st.rnf = dec2hex(hdr_st.rnf) ;
 		%st.mod_type_str = rnf_st.mod_type_str ;
@@ -254,7 +260,7 @@ methods (Static)
 
 		st.csi = csi ;
 		st = iaxcsi.calib_csi_subcs(st) ;
-		st = iaxcsi.calib_csi_perm(st) ;
+		st = iaxcsi.calib_csi_perm(st, hdr_st.buf) ;
 	end
 
 
@@ -280,14 +286,26 @@ methods (Static)
 	end
 
 
-	function st = calib_csi_perm(st)
+	function st = calib_csi_perm(st, hdr_buf)
 		if st.nrx < 2
-			return
+			return;
 		end
 		st.perm = [1,2] ;
-		pw1 = sum(abs(st.scsi(1,1,:))) ;
-		pw2 = sum(abs(st.scsi(2,1,:))) ;
-		%[111, st.rssi(1), st.rssi(2), pw1, pw2]
+
+		csi = squeeze(st.scsi(1,1,:));
+		csi2 = squeeze(st.scsi(2,1,:));
+		pw1 = sum(power(abs(st.csi(1,1,:)), 2))/1e4 ;
+		pw2 = sum(power(abs(st.csi(2,1,:)), 2))/1e4 ;
+		%[11, st.rssi(1), st.rssi(2), pw1, pw2]
+		ppos = unwrap(angle(csi2 .* conj(csi)));
+		z = polyfit(1:length(ppos), ppos, 1) ;
+		%[z(1), z(2), mean(ppos)]
+		%figure(21); hold on; plot(ppos,'-o'); 
+		%figure(22); hold off; plot(abs(csi),'r-o'); hold on; plot(abs(csi2),'b-o');
+		%global recs hdr_buf;
+		%recs(end+1,:) = ([st.rssi(1), st.rssi(2), pw1, pw2, hdr_buf(241:256).']);
+		%recs(end+1,:) = ([0, z(1), z(2), mean(ppos), hdr_buf(257:272).']);
+
 		%{
 		pause
 		[a,b,st.scsi(1,1,:)] = iaxcsi.fit_csi(st.scsi(1,1,:), st.subc.subcs) ;
@@ -297,12 +315,13 @@ methods (Static)
 		%if ~(st.rssi(1) > st.rssi(2) && pw1 > pw2)
 		if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2)) %no
 		%if (pw1 < pw2) %no
-			st.perm = [2,1] ; 
+			%st.perm = [2,1] ; 
+			%st
 			%pause;
-			for i = 1:st.ntx
-				st.scsi(:,i,:) = st.scsi(st.perm,i,:) ;
-			end
+			%st.scsi(:,:,:) = st.scsi(st.perm,:,:) ;
+			%for i = 1:st.ntx; st.scsi(:,i,:) = st.scsi(st.perm,i,:) ; end
 		end
+		%pause;
 	end
 
 
@@ -411,27 +430,28 @@ methods (Static)
 	end
 
 
-	function hdr_st = get_csi_hdr_st(hdrbuf) 
+	function hdr_st = get_csi_hdr_st(hdr_buf) 
 		hdr_st = struct() ;
+		hdr_st.buf = hdr_buf;
 
-		hdr_st.csi_len = iaxcsi.le_uint(hdrbuf(1:4)) ; 
-		hdr_st.ftm = uint32(iaxcsi.le_uint(hdrbuf(9:12))) ;
-		hdr_st.nrx = hdrbuf(47) ;
-		hdr_st.ntx = hdrbuf(48) ;
-		hdr_st.ntone = iaxcsi.le_uint(hdrbuf(53:56)) ;
-		hdr_st.rssi1 = -hdrbuf(61) ;
-		hdr_st.rssi2 = -hdrbuf(65) ;
-		hdr_st.smac = join(string(dec2hex(hdrbuf(69:74))),':') ;
-		hdr_st.seq = iaxcsi.le_uint(hdrbuf(77)) ;
-		hdr_st.us = uint64(iaxcsi.le_uint(hdrbuf(89:92))) ;
-		hdr_st.rnf = iaxcsi.le_uint(hdrbuf(93:96)) ;
+		hdr_st.csi_len = iaxcsi.le_uint(hdr_buf(1:4)) ; 
+		hdr_st.ftm = uint32(iaxcsi.le_uint(hdr_buf(9:12))) ;
+		hdr_st.nrx = hdr_buf(47) ;
+		hdr_st.ntx = hdr_buf(48) ;
+		hdr_st.ntone = iaxcsi.le_uint(hdr_buf(53:56)) ;
+		hdr_st.rssi1 = -hdr_buf(61) ;
+		hdr_st.rssi2 = -hdr_buf(65) ;
+		hdr_st.smac = join(string(dec2hex(hdr_buf(69:74))),':') ;
+		hdr_st.seq = iaxcsi.le_uint(hdr_buf(77)) ;
+		hdr_st.us = uint64(iaxcsi.le_uint(hdr_buf(89:92))) ;
+		hdr_st.rnf = iaxcsi.le_uint(hdr_buf(93:96)) ;
 		%custom
-		hdr_st.ts = iaxcsi.le_uint(hdrbuf(209:216));
+		hdr_st.ts = iaxcsi.le_uint(hdr_buf(209:216));
 	end
 
 
 	%从f中提取4*nrx*ntx*ntone字节到csi矩阵
-	function csi = get_csi(csibuf, hdr_st)
+	function csi = get_csi(csi_buf, hdr_st)
 		%nsymbol = 16 ;
 		pos = 1 ;
 
@@ -439,62 +459,11 @@ methods (Static)
 		for rxidx = 1:hdr_st.nrx; for txidx = 1:hdr_st.ntx; for toneidx = 1:hdr_st.ntone
 				%imag = fread(f, 1, 'int16', 'l') ;
 				%real = fread(f, 1, 'int16', 'l') ;
-				imag = iaxcsi.le_int(csibuf(pos:pos+1)) ;
-				real = iaxcsi.le_int(csibuf(pos+2:pos+3)) ;
+				imag = iaxcsi.le_int(csi_buf(pos:pos+1)) ;
+				real = iaxcsi.le_int(csi_buf(pos+2:pos+3)) ;
 				csi(rxidx, txidx, toneidx) = real + 1j*imag ;
 				pos = pos + 4 ;
 		end; end; end
-	end
-
-
-	function r = get_file_len(f)
-		fseek(f, 0, 'eof') ;
-		r = ftell(f) ;
-		fseek(f, 0, 'bof') ;
-	end
-
-
-	%need s(nitem, comp), be=big-endian
-	function r = to_uintn(s, be)
-		persistent lews ;
-		if isempty(lews)
-			pows = 0:16-1 ;
-			lews = 256 .^ pows ;
-		end
-		if (size(s,2) == 1)
-			s = s.' ;
-		end
-
-		ws = lews(1:size(s,2)) ;
-		if be; ws = flip(ws); end 
-		r = sum(s.*ws, 2) ;
-	end
-
-	function r = uintn_to_intn(s, nbits)
-		uintn = bitshift(1, nbits-1) ;
-		r = s - 2*uintn .* (s>=uintn);
-	end
-
-	function r = le_uintn(s)
-		r = iaxcsi.to_uintn(s, false) ;
-	end
-
-	function r = le_intn(s, nbits)
-		r = iaxcsi.uintn_to_intn(iaxcsi.le_uintn(s), nbits) ;
-	end
-
-	function r = be_uintn(s)
-		r = iaxcsi.to_uintn(s, true) ;
-	end
-
-	function r = be_intn(s, nbits)
-		r = iaxcsi.uintn_to_intn(iaxcsi.be_uintn(s), nbits) ;
-	end
-
-	function dt = ts_to_dt(ts) 
-		ts = double(ts) ;
-		dt = datetime(ts, 'ConvertFrom', 'posixtime', 'TimeZone', 'Asia/Shanghai', 'Format', 'yyyy-MM-dd HH:mm:ss.SSS') ;
-		%dt = string(datestr(dt, 'YYYY-mm-dd HH:MM:ss')) ;
 	end
 
 end

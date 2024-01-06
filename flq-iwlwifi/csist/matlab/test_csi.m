@@ -1,9 +1,14 @@
+clear all;
 close all;
 
 addpath("C:/Users/flq/OneDrive/papers/iax/data/paper");
 addpath("N:\winhome\2023\data");
 addpath("/tmp");
 addpath("D:\Data\csi\iax-rx-hop");
+
+
+global recs rs;
+test_hdr_agc(); return;
 
 %global gs
 %gs.subc_freq_range = -10e6:312.5e3:10e6;
@@ -16,23 +21,31 @@ filename = "";
 use_iax = false;
 use_iax = true;
 if use_iax
-	mat_name = "attack_5m_20spm_130-3400.mat";
-	mat_name = "ax210_40vht160_split.mat";
-	mat_name = "ax210_40ht20_split.mat";
-	%sts = load(mat_name).sts;
-	%sts = csietr().convert_from_sts_iax(sts);
+	filename = "attack_5m_20spm_130-3400.mat";
+	filename = "ax210_40vht160_split.mat";
+	filename = "ax210_40ht20_split.mat";
 	filename = "iax-40vht80vht160-5250.csi";
 	filename = "iax-40vht80vht80-5210.csi";
 	filename = "/flqtmp/perm/iax-40ht20-500us-sync4-air-ppo.csi";
 	filename = "/tmp/iax.csi";
-	%stsa = csietr().read_file(filename, csietr.Type.IAX);
-	stsa = csietr().read_file(filename, csietr.Type.IAX, true);
-	sts = {};
-	for i = 1:length(stsa)
-		st = stsa{i};
-		%if st.chan_type ~= "HE20"; continue; end
-		sts{end+1} = st;
+	filename = "ax210_40ht20_split.mat";
+	filename = "ax210_40ht20_split.csi";
+	filename = "ax210_40noht_split.csi";
+	filename = "ax210_40vht80_split.csi";
+	filename = "ax210_40vht160_split.csi";
+	filename = "ax210_40he160_split.csi";
+
+	sts = {}; 
+	[~,~,ext] = fileparts(filename);
+	if strcmpi(ext, ".mat")
+		sts = load(filename).sts;
+		sts = csietr().convert_from_sts_iax(sts);
+	else
+		once = true;
+		once = false;
+		sts = csietr().read_file(filename, csietr.Type.IAX, once);
 	end
+	sts = reproc_sts_iax(sts);
 else
 	filename = "in.csi";
 	filename = "in2.csi";
@@ -54,13 +67,174 @@ else
 	sts = sts(10:end);
 end
 
+
+foreach_sts(sts);
+
+
+function foreach_sts(sts)
+	for i = 1:min(100, length(sts))
+		st = sts{i};
+
+		csi1 = squeeze(st.csi(1,1,:));
+		csi2 = squeeze(st.csi(1,2,:));
+		pw1 = sum(csi1' * csi1)/1e4;
+		pw2 = sum(csi2' * csi2)/1e4;
+		
+		test_perm_iax(st);
+		%test_ppo(st, csi1, csi2);
+	end
+end
+
+function sts = reproc_sts_iax(stsa)
+	sts = {};
+	for i = 1:length(stsa)
+		st = stsa{i};
+		%if st.chan_type ~= "HE20"; continue; end
+
+		%st.csi(:,:,:) = st.csi(:,st.perm,:);
+		%{
+		st.perm = [1, 2];
+		if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2)) 
+			st.perm = [2, 1];
+		end
+		%}
+
+		sts{end+1} = st;
+	end
+end
+
+function sts = reproc_sts_i53(sts)
+	bw = 40;
+	subcs = -58:58;
+	%phaoffs12 = load('phaoffs').phaoffs12;
+    for i = 1:length(sts)
+        st = sts{i};
+        st.bw = bw;
+        old_subcs = subcs(1):4:subcs(end);
+        st.subcs = subcs;
+		csi = zeros(st.ntx, st.nrx, length(subcs));
+		for i = 1:st.ntx
+			for j = 1:st.nrx
+				csi(i,j,:) = utils.do_complex_interp(st.subcs, old_subcs, squeeze(st.csi(i,j,:)));
+			end
+			%calib
+			%csi(i,1,:) = squeeze(csi(i,1,:)) .* exp(1j*phaoffs12);
+		end
+		st.csi = csi;
+		%plot(abs(squeeze(st.csi(1,1,:))), '-o'); hold on;
+        sts{i} = st;
+    end
+end
+
+function test_perm_iax(st)
+	%ppos = unwrap(angle(csi2 .* conj(csi)));
+	%[k, b, ~] = csiutils.fit_csi_phase(ppos, st.subcs);
+	%[k, b, mean(ppos)]
+	%[st.rssi(1), st.rssi(2), pw1, pw2]
+	%if st.perm(1) == 2; pause; end
+
+	st = st.dbg;
+	hdr_buf = st.hdr_buf;
+	subcs = st.subc.idx_data_pilot_dc_subcs ;
+	subcs = st.subc.idx_data_subcs  ;
+	csi = st.scsi;
+	csi = st.scsi(:,:,subcs);
+	utils.print_hexs(hdr_buf, true);
+
+	csi1 = squeeze(csi(1,1,:));
+	csi2 = squeeze(csi(2,1,:));
+	pw1 = sum(power(abs(csi(1,1,:)), 2))/1e4 ;
+	pw2 = sum(power(abs(csi(2,1,:)), 2))/1e4 ;
+	[111, st.rssi(1), st.rssi(2), pw1, pw2]
+
+	ppos = unwrap(angle(csi2 .* conj(csi1)));
+	z = polyfit(1:length(ppos), ppos, 1) ;
+	[z(1), z(2), mean(ppos)]
+
+	%figure(21); hold on; plot(ppos,'-o'); 
+	%figure(22); hold off; plot(abs(csi1),'r-o'); hold on; plot(abs(csi2),'b-o');
+
+	global recs;
+	if isempty(recs); recs = []; end
+	recs(end+1,:) = ([st.rssi(1), st.rssi(2), pw1, pw2, hdr_buf(241:256)]);
+	recs(end+1,:) = ([0, z(1), z(2), mean(ppos), hdr_buf(257:272)]);
+	save("recs.mat", "recs");
+
+	dr1 = hdr_buf(7+256) - hdr_buf(5+256);
+	dr2 = hdr_buf(11+256) - hdr_buf(9+256);
+	dr3 = dr1 + dr2;
+	fprintf("%d  %d  %d\n", dr1, dr2, dr3);
+
+	if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2)) %no
+		st.perm = [2, 1];
+		st
+		pause
+	end
+
+end
+
+function test_ppo(st, csi1, csi2)
+	ppos = wrapToPi(angle(csi2 .* conj(csi)));
+	figure(13); hold on; plot(ppos, '-o'); 
+end
+
+function test_hdr_agc()
+	global recs rs;
+	n = 0;
+	%if isempty(recs); recs = []; end
+	recs = load("recs.mat").recs;
+	rs = [];
+	for i = 1:2:length(recs)
+		rec1 = recs(i,:);
+		rec2 = recs(i+1,:);
+		%if abs(rec1(3) - rec1(4)) < 20; continue; end
+		%if abs(rec1(3) - rec1(4)) > 50; continue; end
+
+		r1 = rec1(2+4) + rec1(9+4) + rec2(5+4) + rec2(9+4);
+		r1 = rec1(2+4) + rec2(5+4) + rec2(9+4);
+		r2 = rec1(6+4) + rec1(13+4) + rec2(9+4) + rec2(13+4);
+		r2 = rec1(6+4) + rec2(9+4) + rec2(13+4);
+		dr1 = rec2(7+4) - rec2(5+4);
+		dr2 = rec2(11+4) - rec2(9+4);
+		dr3 = dr1 + dr2;
+		%if dr3 < 39; continue; end
+		fprintf("%d  %d  %d  %d  %d\n", r1, r2, dr1, dr2, dr3);
+		rs(end+1,:) = [rec1(1), rec1(2), rec1(3), rec1(4), dr1, dr2, dr3];
+
+		rec = rec1;
+		fprintf("%d  %d  %.1f  %.1f\t\t", rec(1), rec(2), rec(3), rec(4));
+		for j = 5:length(rec); 
+			fprintf("%03d ", rec(j)); 
+			if ~mod(j,4); fprintf(" "); end
+		end
+		fprintf("\n");
+
+		rec = rec2;
+		fprintf("%d  %.4f  %.1f  %.1f\t\t", rec(1), rec(2), rec(3), rec(4));
+		for j = 5:length(rec); 
+			fprintf("%03d ", rec(j)); 
+			if ~mod(j,4); fprintf(" "); end
+		end
+		fprintf("\n\n");
+
+		n = n + 1;
+	end
+	n
+	rs
+	save("rs.mat", "rs");
+end
+
+
+
+
+%inherit
 %test_pdd_us(sts);
 %test_adj_macs(sts);
 %simu_cir();
 %do_fc(sts);
 %do_pdd(sts);
 %do_hk_div_h0(sts);
-do_pll(sts);
+%do_pll(sts);
 
 
 function test_pdd_us(sts)
@@ -262,30 +436,6 @@ function do_pdd(sts)
 
 		pause;
 	end		
-end
-
-
-function sts = reproc_sts_i53(sts)
-	bw = 40;
-	subcs = -58:58;
-	%phaoffs12 = load('phaoffs').phaoffs12;
-    for i = 1:length(sts)
-        st = sts{i};
-        st.bw = bw;
-        old_subcs = subcs(1):4:subcs(end);
-        st.subcs = subcs;
-		csi = zeros(st.ntx, st.nrx, length(subcs));
-		for i = 1:st.ntx
-			for j = 1:st.nrx
-				csi(i,j,:) = utils.do_complex_interp(st.subcs, old_subcs, squeeze(st.csi(i,j,:)));
-			end
-			%calib
-			%csi(i,1,:) = squeeze(csi(i,1,:)) .* exp(1j*phaoffs12);
-		end
-		st.csi = csi;
-		%plot(abs(squeeze(st.csi(1,1,:))), '-o'); hold on;
-        sts{i} = st;
-    end
 end
 
 function plot_phaoff(sts)

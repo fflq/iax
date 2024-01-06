@@ -235,9 +235,9 @@ methods (Access='public')
 		addpath("../../../iaxcsi/csist/matlab/");
 		self.filename = filename;
 		if once
-			sts = iaxcsi(self.filename).read_cached();
+			sts = iaxcsi(self.filename, true).read_cached();
 		else
-			sts = iaxcsi(self.filename).read();
+			sts = iaxcsi(self.filename, true).read();
 		end
 	end
 
@@ -270,6 +270,7 @@ methods (Access='public')
 					st.csi(j,k,:) = in_st.scsi(k,j,:);
 				end
 			end
+			st.dbg = in_st;
 			sts{end+1} = st;
 		end
 	end

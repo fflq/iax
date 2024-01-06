@@ -22,6 +22,7 @@ properties (Access='public')
 	%tx*rx*tone
 	csi = [];
 	csi_order = csist.CsiOrder.TX_RX_TONE;
+	dbg = [];
 end
 
 methods (Access='public')
