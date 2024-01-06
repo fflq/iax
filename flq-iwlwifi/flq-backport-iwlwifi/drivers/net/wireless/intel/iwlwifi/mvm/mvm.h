@@ -934,6 +934,7 @@ struct iwl_mvm {
 	struct mac_address addresses[IWL_MVM_MAX_ADDRESSES];
 
 	/* data related to data path */
+	//fflqkey more infos, but all zeros
 	struct iwl_rx_phy_info last_phy_info;
 	struct ieee80211_sta __rcu *fw_id_to_mac_id[IWL_MVM_STATION_COUNT_MAX];
 	struct ieee80211_link_sta __rcu *fw_id_to_link_sta[IWL_MVM_STATION_COUNT_MAX];

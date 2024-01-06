@@ -5,10 +5,11 @@ addpath("C:/Users/flq/OneDrive/papers/iax/data/paper");
 addpath("N:\winhome\2023\data");
 addpath("/tmp");
 addpath("D:\Data\csi\iax-rx-hop");
+addpath("../../../libs/matlab-libs");
 
 
 global recs rs;
-test_hdr_agc(); return;
+%test_hdr_agc(); return;
 
 %global gs
 %gs.subc_freq_range = -10e6:312.5e3:10e6;
@@ -26,14 +27,18 @@ if use_iax
 	filename = "ax210_40ht20_split.mat";
 	filename = "iax-40vht80vht160-5250.csi";
 	filename = "iax-40vht80vht80-5210.csi";
-	filename = "/flqtmp/perm/iax-40ht20-500us-sync4-air-ppo.csi";
 	filename = "/tmp/iax.csi";
 	filename = "ax210_40ht20_split.mat";
 	filename = "ax210_40ht20_split.csi";
 	filename = "ax210_40noht_split.csi";
-	filename = "ax210_40vht80_split.csi";
 	filename = "ax210_40vht160_split.csi";
+	filename = "/flqtmp/perm/iax-40ht20-500us-sync4-air-ppo.csi";
 	filename = "ax210_40he160_split.csi";
+	filename = "/flqtmp/perm/iax-40ht20-500us.csi";
+	filename = "ax210_40vht80_split.csi";
+	filename = "/flqtmp/perm/iax-40vht160-500ms-sync4-ppo.csi";
+	filename = "/flqtmp/ax210_40ht20_0.csi"; %nice for agc hdr
+	filename = "/flqtmp/attack_5m_20spm_140-2000.csi";
 
 	sts = {}; 
 	[~,~,ext] = fileparts(filename);

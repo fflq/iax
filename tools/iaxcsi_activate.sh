@@ -15,21 +15,20 @@ exit ;
 fi
 
 
-
 #[function handle args]
 chtype=NOHT
 interval_us=10000
 #macs=00:16:ea:12:34:56
 
-if [ $# -ge 1 ]; then
+if [ $# -gt 0 ]; then
 	chtype=$1 ;
 	shift
 fi
-if [ $# -ge 0 ]; then
+if [ $# -gt 0 ]; then
 	interval_us=$1 ;
 	shift
 fi
-if [ $# -ge 1 ]; then
+if [ $# -gt 0 ]; then
 	macs=$* ;
 fi
 chtype=${chtype^^};

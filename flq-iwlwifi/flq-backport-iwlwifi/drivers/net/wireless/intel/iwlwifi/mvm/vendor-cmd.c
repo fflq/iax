@@ -2137,11 +2137,11 @@ void iwl_mvm_rx_csi_header(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 // because csi_hdr/chunk call by schedule_work(&mvm->async_handlers_wk);
 // so call here asyncly, and flq_src_mac is not realtime and reorder.
 // ef:be:ad:de:ad:de
-void flq_calib_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr)
+void flq_expand_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr)
 {
 	//u32 i, sum_from_208_to_240 = 0;
 	time64_t unix_ts;
-	int pos = 208;
+	int pos = 208, size;
 
 	u8 *mac, *flq_smac = mvm->flq_src_mac, *csi_smac = csi_hdr+68;
 	u64 invalid_smac_tag = 0xdeaddeadbeef;
@@ -2170,11 +2170,34 @@ void flq_calib_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr)
 	}
 	*/
 
-	//timestamp
+	//1.timestamp
 	unix_ts = ktime_get_real_seconds();
-	//printk(KERN_ERR "*********** %llu\n", unix_ts);
 	memcpy(csi_hdr+pos, &unix_ts, sizeof(unix_ts)); 
 	pos += sizeof(unix_ts);
+
+	/* why all zeros
+	struct iwl_rx_phy_info *phy_info = &mvm->last_phy_info;
+	printk(KERN_ERR "*** uts%llu, sts%llu, ts%llu, %d, %d\n", 
+		unix_ts, phy_info->system_timestamp, phy_info->timestamp,   
+		phy_info->cfg_phy_cnt, phy_info->non_cfg_phy_cnt);
+	__le16 phy_flags;
+	__le16 channel;
+	__le32 non_cfg_phy[IWL_RX_INFO_PHY_CNT];
+	__le32 rate_n_flags;
+	//2.phy_flags
+	memcpy(csi_hdr+pos, &(phy_info->phy_flags), sizeof(phy_info->phy_flags));
+	pos += sizeof(phy_info->phy_flags);
+	//3.channel
+	memcpy(csi_hdr+pos, &(phy_info->channel), sizeof(phy_info->channel));
+	pos += sizeof(phy_info->channel);
+	//4.non_cfg_phy
+	//size = IWL_RX_INFO_PHY_CNT * sizeof(phy_info->non_cfg_phy[0]);
+	//memcpy(csi_hdr+pos, (phy_info->non_cfg_phy), size);
+	//pos += size;
+	//rnf
+	memcpy(csi_hdr+pos, &(phy_info->channel), sizeof(phy_info->channel));
+	pos += sizeof(phy_info->channel);
+	*/
 }
 
 static void iwl_mvm_csi_complete(struct iwl_mvm *mvm)
@@ -2227,7 +2250,7 @@ static void iwl_mvm_csi_complete(struct iwl_mvm *mvm)
 		len[i - 1] = le32_to_cpu(chunk->size);
 	}
 
-	flq_calib_csi_hdr(mvm, csi_hdr);
+	flq_expand_csi_hdr(mvm, csi_hdr);
 		
 	iwl_mvm_send_csi_event(mvm, csi_hdr, csi_hdr_len, data, len);
 
