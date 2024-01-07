@@ -3,7 +3,7 @@
 
 class utils:
     @staticmethod
-    def output_hexs(data):
+    def output_hexs(data, hex=True):
         for n in range(len(data)):
             if not n % 16:
                 print('\n%08d:' % (n), end=' ')
@@ -11,5 +11,9 @@ class utils:
                 print(end='  ')
             elif not n % 4:
                 print(end=' ')
-            print(' %02X' % (data[n]), end='')
+
+            if hex:
+                print(' %02X' % (data[n]), end='')
+            else:
+                print(' %03d' % (data[n]), end='')
         print()

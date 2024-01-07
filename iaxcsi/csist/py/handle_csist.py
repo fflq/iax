@@ -302,11 +302,18 @@ def csist_filter(csist: csi_st):
     #if csist.mcs_index: return False
     #if not (csist.ntx==1 and csist.nrx == 2): return False
     if csist.nrx < 2: return False
+    if abs(csist.rssi1 - csist.rssi2) < 2: return False
 
     #for calib
     #if csist.rssi1 + csist.rssi2 < -10: return
     pw1 = np.sum(np.abs(csist.csi[0,0])**2)/1e4
     pw2 = np.sum(np.abs(csist.csi[1,0])**2)/1e4
+
+    # 1dbm => 1.25
+    if abs(pw1-pw2)/pw1 < 0.25: return False
+
+    return True
+
     pws1 = np.abs(csist.csi[0,0])
     pws2 = np.abs(csist.csi[1,0])
     pws_cond = len((pws1 > pws2)==True)/len(pws1) > 0.8
@@ -446,8 +453,8 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
     #return 
     
 
-    loopn = 1
     loopn = 10
+    loopn = 1
     if not gn % loopn:
         plt.title(gn)
         plt.pause(0.01)
@@ -456,7 +463,7 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
         #plt.clf()
         pass
 
-    #input()
+    input()
 
 
 

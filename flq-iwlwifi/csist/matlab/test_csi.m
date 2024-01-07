@@ -5,6 +5,7 @@ addpath("C:/Users/flq/OneDrive/papers/iax/data/paper");
 addpath("N:\winhome\2023\data");
 addpath("/tmp");
 addpath("D:\Data\csi\iax-rx-hop");
+addpath("../../../libs/matlab-libs");
 
 
 global recs rs;

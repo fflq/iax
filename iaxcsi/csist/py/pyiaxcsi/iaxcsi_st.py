@@ -109,7 +109,8 @@ class iaxcsi_st:
         self.endian = endian
         self.csist = csi_st()
         self.handle_nmsg_csi(csi_hdr, csi_data)
-        #utils.output_hexs(csi_hdr)
+        #utils.output_hexs(csi_hdr, False)
+        utils.output_hexs(csi_hdr[240:], False)
 
 
     def handle_nmsg_csi(self, csi_hdr, csi_data):
@@ -148,15 +149,20 @@ class iaxcsi_st:
             return
         self.csist.perm = np.array([1, 2])
 
-        phaoff12 = np.unwrap(np.angle(self.csist.scsi[1,0] 
-                        * np.conj(self.csist.scsi[0,0])))
 
         # use csi not scsi, no interp
         pw1 = np.sum(np.abs(self.csist.csi[0,0])**2)/1e4
         pw2 = np.sum(np.abs(self.csist.csi[1,0])**2)/1e4
         pws1 = np.abs(self.csist.csi[0,0])
         pws2 = np.abs(self.csist.csi[1,0])
-        z = np.polyfit(range(len(phaoff12)), phaoff12, 1)
+        ppo12 = np.unwrap(np.angle(self.csist.scsi[1,0] * np.conj(self.csist.scsi[0,0])))
+        z = np.polyfit(range(len(ppo12)), ppo12, 1)
+        print("* k(%f) b(%f) ppo(%f)" % (z[0], z[1], np.mean(ppo12)))
+
+        if abs(self.csist.rssi1-self.csist.rssi2) < 2 or abs(pw1-pw2)/pw1 < 0.25:
+            print("* pw rssi perm:", pw1, pw2, self.csist.rssi1, self.csist.rssi2)
+            print("* perm func pass this csist")
+            #self.csist = None; return
 
         # way1: alway pw1>pw2, diff from ant-order, so chain-order
         #if not (pw1 >= pw2): 
@@ -170,9 +176,12 @@ class iaxcsi_st:
         # way4: may test_perm field in csi_hdr
         #if self.csist.test == 1:
 
+        #20240106:before perm, always bigger csi-pw first, so only judge rssi.
+        # if not first, cause by similar offs(rssis)<2, just ignore.
         #20230320:but always somes against rssi or pw conds
         #if all(pws1 > pws2) != (self.csist.rssi1 > self.csist.rssi2):
-        if (pw1 > pw2) != (self.csist.rssi1 > self.csist.rssi2):
+        #if (pw1 > pw2) != (self.csist.rssi1 > self.csist.rssi2):
+        if self.csist.rssi1 < self.csist.rssi2:
         #if dk > 0:
             self.csist.perm = np.array([2, 1])
             # change to ant-order

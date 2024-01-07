@@ -40,7 +40,10 @@ class iaxcsi_file:
             csi_data_len = struct.unpack('>i', f.read(4))[0]
             csi_data = f.read(csi_data_len)
 
+            st = iaxcsi_st(csi_hdr, csi_data)
+            if st.csist is None:
+                continue
             if self.iaxcsist_callback:
-                self.iaxcsist_callback(iaxcsi_st(csi_hdr, csi_data)); continue
+                self.iaxcsist_callback(st); continue
             if self.csist_callback:
-                self.csist_callback(iaxcsi_st(csi_hdr, csi_data).csist); continue
+                self.csist_callback(st.csist); continue

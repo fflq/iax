@@ -22,7 +22,9 @@ enum iwl_mac_context_info {
 	MAC_CONTEXT_INFO_GSCAN,
 };
 
-//fflq keykey may has perm/antenna_sel, no
+//fflq, keykey may has perm/antenna_sel, no
+//fflq, call by rx.c, but runing only to rxmq(dont use, all zeros)
+//fflq, rxmq use /include?net/mac80211.h/ieee80211_rx_status and desc
 /**
  * struct iwl_rx_phy_info - phy info
  * (REPLY_RX_PHY_CMD = 0xc0)

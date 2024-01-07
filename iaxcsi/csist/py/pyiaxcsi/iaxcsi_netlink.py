@@ -93,10 +93,13 @@ class iaxcsi_netlink:
                 f.write(csi_data)
 
         try:
+            st = iaxcsi_st(csi_hdr, csi_data)
+            if st.csist is None:
+                return
             if self.iaxcsist_callback:
-                self.iaxcsist_callback(iaxcsi_st(csi_hdr, csi_data)); return
+                self.iaxcsist_callback(st); return
             if self.csist_callback:
-                self.csist_callback(iaxcsi_st(csi_hdr, csi_data).csist); return
+                self.csist_callback(st.csist); return
         except Exception as e:
             print(e)
 

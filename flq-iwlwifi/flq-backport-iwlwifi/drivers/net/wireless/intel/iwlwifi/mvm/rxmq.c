@@ -1188,7 +1188,7 @@ struct iwl_mvm_rx_phy_data {
 	u32 gp2_on_air_rise;
 	u16 phy_info;
 	u8 energy_a, energy_b;
-	u8 channel;
+	u8 channel; //fflq, get channel
 };
 
 static void iwl_mvm_decode_he_mu_ext(struct iwl_mvm *mvm,
@@ -2288,6 +2288,7 @@ void flq_record_macs(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 	//printk("****fflq %s, %x:%x:%x:%x:%x:%x\n", __func__, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
+//fflqkeykey
 void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 			struct iwl_rx_cmd_buffer *rxb, int queue)
 {
@@ -2315,6 +2316,12 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 	//mac = mvm->addresses[0].addr; //ifconfig mac
 	//printk("****fflq %s, %x:%x:%x\n", __func__, mac[0], mac[1], mac[2]);
 	//u8 *mac = mvm->last_phy_info.non_cfg_phy;
+	/*
+	struct iwl_rx_phy_info *phy_info = &mvm->last_phy_info;
+	printk(KERN_ERR "### uts%llu, sts%llu, ts%llu, %d, %d\n", 
+		0, phy_info->system_timestamp, phy_info->timestamp,   
+		phy_info->cfg_phy_cnt, phy_info->non_cfg_phy_cnt);
+	*/
 
 	if (unlikely(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
 		return;
