@@ -23,6 +23,7 @@ properties (Access='public')
 	csi = [];
 	csi_order = csist.CsiOrder.TX_RX_TONE;
 	dbg = [];
+	type = -1;
 end
 
 methods (Access='public')

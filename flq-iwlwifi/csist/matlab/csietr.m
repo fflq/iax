@@ -212,6 +212,7 @@ methods (Access='public')
 			st.noise = in_st.noise;
 			st.perm = in_st.perm;
 			st.csi = in_st.csi;
+			st.type = csietr.Type.I53;
 			sts{end+1} = st;
 		end
 	end
@@ -270,6 +271,7 @@ methods (Access='public')
 					st.csi(j,k,:) = in_st.scsi(k,j,:);
 				end
 			end
+			st.type = csietr.Type.IAX;
 			st.dbg = in_st;
 			sts{end+1} = st;
 		end

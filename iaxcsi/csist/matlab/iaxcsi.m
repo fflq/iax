@@ -410,43 +410,23 @@ methods (Static)
 	end
 
 
-	function r = le_uint(s)
-		r = 0 ;
-		m = 1 ;
-		for i = 1:length(s)
-			r = r + s(i)*m ;
-			m = m*256 ;
-		end
-	end
-
-
-	function r = le_int(s)
-		r = iaxcsi.le_uint(s) ;
-		nbit = length(s)*8 ;
-		highest_bit = bitshift(1, nbit-1) ;
-		if bitand(r, highest_bit)
-			r = r - bitshift(1, nbit) ;
-		end
-	end
-
-
 	function hdr_st = get_csi_hdr_st(hdr_buf) 
 		hdr_st = struct() ;
 		hdr_st.buf = hdr_buf;
 
-		hdr_st.csi_len = iaxcsi.le_uint(hdr_buf(1:4)) ; 
-		hdr_st.ftm = uint32(iaxcsi.le_uint(hdr_buf(9:12))) ;
+		hdr_st.csi_len = endian.le32u(hdr_buf(1:4)) ; 
+		hdr_st.ftm = uint32(endian.le32u(hdr_buf(9:12))) ;
 		hdr_st.nrx = hdr_buf(47) ;
 		hdr_st.ntx = hdr_buf(48) ;
-		hdr_st.ntone = iaxcsi.le_uint(hdr_buf(53:56)) ;
+		hdr_st.ntone = endian.le32u(hdr_buf(53:56)) ;
 		hdr_st.rssi1 = -hdr_buf(61) ;
 		hdr_st.rssi2 = -hdr_buf(65) ;
 		hdr_st.smac = join(string(dec2hex(hdr_buf(69:74))),':') ;
-		hdr_st.seq = iaxcsi.le_uint(hdr_buf(77)) ;
-		hdr_st.us = uint64(iaxcsi.le_uint(hdr_buf(89:92))) ;
-		hdr_st.rnf = iaxcsi.le_uint(hdr_buf(93:96)) ;
+		hdr_st.seq = hdr_buf(77) ;
+		hdr_st.us = uint64(endian.le32u(hdr_buf(89:92))) ;
+		hdr_st.rnf = endian.le32u(hdr_buf(93:96)) ;
 		%custom
-		hdr_st.ts = iaxcsi.le_uint(hdr_buf(209:216));
+		hdr_st.ts = endian.le64u(hdr_buf(209:216));
 	end
 
 
@@ -457,12 +437,12 @@ methods (Static)
 
 		csi = zeros(hdr_st.nrx, hdr_st.ntx, hdr_st.ntone) ;
 		for rxidx = 1:hdr_st.nrx; for txidx = 1:hdr_st.ntx; for toneidx = 1:hdr_st.ntone
-				%imag = fread(f, 1, 'int16', 'l') ;
-				%real = fread(f, 1, 'int16', 'l') ;
-				imag = iaxcsi.le_int(csi_buf(pos:pos+1)) ;
-				real = iaxcsi.le_int(csi_buf(pos+2:pos+3)) ;
-				csi(rxidx, txidx, toneidx) = real + 1j*imag ;
-				pos = pos + 4 ;
+			%imag = fread(f, 1, 'int16', 'l') ;
+			%real = fread(f, 1, 'int16', 'l') ;
+			imag = double(endian.le16i(csi_buf(pos:pos+1))) ;
+			real = double(endian.le16i(csi_buf(pos+2:pos+3))) ;
+			csi(rxidx, txidx, toneidx) = real + 1j*imag ;
+			pos = pos + 4 ;
 		end; end; end
 	end
 

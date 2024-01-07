@@ -8,7 +8,7 @@ addpath("D:\Data\csi\iax-rx-hop");
 
 
 global recs rs;
-test_hdr_agc(); return;
+%test_hdr_agc(); return;
 
 %global gs
 %gs.subc_freq_range = -10e6:312.5e3:10e6;
@@ -21,19 +21,22 @@ filename = "";
 use_iax = false;
 use_iax = true;
 if use_iax
+	addpath("N:/winhome/data/");
 	filename = "attack_5m_20spm_130-3400.mat";
 	filename = "ax210_40vht160_split.mat";
 	filename = "ax210_40ht20_split.mat";
 	filename = "iax-40vht80vht160-5250.csi";
 	filename = "iax-40vht80vht80-5210.csi";
-	filename = "/flqtmp/perm/iax-40ht20-500us-sync4-air-ppo.csi";
 	filename = "/tmp/iax.csi";
 	filename = "ax210_40ht20_split.mat";
+	filename = "/flqtmp/perm/iax-40ht20-500us-sync4-air-ppo.csi";
+	filename = "N:/winhome/data/agc/iax-40ht20-hdr256-agc-wireless-wire.csi";
 	filename = "ax210_40ht20_split.csi";
 	filename = "ax210_40noht_split.csi";
 	filename = "ax210_40vht80_split.csi";
-	filename = "ax210_40vht160_split.csi";
 	filename = "ax210_40he160_split.csi";
+	filename = "ax210_40vht160_split.csi";
+	filename = "N:/winhome/data/perm/iax-40ht20-500us-sync4-air-ppo.csi";
 
 	sts = {}; 
 	[~,~,ext] = fileparts(filename);
@@ -47,8 +50,6 @@ if use_iax
 	end
 	sts = reproc_sts_iax(sts);
 else
-	filename = "in.csi";
-	filename = "in2.csi";
 	filename = "in-64ht40-add10m.csi";
 	filename = "in-64ht40-add15m.csi";
 	filename = "in-64ht40-add-0m-5m-10m-15m.csi";
@@ -62,6 +63,9 @@ else
 	filename = "/flqtmp/tof/incsi-64ht40-500us-7m-splitter.csi";
 	filename = "/flqtmp/tof/incsi-64ht40-1000us-7m-splitter.csi";
 	filename = "/flqtmp/tof/incsi-64ht40-200us-7m-splitter.csi";
+	filename = "in.csi";
+	filename = "in2.csi";
+	filename = "in-64ht40-add10m.csi";
 	sts = csietr().read_file(filename, csietr.Type.I53);
 	sts = reproc_sts_i53(sts);
 	sts = sts(10:end);
@@ -77,11 +81,24 @@ function foreach_sts(sts)
 
 		csi1 = squeeze(st.csi(1,1,:));
 		csi2 = squeeze(st.csi(1,2,:));
-		pw1 = sum(csi1' * csi1)/1e4;
-		pw2 = sum(csi2' * csi2)/1e4;
+		csi3 = squeeze(st.csi(1,end,:));
+		pw1 = sum(csi1' * csi1)/1e3;
+		pw2 = sum(csi2' * csi2)/1e3;
+		pw3 = sum(csi3' * csi3)/1e3;
+		%int32([st.perm, st.rssi, pw1, pw2])
+		%int32([st.perm, st.rssi, pw1, pw2, pw3])
+		%[st.rssi(1)-st.rssi(2), 10*log10(pw1/pw2)]
+		%[st.rssi(2)-st.rssi(3), 10*log10(pw2/pw3)]
+		%[st.rssi(1)-st.rssi(3), 10*log10(pw1/pw3)]
 		
-		test_perm_iax(st);
-		%test_ppo(st, csi1, csi2);
+		if st.type == csietr.Type.IAX
+			test_perm_iax(st);
+		else
+			test_perm_i53(st);
+		end
+		%disp(st); 
+		test_ppo(st);
+		pause;
 	end
 end
 
@@ -106,6 +123,7 @@ end
 function sts = reproc_sts_i53(sts)
 	bw = 40;
 	subcs = -58:58;
+	subcs = -58:4:58;
 	%phaoffs12 = load('phaoffs').phaoffs12;
     for i = 1:length(sts)
         st = sts{i};
@@ -173,8 +191,39 @@ function test_perm_iax(st)
 
 end
 
-function test_ppo(st, csi1, csi2)
-	ppos = wrapToPi(angle(csi2 .* conj(csi)));
+function test_perm_i53(st)
+	csi = st.csi;
+
+	%before_perm_csi = csi(:,st.perm,:);
+	%csi = csi(:,st.perm,:);
+	%test_ppo2(squeeze(csi(1,1,:)), squeeze(csi(1,2,:)));
+
+	csi1 = squeeze(csi(1,1,:));
+	csi2 = squeeze(csi(1,2,:));
+	csi3 = squeeze(csi(1,end,:));
+	pw1 = sum(csi1' * csi1)/1e1;
+	pw2 = sum(csi2' * csi2)/1e1;
+	pw3 = sum(csi3' * csi3)/1e1;
+	[pw1, pw2, pw3]
+	[v, fperm] = sort([pw1, pw2, pw3], 'descend');
+	%倒推perm而不是fw提供需要rssi不模糊
+	csi = csi(:,fperm,:);
+	%test_ppo2(squeeze(csi(1,1,:)), squeeze(csi(1,2,:)));
+	st.perm
+	fperm
+	if ~all(st.perm == fperm)
+		warning('* not equal');
+	end
+end
+
+function test_ppo(st)
+	csi1 = squeeze(st.csi(1,1,:));
+	csi2 = squeeze(st.csi(1,2,:));
+	test_ppo2(csi1, csi2);
+end
+
+function test_ppo2(csi1, csi2)
+	ppos = unwrap(angle(csi2 .* conj(csi1)));
 	figure(13); hold on; plot(ppos, '-o'); 
 end
 
