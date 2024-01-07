@@ -21,8 +21,8 @@ methods (Static)
 
 	% extra subc is part dc
 	function r = get_noextra_subc(ntone, ntone_data_plot)
-		half_extra = int32((ntone - ntone_data_plot) / 2) ;
-		half = int32(ntone / 2);
+		half_extra = floor((ntone - ntone_data_plot) / 2) ;
+		half = floor(ntone / 2);
 		r = union(1:half-half_extra, half+half_extra+1:ntone);
 	end
 

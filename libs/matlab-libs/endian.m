@@ -63,6 +63,43 @@ methods (Static)
         n = swapbytes(endian.le64i(s));
     end
 
+
+    %{
+	function r = leuint(s)
+        s = uint64(s);
+		r = uint64(0);
+		m = uint64(1);
+		for i = 1:length(s)
+			r = r + s(i)*m;
+			m = m*256;
+		end
+	end
+
+	function r = leint(s)
+        r = typecast(endian.leuint(s), 'int64');
+    end
+    %}
+
+    %{
+	function r = leuint(s)
+		r = 0;
+		m = 1;
+		for i = 1:length(s)
+			r = r + s(i)*m;
+			m = m*256;
+		end
+	end
+
+	function r = leint(s)
+		r = endian.leuint(s) ;
+		nbit = length(s)*8 ;
+		highest_bit = bitshift(1, nbit-1) ;
+		if bitand(r, highest_bit)
+			r = r - bitshift(1, nbit) ;
+		end
+	end
+    %}
+
 end
 
 end
