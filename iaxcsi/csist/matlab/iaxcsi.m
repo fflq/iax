@@ -285,6 +285,15 @@ methods (Static)
 		%plot(xs, unwrap(angle(tones)),':o'); hold on;
 	end
 
+	function st = perm_csi(st, new_perm)
+		if st.nrx < 2
+			warning("* nrx < 2");
+			return;
+		end
+		st.perm = new_perm;
+		st.csi(:,:,:) = st.csi(st.perm,:,:) ;
+		st.scsi(:,:,:) = st.scsi(st.perm,:,:) ;
+	end
 
 	function st = calib_csi_perm(st, hdr_buf)
 		if st.nrx < 2

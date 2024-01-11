@@ -1,6 +1,9 @@
 clear all;
 close all;
 
+%libs
+addpath("../../../libs/matlab-libs/");
+
 addpath('/flqtmp')
 paper_data_dir = 'C:/Users/flq/OneDrive/papers/iax/data/paper/';
 addpath(paper_data_dir);
@@ -11,6 +14,7 @@ addpath([algorithm_dir, 'music']);
 addpath([algorithm_dir, 'iaa']);
 addpath([algorithm_dir, 'spotfi']);
 addpath("/home/flq/ws/git/SpotFi");
+addpath("/flqtmp/wdata/perm/");
 
 addpath([paper_data_dir, 'aoa-ap']);
 
@@ -56,6 +60,9 @@ inputname='ax210-ap_ipad-60_iphone-60_149ht40_range200-900.csi'; use_net=false;
 gbeg = 200; gend = 900;
 inputname='ax210-ap_ipad-30_iphone30_149ht40_range200-1200.csi'; use_net=false;
 
+inputname='iax-40ht20-exchange-att-splitter.csi'; use_net=false;
+
+inputname='127.0.0.1:7120'; use_net = true;
 
 handle_all = true;
 handle_all = false;
@@ -68,10 +75,11 @@ end
 
 gn = 1 ;
 ax = [] ;
+sts = {};
 while true
 	try
 		if isempty(ax); ax = iaxcsi(inputname) ; end
-		st = ax.read_once() ;
+		st = ax.read_next() ;
 	catch ME
 		ME.identifier
 		if isempty(ax) || ax.test()
@@ -88,9 +96,10 @@ while true
 		%figure(3); close 3;
 	end
 	gn = gn + 1;
-	if gn < gbeg; continue; end
-	if gn > gend; break; end
+	%if gn < gbeg; continue; end
+	%if gn > gend; break; end
 
+	sts{end+1} = st;
 	handle_csist_func(st) ;
 end
 
@@ -113,7 +122,8 @@ function handle_csist_func(csist)
 	end
 	
 	csist
-	%csist = preprocess(csist) ; %nouse
+	csist = preprocess(csist) ; %nouse
+
 	%plot_attack(csist) ;
 	%plot_csi(csist.csi);
 	%plot_mag(csist) ;
@@ -344,9 +354,9 @@ end
 
 function [aoa1, aoa2] = do_aoa_ap(csist)
 	persistent aoas;
-	calc_aoa = @do_dbf ; algo_name = "dbf";
 	calc_aoa = @do_iaa ; algo_name = "iaa";
 	calc_aoa = @do_music ; algo_name = "music";
+	calc_aoa = @do_dbf ; algo_name = "dbf";
 	calc_aoa = @do_spotfi ; algo_name = "spotfi";
 
 	plot_phase_offset(csist) ;
@@ -361,10 +371,10 @@ function [aoa1, aoa2] = do_aoa_ap(csist)
 
 	fid = 11;
 	ch = char(csist.smac);
-	fid = hex2dec(ch(1:2));
+	%fid = hex2dec(ch(1:2));
 	plot_aoa(aoa1, fid, csist.smac, false, 'b'); 
 	plot_aoa(aoa2, fid, csist.smac, true, 'r'); 
-	pause
+	%pause
 
 	truthaoa = -60 ;
 	aoas(end+1) = min(abs(aoa1-truthaoa), abs(aoa2-truthaoa));
@@ -513,7 +523,7 @@ function aoa = do_spotfi(csist, music)
 	envs.ntone = csist.nstone ;
 	envs.ntone_sm = floor(envs.ntone/2) ;
 	envs.subc_idxs = csist.subc.subcs ;
-	%envs.pmufig = true;
+	envs.pmufig = true;
 	envs.niter = 1 ;
 	envs.music = music ;
 
@@ -598,8 +608,10 @@ function csist = calib_scsi_by_file(csist)
 	persistent phaoffs;
 	if isempty(phaoffs)
 		%savename = join(['/flqtmp/', csist.chan_type_str, 'phaoffs12.mat'], '')
-		savename = join([csist.chan_type_str, 'phaoffs12.mat'], '')
-		phaoffs = load(savename).phaoffs.';
+		%for paper
+		%savename = join([csist.chan_type_str, 'phaoffs12.mat'], '')
+		%phaoffs = load(savename).phaoffs.';
+		phaoffs = load("/flqtmp/wdata/perm/40ht20-ppo12.mat").ppo12;
 		%figure(29); plot(phaoffs);
 		fprintf("***** load phaoffs %f\n", mean(phaoffs)); %pause;
 	end
@@ -661,6 +673,15 @@ end
 
 
 function csist = preprocess(csist)
+	if abs(csist.rssi(1)-csist.rssi(2)) < 2; csist = []; return; end
+
+	if csist.rssi(2) > csist.rssi(1)
+		fprintf("* rssi2 > rssi1, perm[2,1]");
+		csist = iaxcsi.perm_csi(csist, [2,1]);
+	end
+
+	return
+
 	for itx = 1:csist.ntx
 		for irx = 1:csist.nrx
 			subc0 = csist.scsi(irx,itx,ceil(end/2));
@@ -722,6 +743,13 @@ end
 
 function r = csi_filter(csist)
 	r = false;
+
+	if (csist.nrx < 2); return; end
+	if abs(csist.rssi(1)-csist.rssi(2)) < 2; return; end
+
+	r = true;
+	return;
+
 	if (csist.nrx < 2); return; end
 	if (csist.ntx < 2); return; end
 	%test
@@ -840,10 +868,12 @@ function plot_phase_offset(csist)
 	scsi = squeeze(csist.scsi(:,1,:)) ;
 	phaoff12 = unwrap(angle( scsi(2,:) .* conj(scsi(1,:)) )) ;  
 	avg_phaoff12 = mean(phaoff12);
+	%{
     while avg_phaoff12 < -pi/2
         avg_phaoff12 = avg_phaoff12 + 2*pi;
         phaoff12 = phaoff12 + 2*pi;
 	end
+	%}
 	fprintf("* phaoff12 %f\n", mean(phaoff12))
 	%phaseoffs(end+1) = mean(phaoff12) ;
 	%phaseoffs(end+1) = phaoff12(1) ;
@@ -852,7 +882,7 @@ function plot_phase_offset(csist)
 	%Util.plot_realtime1(1, phaseoffs) ;
 	fid = 3;
 	ch = char(csist.smac);
-	fid = hex2dec(ch(1));
+	%fid = hex2dec(ch(1));
 	figure(fid); hold on;
 	plot(csist.subc.subcs, phaoff12, 'LineWidth',2) ;
 	title(csist.smac);

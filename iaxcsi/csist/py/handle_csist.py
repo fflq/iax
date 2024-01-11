@@ -190,7 +190,7 @@ def plot_attack(csist: csi_st):
 
 
 gploty = [0]
-def plot_phase_offset(csist: csi_st, adjust=False):
+def plot_phase_offset(csist: csi_st, fid = 13, adjust=False):
     csi = csist.csi
     subcs = np.arange(csist.ntone)-csist.ntone/2
     csi = csist.scsi
@@ -215,7 +215,7 @@ def plot_phase_offset(csist: csi_st, adjust=False):
         pass
         #input('-change')
     '''
-    plt.figure(13)
+    plt.figure(fid)
     sns.lineplot(x=subcs, y=phaoff12)
     #sns.lineplot(x=subcs, y=-phaoff12)
 
@@ -428,6 +428,22 @@ def preprocess(csist: csi_st):
     #return calib_by_tof_sant(csist)
 
 
+def do_perm(csist: csi_st):
+    plot_phase_offset(csist, 21)
+
+    #发现offs=0时perm12貌似可以, filter=(0,1]
+    if abs(csist.rssi1 - csist.rssi2) < 2:
+        print("* skip offs(rssi)<2")
+        return
+
+    if csist.rssi2 > csist.rssi1:
+        iaxcsi_st.perm_csi(csist, np.array([2,1]))
+        print("---")
+        #input("---")
+    plot_phase_offset(csist, 22)
+    #input("--")
+
+
 gn = 0
 def iaxcsist_callback(iaxcsist: iaxcsi_st):
     csist = iaxcsist.csist
@@ -442,7 +458,7 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
     #preprocess(csist)
     #plot_mag(csist, gn)
     #plot_phase(csist)
-    plot_phase_offset(csist)
+    #plot_phase_offset(csist)
     #plot_attack(csist)
     #plot_cir(csist)
     #plot_ft(csist)
@@ -450,6 +466,7 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
     #dl_test_phase_offset(csist)
     #do_spotfi(csist)
     #send_csist(iaxcsist); #time.sleep(1) 
+    do_perm(csist)
     #return 
     
 
@@ -463,7 +480,7 @@ def iaxcsist_callback(iaxcsist: iaxcsi_st):
         #plt.clf()
         pass
 
-    input()
+    #input()
 
 
 

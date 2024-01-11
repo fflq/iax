@@ -295,6 +295,13 @@ class iaxcsi_st:
 
         self.csist.test_perm = int(csi_hdr[180])
 
+
+    def perm_csi(csist, new_perm):
+        csist.perm = new_perm
+        for i in range(csist.ntx):
+            #pass; print("*********** pass perm")
+            csist.scsi[:,i] = csist.scsi[csist.perm-1,i]
+
  
     #def fit_csi(self, tones, xs):
     def fit_csi(tones, xs):
@@ -312,5 +319,4 @@ class iaxcsi_st:
         tones = mag*np.exp(1j*pha)
         return [k,b,tones]
         return pha
-
 
