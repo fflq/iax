@@ -39,6 +39,8 @@ if use_iax
 	filename = "N:/winhome/data/perm/iax-40ht20-rx-diff-cable-len.csi";
 	filename = "ax210_40ht20_split.csi";
 	filename = "N:/winhome/data/perm/iax-40ht20-500us-sync4-air-ppo.csi";
+	filename = "N:/winhome/data/perm/iax-40ht20-sync4-ppo-splitter.csi";
+	filename = "N:/winhome/data/perm/iax-40ht20-sync4-ppo-air.csi";
 
 	sts = {}; 
 	[~,~,ext] = fileparts(filename);
@@ -94,7 +96,8 @@ function foreach_sts(sts)
 		%[st.rssi(1)-st.rssi(3), 10*log10(pw1/pw3)]
 		
 		if st.type == csietr.Type.IAX
-			test_perm_iax(st);
+			%test_perm_iax(st);
+			test_ppo_iax(st);
 		else
 			test_perm_i53(st);
 		end
@@ -146,6 +149,74 @@ function sts = reproc_sts_i53(sts)
     end
 end
 
+function test_ppo_iax(st)
+	st = st.dbg;
+	%csi = st.scsi;
+	%csi1 = squeeze(csi(1,1,:));
+	%csi2 = squeeze(csi(2,1,:));
+
+	if abs(st.rssi(1) - st.rssi(2)) < 2
+		fprintf("* skip\n");
+		return;
+	end
+	%test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 23, 'r-*');
+	is_perm21 = st.rssi(1) < st.rssi(2);
+	if is_perm21
+		warning("* perm21");
+		st = iaxcsi.perm_csi(st, [2,1]);
+	end
+	test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 13, 'b-o');
+
+	csi = st.scsi;
+	csi1 = squeeze(csi(1,1,:));
+	csi2 = squeeze(csi(2,1,:));
+	ppo = mean(unwrap(angle(squeeze(csi2 .* conj(csi1)))))
+
+	fc = 5.2e9;
+	bw = st.chan_width; 
+	subcs = 1:length(st.subc.subcs); scale = 1e6; df = 312.5e3;
+	subcs = st.subc.subcs; scale = 1e6; df = 312.5e3;
+	len = length(subcs);
+	[fks, fc_idx] = csiutils.get_subc_freq_range(fc, bw, len);
+	subcs = fks; scale = 1e9; df = 1;
+	%subcs
+	%figure(11); plot(unwrap(angle(csi1)), 'r-o'); hold on;
+	%plot(unwrap(angle(csi2)), 'b-o'); hold on;
+
+	[k1, b1, ~] = csiutils.fit_csi_phase(csi1, subcs);
+	k1 = k1/df;
+	b1 = wrapToPi(b1);
+	[k2, b2, ~] = csiutils.fit_csi_phase(csi2, subcs);
+	k2 = k2/df;
+	b2 = wrapToPi(b2);
+	[k1*scale, k2*scale]
+	[b1, b2]
+	db = wrapToPi(b2-b1)
+	dpdd = (k2-k1)/(-2*pi)
+
+	%for fks, detail in goodnotes
+	%test ok for splitter cond. ok for nice-air
+	if ~all(subcs == fks)
+		warning("* subcs ~= fks, not fks, skip calc_db ops");
+		return;
+	end
+	real_ppo = 2.2;
+	real_ppo = 2;
+	calc_db = 2*pi*fc*dpdd + real_ppo;
+	calc_db = wrapToPi(calc_db)
+	%calc_db == db ok
+
+	if abs(wrapToPi(calc_db - db)) > pi/2
+		warning("* abs(calc_db - db) > pi/2, add pi");
+		calc_db_addpi = wrapToPi(calc_db + pi)
+		calc_db = calc_db_addpi;
+	end
+	persistent dboffs;
+	if isempty(dboffs); dboffs = []; end 
+	dboffs(end+1) = wrapToPi(calc_db - db);
+	utils.plot_realtime1(31, dboffs);
+end
+
 function test_perm_iax(st)
 	%ppos = unwrap(angle(csi2 .* conj(csi)));
 	%[k, b, ~] = csiutils.fit_csi_phase(ppos, st.subcs);
@@ -168,14 +239,14 @@ function test_perm_iax(st)
 	pw2 = sum(power(abs(csi(2,1,:)), 2))/1e4 ;
 	%pw1 = sum(abs(csi(1,1,:)));
 	%pw2 = sum(abs(csi(2,1,:)));
-	[111, st.rssi(1), st.rssi(2), pw1, pw2]
+	[111, st.rssi(1), st.rssi(2), pw1, pw2, st.woff]
 
 	ppos = unwrap(angle(csi2 .* conj(csi1)));
 	z = polyfit(1:length(ppos), ppos, 1) ;
 	[z(1), z(2), mean(ppos)]
 
 	if abs(st.rssi(1) - st.rssi(2)) < 2
-		%return;
+		return;
 	end
 	test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 23, 'r-*');
 	is_perm21 = z(1) > 0;

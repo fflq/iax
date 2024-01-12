@@ -237,6 +237,7 @@ methods (Static)
 
 	function st = fill_csist(hdr_st, rnf_st, csi)
 		st = struct() ;
+		st = hdr_st ; %fflqtest
 
 		st.smac = hdr_st.smac ;
 		st.seq = hdr_st.seq ;
@@ -257,8 +258,8 @@ methods (Static)
 		st.ntx = hdr_st.ntx ;
 		st.ntone = hdr_st.ntone ;
 		st.csi_len = hdr_st.csi_len ;
-
 		st.csi = csi ;
+
 		st = iaxcsi.calib_csi_subcs(st) ;
 		st = iaxcsi.calib_csi_perm(st, hdr_st.buf) ;
 	end
@@ -436,6 +437,9 @@ methods (Static)
 		hdr_st.rnf = endian.le32u(hdr_buf(93:96)) ;
 		%custom
 		hdr_st.ts = endian.le64u(hdr_buf(209:216));
+		hdr_st.w1 = endian.le16u(hdr_buf(249:250)) + hdr_buf(261) + endian.le16u(hdr_buf(265:266));
+		hdr_st.w2 = endian.le16u(hdr_buf(249+4:250+4)) + hdr_buf(261+2) + endian.le16u(hdr_buf(265+2:266+2));
+		hdr_st.woff = double(hdr_st.w2) - double(hdr_st.w1);
 	end
 
 
