@@ -155,6 +155,10 @@ function test_ppo_iax(st)
 	%csi1 = squeeze(csi(1,1,:));
 	%csi2 = squeeze(csi(2,1,:));
 
+	%csiutils.plot_cir(squeeze(st.scsi(1,1,:)), st.chan_width, 11, '-o', true);
+	%csiutils.plot_cir(squeeze(st.scsi(2,1,:)), st.chan_width, 11, '-o', false);
+
+	%{
 	if abs(st.rssi(1) - st.rssi(2)) < 2
 		fprintf("* skip\n");
 		return;
@@ -165,12 +169,25 @@ function test_ppo_iax(st)
 		warning("* perm21");
 		st = iaxcsi.perm_csi(st, [2,1]);
 	end
-	test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 13, 'b-o');
+	%}
+	st = iaxcsi.calib_csi_perm(st);
+	if isempty(st); return; end
+	test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 33, '-o');
+
+	real_ppo = 1.8336;
+	real_ppo = 0.8336;
+	st = iaxcsi.calib_csi_dppo_qtr_lambda(st, [-0.007,real_ppo]);
+	test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 43, '-o');
+
+	st
+	return;
 
 	csi = st.scsi;
 	csi1 = squeeze(csi(1,1,:));
 	csi2 = squeeze(csi(2,1,:));
-	ppo = mean(unwrap(angle(squeeze(csi2 .* conj(csi1)))))
+	ppos = (unwrap(angle(squeeze(csi2 .* conj(csi1)))));
+	ppo = mean(ppos)
+	%figure(13); hold on; plot(ppos, 'r-o'); 
 
 	fc = 5.2e9;
 	bw = st.chan_width; 
@@ -178,19 +195,24 @@ function test_ppo_iax(st)
 	subcs = st.subc.subcs; scale = 1e6; df = 312.5e3;
 	len = length(subcs);
 	[fks, fc_idx] = csiutils.get_subc_freq_range(fc, bw, len);
-	subcs = fks; scale = 1e9; df = 1;
+	%subcs = fks; scale = 1e9; df = 1;
 	%subcs
 	%figure(11); plot(unwrap(angle(csi1)), 'r-o'); hold on;
 	%plot(unwrap(angle(csi2)), 'b-o'); hold on;
 
 	[k1, b1, ~] = csiutils.fit_csi_phase(csi1, subcs);
+	[k2, b2, ~] = csiutils.fit_csi_phase(csi2, subcs);
+	[k3, b3, ~] = csiutils.fit_csi_phase(csi2.*conj(csi1), subcs);
+
+	[k1*scale, k2*scale, k3*scale]
 	k1 = k1/df;
 	b1 = wrapToPi(b1);
-	[k2, b2, ~] = csiutils.fit_csi_phase(csi2, subcs);
 	k2 = k2/df;
 	b2 = wrapToPi(b2);
-	[k1*scale, k2*scale]
-	[b1, b2]
+	k3 = k3/df;
+	b3 = wrapToPi(b3);
+	[k1*scale, k2*scale, k3*scale]
+	[b1, b2, b3]
 	db = wrapToPi(b2-b1)
 	dpdd = (k2-k1)/(-2*pi)
 
@@ -248,16 +270,16 @@ function test_perm_iax(st)
 	if abs(st.rssi(1) - st.rssi(2)) < 2
 		return;
 	end
-	test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 23, 'r-*');
+	%test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 23, 'r-*');
 	is_perm21 = z(1) > 0;
 	is_perm21 = st.rssi(1) < st.rssi(2);
 	if is_perm21
 		warning("* perm21");
 		st = iaxcsi.perm_csi(st, [2,1]);
 	end
-	test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 13, 'b-o');
+	test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 13, '-o');
 
-	figure(22); hold off; plot(abs(csi1),'r-o'); hold on; plot(abs(csi2),'b-o');
+	%figure(22); hold off; plot(abs(csi1),'r-o'); hold on; plot(abs(csi2),'b-o');
 	%figure(21); hold on; plot(ppos,'-o'); 
 	return;
 
