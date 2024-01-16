@@ -259,9 +259,10 @@ methods (Static)
 		st.ntone = hdr_st.ntone ;
 		st.csi_len = hdr_st.csi_len ;
 		st.csi = csi ;
+		st.perm = 1:st.nrx;
 
 		st = iaxcsi.calib_csi_subcs(st) ;
-		st = iaxcsi.calib_csi_perm(st, hdr_st.buf) ;
+		%st = iaxcsi.calib_csi_perm(st) ; %call by hand
 	end
 
 
@@ -286,21 +287,84 @@ methods (Static)
 		%plot(xs, unwrap(angle(tones)),':o'); hold on;
 	end
 
+	%ppos or [k,b]
+	function [st, w] = calib_csi_dppo_qtr_lambda(st, plus_ppos)
+		st.dppow = 0;
+
+		if st.nrx < 2
+			st.dppow = 1;
+			return;
+		end
+
+		%convert [k,b] to ppos
+		if length(plus_ppos) == 2
+			ppos_kb = plus_ppos;
+			plus_ppos = ppos_kb(1)*st.subc.subcs + ppos_kb(2);
+		end
+		if isrow(plus_ppos); plus_ppos = plus_ppos.'; end
+		%[ppo1,ppo2] => [exp(1j*ppo1),exp(1j*ppo2)]
+		if isreal(plus_ppos); plus_ppos = exp(1j*plus_ppos); end
+
+		%judge ppo12 by subc0
+		csi1 = squeeze(st.scsi(1,1,:));
+		csi2 = squeeze(st.scsi(2,1,:));
+		subc0_idx = find(st.subc.subcs == 0);
+		subc0_po = angle(csi2(subc0_idx) .* conj(csi1(subc0_idx)));
+		po_to_ppo = wrapToPi(subc0_po - angle(plus_ppos(subc0_idx)));
+
+		%judge if hop pi under qtr lambda ant dist
+		is_hop_pi = false;
+		if abs(po_to_ppo) > pi/2
+			warning("** abs(po_to_ppo(%.2f)) > pi/2, hop pi\n", po_to_ppo);
+			is_hop_pi = true;
+		end
+		%calc dppo right weight, maxw for 0 or pi, for [-pi/2,pi/2], [pi/2,3pi/2]
+		w = 1 - abs(wrapToPi(po_to_ppo - double(is_hop_pi)*pi)) / (pi/2);
+		st.dppow = w;
+
+		%minus pi
+		%wrong, need calib plus_ppos first, then judge extra pi.
+		dppo_ppos = plus_ppos * exp(-1j*double(is_hop_pi)*pi); 
+		for i = 1:st.ntx
+			st.scsi(2,i,:) = squeeze(st.scsi(2,i,:)) .* conj(dppo_ppos);
+			%st.csi(2,i,:) = squeeze(st.csi(2,i,:)) .* conj(dppo_ppos);
+		end
+	end
+
 	function st = perm_csi(st, new_perm)
 		if st.nrx < 2
 			warning("* nrx < 2");
 			return;
 		end
 		st.perm = new_perm;
-		st.csi(:,:,:) = st.csi(st.perm,:,:) ;
 		st.scsi(:,:,:) = st.scsi(st.perm,:,:) ;
+		%st.csi(:,:,:) = st.csi(st.perm,:,:) ;
 	end
 
-	function st = calib_csi_perm(st, hdr_buf)
+	function st = calib_csi_perm(st)
+		st.permw = 0;
 		if st.nrx < 2
+			st.perm = [1];
+			st.permw = 1;
 			return;
 		end
-		st.perm = [1,2] ;
+		st.permw = min(1, abs(st.rssi(1) - st.rssi(2))/10);
+
+		if abs(st.rssi(1) - st.rssi(2)) < 2
+			fprintf("* cannot perm, skip\n");
+			st.perm = [0,0] ;
+			st = [];
+			return;
+		end
+
+		%st.perm = [1,2] ;
+		is_perm21 = st.rssi(1) < st.rssi(2);
+		if is_perm21 && all(st.perm == [1,2])
+			warning("** perm21");
+			st = iaxcsi.perm_csi(st, [2,1]);
+		end
+
+		return;
 
 		csi = squeeze(st.scsi(1,1,:));
 		csi2 = squeeze(st.scsi(2,1,:));
