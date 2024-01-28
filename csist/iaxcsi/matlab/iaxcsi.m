@@ -146,12 +146,24 @@ methods (Static)
 		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,1]); end
 
 		st = iaxcsi.calib_csi_perm(st);
-		if isempty(st); return; end
+		if ~iaxcsi.is_calib_perm_valid(st); return; end
 		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,2]); end
 
 		st = iaxcsi.calib_csi_dppo_qtr_lambda(st, plus_ppos);
-		if st.dppow < 0.2; return; end
+		if ~iaxcsi.is_calib_dppo_valid(st); return; end
 		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,3]); end
+	end
+
+	function r = is_calib_perm_valid(st)
+		r = st.permw >= 0.2;
+	end
+
+	function r = is_calib_dppo_valid(st)
+		r = st.dppow >= 0.2;
+	end
+
+	function r = is_calib_valid(st)
+		r = iaxcsi.is_calib_perm_valid(st) && iaxcsi.is_calib_dppo_valid(st);
 	end
 
 	%ppos or [k,b]
@@ -209,22 +221,21 @@ methods (Static)
 	end
 
 	function st = calib_csi_perm(st)
+		st.perm = [1, 2] ;
 		st.permw = 0;
 		if st.nrx < 2
 			st.perm = [1];
 			st.permw = 1;
 			return;
 		end
-		st.permw = min(1, abs(st.rssi(1) - st.rssi(2))/10);
 
 		if abs(st.rssi(1) - st.rssi(2)) < 2
 			fprintf("* cannot perm, skip\n");
-			st.perm = [0,0] ;
-			st = [];
+			st.permw = 0;
 			return;
 		end
 
-		%st.perm = [1,2] ;
+		st.permw = min(1, abs(st.rssi(1) - st.rssi(2))/10);
 		is_perm21 = st.rssi(1) < st.rssi(2);
 		if is_perm21 && all(st.perm == [1,2])
 			warning("** perm21");
@@ -368,9 +379,11 @@ methods (Static)
 		hdr_st.rnf = endian.le32u(hdr_buf(93:96)) ;
 		%custom
 		hdr_st.ts = endian.le64u(hdr_buf(209:216));
+		%{
 		hdr_st.w1 = endian.le16u(hdr_buf(249:250)) + double(hdr_buf(261)) + endian.le16u(hdr_buf(265:266));
 		hdr_st.w2 = endian.le16u(hdr_buf(249+4:250+4)) + double(hdr_buf(261+2)) + endian.le16u(hdr_buf(265+2:266+2));
 		hdr_st.woff = double(hdr_st.w2) - double(hdr_st.w1);
+		%}
 	end
 
 

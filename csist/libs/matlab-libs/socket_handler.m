@@ -65,7 +65,7 @@ methods (Access='public')
     function reconn(self)
         self.reconn_count = self.reconn_count + 1;
         self.close();
-        pause(min(self.reconn_count, 60));
+        pause(min(self.reconn_count, self.timeout));
 
         fprintf("* reconn no.%d: %s\n", self.reconn_count, self.addr);
         try
@@ -129,16 +129,28 @@ methods (Access='public')
     function buf = read(self, count)
         %use custom timeout, not read/write timeout
         timeout = self.timeout;
+        n = 1;
         while self.sbuf.len < count
-            fprintf("* read wait buf(%d/%d)\n", self.sbuf.len, count);
+            if n == 1
+                fprintf("* wait read buf(%d/%d) ", self.sbuf.len, count);
+            elseif ~mod(n, 50)
+                fprintf(".\n");
+            else
+                fprintf(".");
+            end
+            n = n + 1;
             pause(1);
 
-            timeout = timeout - 1;
-            if timeout < 0
-                self.reconn();
-                timeout = self.timeout;
+            %reconn for client
+            if ~self.is_server
+                timeout = timeout - 1;
+                if timeout < 0
+                    self.reconn();
+                    timeout = self.timeout;
+                end
             end
         end
+        fprintf("\n");
         buf = self.sbuf.read(count);
     end
 

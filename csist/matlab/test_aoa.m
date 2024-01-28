@@ -5,16 +5,20 @@ addpath("../libs/matlab-libs");
 addpath("../algorithm/iaa");
 addpath("/home/flq/ws/git/SpotFi");
 
+%{
 calib_file = "/flqtmp/wdata/in/ppo/incsi-64ht20-ppo.mat";
 ppo = load(calib_file).ppo.ppo;
 [11, mean(ppo.ppo12), mean(ppo.ppo13)]
 %ppo.ppo12 = ppo.ppo12 - pi;
 ppo.ppo13 = ppo.ppo13 - pi;
 [22, mean(ppo.ppo12), mean(ppo.ppo13)]
+%}
 
 iax_calib_file = "/flqtmp/wdata/ppo/iax-13ht20-ppo.mat";
 iax_calib_file = "iax-13ht20-ppo.mat";
+iax_calib_file = "sre8-iax-13ht20-ppo.mat";
 iax_ppo = load(iax_calib_file);
+ppo = iax_ppo;
 
 global gs;
 gs.ppo = ppo;
@@ -27,12 +31,12 @@ aoas = [];
 if is_realtime
 	input_name = "tcp-server:127.0.0.1:7120"; csi_type = csietr.Type.I53;
 	input_name = "/tmp/iax.csi"; csi_type = csietr.Type.IAX;
-	input_name = "tcp-client:127.0.0.1:7120"; csi_type = csietr.Type.IAX;
+	input_name = "tcp-server:0.0.0.0:7120"; csi_type = csietr.Type.IAX;
 	s = csietr(input_name, csi_type);
 	%s.set("debug", true);
 
 	while ~s.is_end()
-		st = s.read_next()
+		st = s.read_next();
 		sts{end+1} = st;
 
     	%[-2,-1.4]
@@ -40,11 +44,16 @@ if is_realtime
     		st = csietr.calib_ppo(st, ppo.ppo12, ppo.ppo13);
 		else
 			gs.fc = 2.472e9;
-			gs.d = 0.028;
+			gs.d = 0.026;
 			[mean(iax_ppo.ppo12)]
 			%csiutils.plot_ppo12(st.csi(1,:,:));
 			st = iaxcsi.calib_csi_perm_ppo_qtr_lambda(st.dbg, iax_ppo.ppo12, true);
-			if isempty(st); continue; end
+			if ~iaxcsi.is_calib_valid(st); continue; end
+			%{
+			st = iaxcsi.calib_csi_perm(st.dbg);
+			if ~iaxcsi.is_calib_perm_valid(st); continue; end
+			%}
+			st
 			st = s.convert_csist(st);
 		end
 		%handle_st(st);
@@ -72,10 +81,12 @@ function handle_st(st)
 end
 
 function aoa = do_aoa(st)
-	aoa_func = @do_iaa ; algo_name = "iaa";
 	aoa_func = @do_spotfi ; algo_name = "spotfi";
+	aoa_func = @do_iaa ; algo_name = "iaa";
     aoa = aoa_func(st);
+	aoa = -aoa;
     csiutils.plot_aoa(aoa, 15, algo_name);
+    csiutils.plot_aoa(mod(aoa-90,180), 15, algo_name, true, 'r');
 end
 
 function aoa = do_spotfi(st)

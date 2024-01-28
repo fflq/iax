@@ -42,6 +42,9 @@ methods (Static)
     end
 
     function plot_ppo(csi1, csi2, fid, hold_off, spec)
+        persistent n;
+        if isempty(n); n = 1; end
+        n = n + 1;
         if nargin < 3; fid = 13; end
         if nargin < 4; hold_off = false; end
         if nargin < 5; spec = "-o"; end
@@ -59,6 +62,7 @@ methods (Static)
             set(gcf, 'Position', sz);
         end
         if ~hold_off;  hold on; end
+        if ~mod(n, 100); hold off; end
         ppo = unwrap(angle(squeeze(csi2 .* conj(csi1))));
         plot(ppo, spec);
         %ylim([-pi, pi]*1.2);

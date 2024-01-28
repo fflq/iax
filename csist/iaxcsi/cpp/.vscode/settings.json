@@ -1,0 +1,16 @@
+{
+    "C_Cpp.default.cppStandard": "c++20",
+    "C_Cpp.default.includePath": [
+        "/usr/include/c++/9",
+        "/usr/include/libnl3"
+    ],
+    "files.associations": {
+        "ranges": "cpp",
+        "functional": "cpp",
+        "mutex": "cpp",
+        "condition_variable": "cpp",
+        "charconv": "cpp",
+        "tuple": "cpp",
+        "string_view": "cpp"
+    },
+}
