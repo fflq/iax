@@ -10,7 +10,7 @@ methods (Access='public')
     function self = io_handler_base()
     end
 
-    function buf = read(self, count)
+    function buf = read(self, len)
 		warning("** read_next need impl\n");
     end
 

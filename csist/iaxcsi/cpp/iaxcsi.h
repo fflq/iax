@@ -1,7 +1,6 @@
 #ifndef _IAXCSI_H_
 #define _IAXCSI_H_
 
-
 static map<uint32_t, string> g_mod_type_map = {
 	{RATE_MCS_CCK_MSK, "CCK"}, 
 	{RATE_MCS_LEGACY_OFDM_MSK, "NOHT"}, 
@@ -101,9 +100,5 @@ struct flq_nl_sock
 	struct nl_cb *s_cb;
 	size_t s_bufsize;
 };
-
-
-
-
 
 #endif

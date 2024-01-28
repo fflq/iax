@@ -32,18 +32,18 @@ methods (Static)
     end
 
 
-    function plot_ppo12(csi, fid, hold_on, spec)
+    function plot_ppo12(csi, fid, hold_off, spec)
         if nargin < 2; fid = 13; end
-        if nargin < 3; hold_on = false; end
+        if nargin < 3; hold_off = false; end
         if nargin < 4; spec = "-o"; end
         
         csi = squeeze(csi);
-        csiutils.plot_ppo(csi(2,:), csi(1,:), fid, hold_on, spec);
+        csiutils.plot_ppo(csi(2,:), csi(1,:), fid, hold_off, spec);
     end
 
-    function plot_ppo(csi1, csi2, fid, hold_on, spec)
+    function plot_ppo(csi1, csi2, fid, hold_off, spec)
         if nargin < 3; fid = 13; end
-        if nargin < 4; hold_on = false; end
+        if nargin < 4; hold_off = false; end
         if nargin < 5; spec = "-o"; end
         
         if size(fid) == 1
@@ -58,12 +58,36 @@ methods (Static)
             sz(4) = fid(1)*szh; 
             set(gcf, 'Position', sz);
         end
-        if hold_on;  hold on; end
+        if ~hold_off;  hold on; end
         ppo = unwrap(angle(squeeze(csi2 .* conj(csi1))));
         plot(ppo, spec);
         %ylim([-pi, pi]*1.2);
 		pause(0.0001);
     end
+
+    function plot_mag(csi, fid, hold_off, spec)
+        if nargin < 2; fid = 21; end
+        if nargin < 3; hold_off = false; end
+        if nargin < 4; spec = "-o"; end
+        
+        if size(fid) == 1
+            figure(fid);
+        else
+            figure(21);
+            subplot(fid(1), fid(2), fid(3));
+            szw = 600;
+            szh = 350;
+            sz = get(gcf, 'Position');
+            sz(3) = fid(2)*szw;
+            sz(4) = fid(1)*szh; 
+            set(gcf, 'Position', sz);
+        end
+        if ~hold_off;  hold on; end
+        plot(abs(squeeze(csi).'), spec);
+        %ylim([-pi, pi]*1.2);
+		pause(0.0001);
+    end
+
 
 
     %{

@@ -2,11 +2,11 @@
 classdef csietr < csi_handler_base
 
 properties (Constant)
-    Type = struct('I53', 1, 'IAX', 2, 'MAX', 5);
+    Type = struct('NONE', 0, 'I53', 1, 'IAX', 2, 'MAX', 5);
 end
 
 properties (Access='public')
-	type = csietr.Type.I53;
+	type = csietr.Type.NONE;
 	csi_handler = [];
 	%type map
 	csi_handler_func_map = [];
@@ -16,15 +16,15 @@ end
 methods (Access='public')
 
 	function self = csietr(input_name, type)
-		self@csi_handler_base(); % empty base
+		self@csi_handler_base(input_name, true); % empty base
 
-		if nargin < 2; type = csietr.Type.I53; end
+		if nargin < 2; type = csietr.Type.NONE; end
 		self.input_name = input_name;
 		self.type = type;
 
 		self.build_func_map();
 
-		self.csi_handler = self.csi_handler_func();
+		self.csi_handler = self.get_csi_handler();
 		%self.io_handler = self.csi_handler.io_handler;
 	end
 
@@ -52,26 +52,25 @@ methods (Access='public')
 		self.convert_csist_func_map{csietr.Type.IAX} = @self.convert_from_st_iax;
 	end
 
-	function r = csi_handler_func(self)
+	function r = get_csi_handler(self)
 		r = self.csi_handler_func_map{self.type}(self.input_name);
 	end
 
-	function st = convert_csist_func(self, st)
+	function st = convert_csist(self, st)
 		st = self.convert_csist_func_map{self.type}(st);
 	end
 
-	function st = read_st(self, buf)
-		st = self.csi_handler.read_st(buf);
-		st = self.convert_csist_func(st);
+	function sts = convert_csists(self, in_sts)
+		sts = {};
+		for i = 1:length(in_sts)
+			in_st = in_sts{i};
+			sts{end+1} = self.convert_csist(in_st);
+		end
 	end
 
 	function st = read_next(self)
 		st = self.csi_handler.read_next();
-		st = self.convert_csist_func(st);
-		try
-		catch ME
-			ME.identifier
-		end
+		st = self.convert_csist(st);
 	end
 
 	function st = convert_from_st_i53(self, in_st)
@@ -97,6 +96,8 @@ methods (Access='public')
 		st = csist();
 		st.seq = in_st.seq;
 		st.us = in_st.us;
+		st.ts = in_st.ts;
+		st.datetime = in_st.datetime;
 		st.rnf = in_st.rnf;
 		st.ntx = in_st.ntx;
 		st.nrx = in_st.nrx;

@@ -19,7 +19,7 @@ methods (Access='public')
     end
 
     function delete(self)
-        warning("** socket_handler");
+        warning("** file_handler");
         self.close();
     end
 

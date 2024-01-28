@@ -9,6 +9,7 @@ properties (Access='public')
 	seq = -1;
 	us = -1; 
 	ts = -1;
+	datetime = [];
 	protocol = -1;
 	bw = -1; 
 	chan = -1;
