@@ -20,7 +20,7 @@ using namespace std ;
 
 #include "iwl_fw_api_rs.h"
 #include "iaxcsi.h"
-#include "tcp_client.h"
+#include "tcp_server.h"
 
 #define DEBUG
 #ifdef DEBUG
@@ -34,7 +34,7 @@ FILE *g_fp_csi = NULL ;
 struct nl_cb *gcb = NULL ;
 unsigned int gportid = 0;
 int gdevidx = -1 ;
-shared_ptr<iaxcsi::TcpClient> g_tcp_client = nullptr ;
+tcp_server *p_tcp_server = nullptr ;
 
 
 void call_iwl_mvm_vendor_csi_register(struct nl_sock *sk, int family_id)
@@ -149,7 +149,7 @@ void handle_csi(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi_da
 	fflush(g_fp_csi) ;
 
 	// send to net
-	g_tcp_client->send(buf, pos) ;
+	p_tcp_server->broadcast(buf, pos) ;
 
 	// decompose csi_hdr
 	csi_hdr_t *pch = (p_csi_hdr_t)csi_hdr ;
@@ -262,20 +262,23 @@ void loop_recv_msg(struct nl_sock *sk)
 void handle_args(int argc, char **argv)
 {
 	if (argc < 3) {
-		flqstdout("Usage: sudo %s wlan file [addr]\n- wlan: eg wlp8s0\n- file: eg ./a.csi\n"
+		flqstdout("Usage: sudo %s wlan file\n- wlan: eg wlp8s0\n- file: eg ./a.csi\n"
 				"* eg: sudo %s wlp8s0 ./a.csi\n", argv[0], argv[0]) ;
 		exit(EXIT_FAILURE) ;
 	}
-
-	gdevidx = if_nametoindex(argv[1]) ;
-	g_fp_csi = fopen(argv[2], "w") ;
-	if (!gdevidx || !g_fp_csi) {
-		flqstdout("* args err(%s), devidx(%d) fp_csi(%p)\n", strerror(errno), gdevidx, g_fp_csi) ;
-		exit(EXIT_FAILURE) ;
+	else {
+ 		gdevidx = if_nametoindex(argv[1]) ;
+		g_fp_csi = fopen(argv[2], "w") ;
+		if (!gdevidx || !g_fp_csi) {
+			flqstdout("* args err(%s), devidx(%d) fp_csi(%p)\n", strerror(errno), gdevidx, g_fp_csi) ;
+			exit(EXIT_FAILURE) ;
+		}
+		flqstdout("* %s, %s/%d %s\n", __func__, argv[1], gdevidx, argv[2]) ;
 	}
 
-	if (argc > 3) {
-		g_tcp_client = std::make_shared<iaxcsi::TcpClient>(argv[3]);
+	if (!(p_tcp_server = new tcp_server(7120))) {
+		flqstdout("* tcp_server err") ;
+		exit(EXIT_FAILURE) ;
 	}
 }
 
@@ -340,7 +343,6 @@ int main(int argc, char **argv)
 	loop_recv_msg(sk) ;
 	
 	deinit() ;
-	std::cerr << "mmmmmmmmmmmm" << std::endl;
 
 	return 0 ;
 }
