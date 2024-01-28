@@ -3,9 +3,13 @@ close all;
 
 input_name = "/flqtmp/i53/i53_phaoffs.csi";
 input_name = "/tmp/in.csi";
-input_name = "tcp-server:127.0.0.1:7120";
-s = csietr(input_name, csietr.Type.I53);
-s.set("debug", true);
+input_name = "tcp-server:127.0.0.1:7120"; csi_type = csietr.Type.I53;
+input_name = "tcp-client:127.0.0.1:7120"; csi_type = csietr.Type.IAX;
+s = csietr(input_name, csi_type);
+%s.set("debug", true);
+
+calib_file = "/flqtmp/wdata/ppo/iax-13ht20-ppo.mat";
+ppo12 = load(calib_file).ppo12;
 
 ppo12s = [];
 ppo13s = [];
@@ -15,6 +19,8 @@ while ~s.is_end()
     csi1 = squeeze(st.csi(1,1,:));
     csi2 = squeeze(st.csi(1,2,:));
     csi3 = squeeze(st.csi(1,end,:));
+
+	%st = iaxcsi.calib_csi_perm_ppo_qtr_lambda(st.dbg, ppo12, true); continue;
 
     %mag
     %figure(11); hold off; plot(abs(squeeze(st.csi(1,:,:)).')); legend("1", "2", "3");

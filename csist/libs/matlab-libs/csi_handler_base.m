@@ -4,27 +4,33 @@ libs: file_handler, tcp_client_handler, endian, csiutils, csi_handler_interface
 
 classdef csi_handler_base < handle
 
+properties (Constant)
+	%IoType = struct("NONE", 0, "FILE", 1, "MAT", 2, "SOCKET", 3, "MAX", 5);
+	IoType = struct("NONE", 0, "FILE", 1, "SOCKET", 2, "MAX", 5);
+end
+
 properties (Access='public')
-	input_name = "";
+	input_name = [];
 	io_handler = [];
-	is_net = false ;
+	io_type = csi_handler_base.IoType.NONE;
+	io_handler_func_map = [];
 	debug = false;
+	no_io_handler = false;
 end
 
 methods (Access='public')
 
-	function self = csi_handler_base(input_name, debug)
-		if nargin < 1
-			fprintf("* nop csi_handler_base\n");
-			return;
-		end
+	function self = csi_handler_base(input_name, no_io_handler)
 		if nargin < 2
-			debug = false;
+			fprintf("* not create io handler\n");
+			no_io_handler = false;
 		end
 
 		self.input_name = input_name;
-		self.debug = debug;
-		self.build_io_handler();
+		self.no_io_handler = no_io_handler;
+		if ~self.no_io_handler
+			self.io_handler = self.get_io_handler();
+		end
 	end
 
 	function delete(self)
@@ -45,25 +51,39 @@ methods (Access='public')
         end
     end
 
-	function build_io_handler(self)
-			if contains(self.input_name, ':') && ~contains(self.input_name, '/')
-				self.is_net = true;
-				self.io_handler = socket_handler(self.input_name);
-			else
-				self.is_net = false;
-				self.io_handler = file_handler(self.input_name);
-			end
-		try
-		catch ME
-			ME.identifier
-			%self = [];
-		end
-
+	function build_func_map(self)
+		self.io_handler_func_map = cell(1, csi_handler_base.IoType.MAX);
+		self.io_handler_func_map{csi_handler_base.IoType.FILE} = @file_handler;
+		self.io_handler_func_map{csi_handler_base.IoType.SOCKET} = @socket_handler;
 	end
 
+	function r = get_io_handler(self)
+		if self.io_type == csi_handler_base.IoType.NONE
+			self.judge_io_type();
+		end
+		if isempty(self.io_handler_func_map)
+			self.build_func_map();
+		end
+		r = self.io_handler_func_map{self.io_type}(self.input_name);
+	end
+
+	function judge_io_type(self)
+		if contains(self.input_name, ':') && ~contains(self.input_name, '/')
+			self.io_type = csi_handler_base.IoType.SOCKET;
+		else
+			self.io_type = csi_handler_base.IoType.FILE;
+		end
+	end
+
+	%{
+	function st = read_st(self, buf)
+		st = [] ;
+		warning("** read_st need impl\n");
+	end
+	%}
 
 	function st = read_next(self)
-		st = []; len = 0;
+		st = []; 
 		warning("** read_next need impl\n");
 	end
 
@@ -71,9 +91,9 @@ methods (Access='public')
 		if (nargin < 2); save_name = '' ; end
 
 		sts = {} ;
-		while ~self.io_handler.is_end()
+		while ~self.is_end()
 			st = self.read_next();
-			if isempty(st); break; end
+			if isempty(st); continue; end
 
 			sts{end+1} = st ;
 
@@ -100,16 +120,6 @@ methods (Access='public')
 			sts = load(cached_mat).sts ;
 		else
 			sts = self.read(cached_mat);
-		end
-	end
-
-	function st = read_st(self, buf)
-		pos = 1 ;
-		st = [] ;
-		try
-			warning("** read_st need impl\n");
-		catch ME
-			ME.identifier
 		end
 	end
 

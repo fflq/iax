@@ -143,15 +143,15 @@ methods (Static)
 
 	function st = calib_csi_perm_ppo_qtr_lambda(st, plus_ppos, do_plot)
 		if nargin < 3; do_plot = false; end
-		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,1], true); end
+		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,1]); end
 
 		st = iaxcsi.calib_csi_perm(st);
 		if isempty(st); return; end
-		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,2], true); end
+		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,2]); end
 
 		st = iaxcsi.calib_csi_dppo_qtr_lambda(st, plus_ppos);
 		if st.dppow < 0.2; return; end
-		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,3], true); end
+		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,3]); end
 	end
 
 	%ppos or [k,b]
@@ -292,7 +292,6 @@ methods (Static)
 			st.ntone = size(st.csi, 3) ;
 		end
 
-
 		subc = subcarry.get_subc(st.chan_type_str) ;
 		scsi = zeros(st.nrx, st.ntx, subc.subcs_len) ; % add for dc
 		data_pilot_dc_tones = zeros(1, subc.subcs_len) ;
@@ -358,11 +357,11 @@ methods (Static)
 
 		hdr_st.csi_len = endian.le32u(hdr_buf(1:4)) ; 
 		hdr_st.ftm = uint32(endian.le32u(hdr_buf(9:12))) ;
-		hdr_st.nrx = hdr_buf(47) ;
-		hdr_st.ntx = hdr_buf(48) ;
-		hdr_st.ntone = endian.le32u(hdr_buf(53:56)) ;
-		hdr_st.rssi1 = -hdr_buf(61) ;
-		hdr_st.rssi2 = -hdr_buf(65) ;
+		hdr_st.nrx = double(hdr_buf(47)) ;
+		hdr_st.ntx = double(hdr_buf(48)) ;
+		hdr_st.ntone = double(endian.le32u(hdr_buf(53:56))) ;
+		hdr_st.rssi1 = -double(hdr_buf(61)) ;
+		hdr_st.rssi2 = -double(hdr_buf(65)) ;
 		hdr_st.smac = join(string(dec2hex(hdr_buf(69:74))),':') ;
 		hdr_st.seq = hdr_buf(77) ;
 		hdr_st.us = uint64(endian.le32u(hdr_buf(89:92))) ;

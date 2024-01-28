@@ -41,6 +41,7 @@ if use_iax
 	filename = "N:/winhome/data/perm/iax-40ht20-500us-sync4-air-ppo.csi";
 	filename = "N:/winhome/data/perm/iax-40ht20-sync4-ppo-splitter.csi";
 	filename = "N:/winhome/data/perm/iax-40ht20-sync4-ppo-air.csi";
+	filename = "tcp-client:127.0.0.1:7120"; 
 
 	sts = {}; 
 	[~,~,ext] = fileparts(filename);
@@ -50,7 +51,9 @@ if use_iax
 	else
 		once = true;
 		once = false;
-		sts = csietr().read_file(filename, csietr.Type.IAX, once);
+		s = csietr(filename, csietr.Type.IAX);
+		s.set("debug", true);
+		sts = s.read();
 	end
 	sts = reproc_sts_iax(sts);
 else
@@ -174,9 +177,10 @@ function test_ppo_iax(st)
 	if isempty(st); return; end
 	test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 33, '-o');
 
-	real_ppo = 1.8336;
-	real_ppo = 0.8336;
-	st = iaxcsi.calib_csi_dppo_qtr_lambda(st, [-0.007,real_ppo]);
+	ppo12 = [-0.007, 0.8336];
+	calib_file = "/flqtmp/wdata/ppo/iax-13ht20-ppo.mat";
+	ppo12 = load(calib_file).ppo12;
+	st = iaxcsi.calib_csi_dppo_qtr_lambda(st, ppo12);
 	test_ppo2(squeeze(st.scsi(1,1,:)), squeeze(st.scsi(2,1,:)), 43, '-o');
 
 	st

@@ -53,6 +53,8 @@ void call_iwl_mvm_vendor_csi_register(struct nl_sock *sk, int family_id)
   	nla_put_u32(msg, NL80211_ATTR_VENDOR_ID, INTEL_OUI); 
   	nla_put_u32(msg, NL80211_ATTR_VENDOR_SUBCMD, IWL_MVM_VENDOR_CMD_CSI_EVENT); 
 	//nla_put(msg, NL80211_ATTR_VENDOR_DATA, 0, NULL) ;
+#undef INTEL_OUI
+#undef IWL_MVM_VENDOR_CMD_CSI_EVENT
 
 	int r = nl_send_auto(sk, msg);
 	flqstdout("%s, send return %d\n", __func__, r) ;
@@ -193,6 +195,8 @@ static int valid_cb(struct nl_msg *msg, void *arg)
 
 		nmsg_csi_hdr = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_HDR] ;
 	 	nmsg_csi_data = nested_tb_msg[IWL_MVM_VENDOR_ATTR_CSI_DATA] ;
+#undef IWL_MVM_VENDOR_ATTR_CSI_HDR
+#undef IWL_MVM_VENDOR_ATTR_CSI_DATA
 		if (nmsg_csi_hdr && nmsg_csi_data) {
 			flqstdout("-- (nla_type,nla_len) csi_hdr(%x,%u-4) csi_data(%x,%u-4)\n", 
 					nmsg_csi_hdr->nla_type, nmsg_csi_hdr->nla_len,
