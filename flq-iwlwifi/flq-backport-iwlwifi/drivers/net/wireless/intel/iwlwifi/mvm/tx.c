@@ -4,6 +4,8 @@
  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
  * Copyright (C) 2016-2017 Intel Deutschland GmbH
  */
+#include <linux/flq-dbg.h>
+#include "flq-mvm.h"
 #include <linux/ieee80211.h>
 #include <linux/etherdevice.h>
 #include <linux/tcp.h>
@@ -348,8 +350,8 @@ static u32 iwl_mvm_get_tx_rate(struct iwl_mvm *mvm,
 		/* Force OFDM on each TX packet */
 		rate_idx = IWL_FIRST_OFDM_RATE;
 #endif
-		//fflq, ax210 no be here
-		//printk("***fflq iwl_mvm_get_tx_rate, rate_idx=%04x\n", rate_idx) ;
+		//fflq, ax210 not be here
+		//flq_dbgi_fl("rate_idx=%04x", rate_idx) ;
 	}
 
 	/* if the rate isn't a well known legacy rate, take the lowest one */
@@ -372,7 +374,7 @@ static u32 iwl_mvm_get_tx_rate(struct iwl_mvm *mvm,
 		rate_flags |= RATE_MCS_CCK_MSK_V1;
 	}
 	//fflq, here is 0x0000 | 0x0100
-	//printk("***fflq iwl_mvm_get_tx_rate, rate_plcp=%04x rate_flags=%04x\n", (u32)rate_plcp, rate_flags) ;
+	//flq_dbgi_fl("rate_plcp=%04x rate_flags=%04x", (u32)rate_plcp, rate_flags) ;
 
 	return (u32)rate_plcp | rate_flags;
 }
@@ -568,7 +570,7 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
 			//rate_n_flags = 0xd400 ; //fflqkey he80 err
 			rate_n_flags = 0xc400 | RATE_MCS_LDPC_MSK | RATE_MCS_SGI_MSK ;
 			*/
-			//printk("***fflq iwl_mvm_set_tx_params, rate_n_flags=%04x, tx_rate123|ants4\n", rate_n_flags) ;
+			//flq_dbgi_fl("rate_n_flags=%04x, tx_rate123|ants4\n", rate_n_flags) ;
 		}
 
 		if (mvm->trans->trans_cfg->device_family >=
@@ -615,7 +617,7 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
 	iwl_mvm_set_tx_cmd(mvm, skb, tx_cmd, info, sta_id);
 
 	iwl_mvm_set_tx_cmd_rate(mvm, tx_cmd, info, sta, hdr->frame_control);
-	//printk("***fflq iwl_mvm_set_tx_params, txcmd->rate_n_flags=%04x\n", tx_cmd->rate_n_flags) ;
+	//flq_dbgi_fl("txcmd->rate_n_flags=%04x\n", tx_cmd->rate_n_flags) ;
 
 	/* Copy MAC header from skb into command buffer */
 	memcpy(tx_cmd->hdr, hdr, hdrlen);
@@ -740,46 +742,6 @@ out:
 	rcu_read_unlock();
 }
 
-
-
-/*
- * fflq set custom monitor tx rate
- */
-static void iwl_mvm_set_flq_monitor_tx_rate(struct iwl_mvm *mvm, struct sk_buff *skb,
-		      struct ieee80211_tx_info *info, struct iwl_device_tx_cmd *dev_cmd)
-{
-	static int flqcnt = 0 ;
-
-	if (info->control.vif->type != NL80211_IFTYPE_MONITOR || 
-			!mvm->flq_monitor_tx_rate) 
-		return ;
-
-	if (flqcnt++ % 10000 == 0)
-		printk(KERN_ERR "***fflq %s, rate_n_flags=monitor_tx_rate=%08x\n", 
-				__func__, mvm->flq_monitor_tx_rate) ;
-
-	if (iwl_mvm_has_new_tx_api(mvm)) {
-		if (mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {
-			struct iwl_tx_cmd_gen3 *tx_cmd = (void *)dev_cmd->payload;
-
-			tx_cmd->flags |= IWL_TX_FLAGS_CMD_RATE;
-			tx_cmd->rate_n_flags = cpu_to_le32(mvm->flq_monitor_tx_rate);
-		} 
-		else {
-			struct iwl_tx_cmd_gen2 *tx_cmd = (void *)dev_cmd->payload;
-
-			tx_cmd->flags |= IWL_TX_FLAGS_CMD_RATE;
-			tx_cmd->rate_n_flags = cpu_to_le32(mvm->flq_monitor_tx_rate);
-		}
-	}
-	else {
-		struct iwl_tx_cmd *tx_cmd = (struct iwl_tx_cmd *)dev_cmd->payload;
-		tx_cmd->tx_flags |= TX_CMD_FLG_STA_RATE ; //same as IWL_TX_FLAGS_CMD_RATE
-		tx_cmd->rate_n_flags = cpu_to_le32(mvm->flq_monitor_tx_rate);
-	}
-}
-
-
 int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
 {
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
@@ -861,7 +823,7 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
 	dev_cmd = iwl_mvm_set_tx_params(mvm, skb, &info, hdrlen, NULL, sta_id);//fflqinj
 	if (!dev_cmd)
 		return -1;
-	iwl_mvm_set_flq_monitor_tx_rate(mvm, skb, &info, dev_cmd) ;
+	flq_iwl_mvm_set_monitor_tx_rate(mvm, skb, &info, dev_cmd) ;
 
 	/* From now on, we cannot access info->control */
 	iwl_mvm_skb_prepare_status(skb, dev_cmd);//fflqinj

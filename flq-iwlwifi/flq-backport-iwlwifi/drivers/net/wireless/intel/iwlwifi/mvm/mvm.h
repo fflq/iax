@@ -7,6 +7,8 @@
 #ifndef __IWL_MVM_H__
 #define __IWL_MVM_H__
 
+#include <linux/flq-dbg.h>
+#include "flq-mvm.h"
 #include <linux/list.h>
 #include <linux/spinlock.h>
 #include <linux/leds.h>
@@ -1215,9 +1217,7 @@ struct iwl_mvm {
 		u8 range_resp;
 	} cmd_ver;
 
-	//fflq_add
-	u32 flq_monitor_tx_rate ;
-	u8 flq_src_mac[ETH_ALEN], flq_dst_mac[ETH_ALEN] ;
+	struct flq_iwl_mvm_res flq_res ;
 
 	struct ieee80211_vif *nan_vif;
 	struct iwl_mvm_baid_data __rcu *baid_map[IWL_MAX_BAID];

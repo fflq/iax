@@ -1745,7 +1745,7 @@ next_queue:
 static int iwl_trans_txq_send_hcmd_sync(struct iwl_trans *trans,
 					struct iwl_host_cmd *cmd)
 {
-	//printk("***fflq iwl_trans_txq_send_hcmd_sync\n") ;
+	//flq_dbgi_fl();
 	const char *cmd_str = iwl_get_cmd_string(trans, cmd->id);
 	struct iwl_txq *txq = trans->txqs.txq[trans->txqs.cmd.q_id];
 	int cmd_idx;
@@ -1762,7 +1762,7 @@ static int iwl_trans_txq_send_hcmd_sync(struct iwl_trans *trans,
 
 	//fflq .send_cmd = iwl_pcie_gen2_enqueue_hcmd
 	cmd_idx = trans->ops->send_cmd(trans, cmd);
-	//printk("***fflq iwl_trans_txq_send_hcmd_sync, send_cmd=%d 5g35 2g32", cmd_idx) ;
+	//flq_dbgi_fl("send_cmd=%d 5g35 2g32", cmd_idx) ;
 	if (cmd_idx < 0) {
 		ret = cmd_idx;
 		clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);
@@ -1839,7 +1839,7 @@ cancel:
 int iwl_trans_txq_send_hcmd(struct iwl_trans *trans,
 			    struct iwl_host_cmd *cmd)
 {
-	//printk("***fflq iwl_trans_txq_send_hcmd\n") ;
+	//flq_dbgi_fl();
 	/* Make sure the NIC is still alive in the bus */
 	if (test_bit(STATUS_TRANS_DEAD, &trans->status))
 		return -ENODEV;

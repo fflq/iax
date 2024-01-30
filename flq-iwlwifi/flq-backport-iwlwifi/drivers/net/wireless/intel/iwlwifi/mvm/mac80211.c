@@ -4,6 +4,7 @@
  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
  * Copyright (C) 2016-2017 Intel Deutschland GmbH
  */
+#include <linux/flq-dbg.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/skbuff.h>
@@ -191,7 +192,7 @@ struct ieee80211_regdomain *iwl_mvm_get_regdomain(struct wiphy *wiphy,
 	mvm->lar_regdom_set = true;
 	mvm->mcc_src = src_id;
 
-	printk("***fflq iwl_mvm_get_regdomain, iwl_mei_set_country_code(%d)", resp->mcc) ;
+	flq_dbgi_fl("iwl_mei_set_country_code(%d)", resp->mcc) ;
 	iwl_mei_set_country_code(__le16_to_cpu(resp->mcc));
 
 out:
@@ -812,7 +813,7 @@ void iwl_mvm_mac_tx(struct ieee80211_hw *hw,
 	//fflq
 	/*
 	if (info->control.vif->type == NL80211_IFTYPE_MONITOR) {
-		printk("***fflq iwl_mvm_mac_tx, type=MONITOR, fc=%04x\n", hdr->frame_control) ;
+		flq_dbgi_fl("type=MONITOR, fc=%04x\n", hdr->frame_control) ;
 	}
 	*/
 
@@ -1277,7 +1278,7 @@ static void iwl_mvm_restart_complete(struct iwl_mvm *mvm)
 	//fflq, resend csi_cmd if csi_enabled before fw_restart
 	if (mvm->csi_cfg.flags & IWL_CHANNEL_ESTIMATION_ENABLE) {
 		int err = iwl_mvm_send_csi_cmd(mvm);
-		printk(KERN_ERR "***fflq %s, iwl_mvm_send_csi_cmd=%d\n", __func__, err) ;
+		flq_dbge_fl("iwl_mvm_send_csi_cmd=%d\n", err) ;
 	}
 #endif
 
@@ -2941,10 +2942,10 @@ bool iwl_mvm_start_ap_ibss_common(struct ieee80211_hw *hw,
 				  struct ieee80211_vif *vif,
 				  int *ret)
 {
-	printk(KERN_ERR "***fflq iwl_mvm_start_ap_ibss_common\n") ;
 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
 	int i;
+	flq_dbge_fl();
 
 	lockdep_assert_held(&mvm->mutex);
 
@@ -2983,10 +2984,10 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
 				 struct ieee80211_vif *vif,
 				 struct ieee80211_bss_conf *link_conf)
 {
-	printk(KERN_ERR "***fflq iwl_mvm_start_ap_ibss\n") ;
 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
 	int ret;
+	flq_dbge_fl();
 
 	mutex_lock(&mvm->mutex);
 
@@ -3026,7 +3027,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
 
 	/* Perform the binding */
 	ret = iwl_mvm_binding_add_vif(mvm, vif); //fflq crash -5 here
-	printk("***fflq %s, iwl_mvm_binding_add_vif=%d\n", __func__, ret) ;
+	flq_dbgi_fl("iwl_mvm_binding_add_vif=%d", ret) ;
 	if (ret)
 		goto out_remove;
 

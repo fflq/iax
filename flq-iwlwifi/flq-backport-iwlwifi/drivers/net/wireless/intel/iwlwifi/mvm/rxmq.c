@@ -4,6 +4,8 @@
  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
  * Copyright (C) 2015-2017 Intel Deutschland GmbH
  */
+#include <linux/flq-dbg.h>
+#include "flq-mvm.h"
 #include <linux/etherdevice.h>
 #include <linux/skbuff.h>
 #include "iwl-trans.h"
@@ -274,9 +276,7 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
 	rx_status->chain_signal[0] = energy_a;
 	rx_status->chain_signal[1] = energy_b;
 
-	static int flqcnt = 0 ;
-	if (flqcnt++ % 100000 == 0)
-	printk("***fflq rxmq.c iwl_mvm_get_signal_strength, energyABMax(%d,%d,%d), chains(%u)\n",
+	flqn_dbgi(10000, "energyABMax(%d,%d,%d), chains(%u)",
 			energy_a, energy_b, max_energy, rx_status->chains);
 }
 
@@ -2152,13 +2152,9 @@ static void iwl_mvm_rx_fill_status(struct iwl_mvm *mvm,
 		break;
 	}
 
-	/*
-	static int flqcnt = 0 ;
-	if (flqcnt++ % 10000 == 0)
-		//0xc100 0x0100 0x0
-		printk(KERN_ERR "***fflq iwl_mvm_rx_fill_status, rate_n_flags=%04x, format=%04x, switch=%04x\n", 
-				rate_n_flags, format, (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK)) ;
-				*/
+	//0xc100 0x0100 0x0
+	flqn_dbge(10000, "(%s), rate_n_flags=%04x, format=%04x, switch=%04x\n", 
+			__func__, rate_n_flags, format, (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK)) ;
 
 	/* must be before L-SIG data */
 	if (format == RATE_MCS_HE_MSK)
@@ -2248,46 +2244,6 @@ static bool iwl_mvm_is_valid_packet_channel(struct ieee80211_rx_status *rx_statu
 }
 
 
-/* 
- * can see that consistent during csi-hdr/chunk, and csi'mac is invalid
-[36800.967908] ****fflq flq_record_macs, cc:2d:21:d4:7:91
-[36800.991893] ****fflq flq_record_macs, 20:82:1a:28:3:10
-[36800.991960] ****fflq iwl_mvm_rx_csi_header, 0:0:fe:0:0:8
-[36800.991972] ****fflq iwl_mvm_rx_csi_chunk, fb:ff:5a:ff:d6:ff
-[36800.991982] ****fflq iwl_mvm_rx_csi_chunk, idx/num, 1/2
-[36800.991990] ****fflq iwl_mvm_rx_csi_chunk, 37:0:b6:ff:20:0
-[36800.991999] ****fflq iwl_mvm_rx_csi_chunk, idx/num, 2/2
-[36800.995844] ****fflq flq_record_macs, 66:5c:8:cd:18:11
-[36800.995892] ****fflq flq_record_macs, 60:2f:33:c:3:10
- * can see it works
-[37296.943687] ****fflq iwl_mvm_csi_complete, flq_mac 66:5c:8:cd:18:11
-[37296.943699] ****fflq iwl_mvm_csi_complete, csi_hdr 66:5c:8:cd:18:11
-[37297.060271] ****fflq iwl_mvm_csi_complete, flq_mac 20:82:1a:28:3:10
-[37297.060284] ****fflq iwl_mvm_csi_complete, csi_hdr ef:be:ad:de:ad:de
-[37297.201618] ****fflq iwl_mvm_csi_complete, flq_mac 66:5c:8:cd:18:11
-[37297.201631] ****fflq iwl_mvm_csi_complete, csi_hdr ef:be:ad:de:ad:de
- */
-//fflqkey record_macs
-void flq_record_macs(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
-{
-	struct iwl_rx_packet *pkt = rxb_addr(rxb);
-	struct iwl_rx_mpdu_desc *desc = (void *)pkt->data;
-	struct ieee80211_hdr *hdr;
-	size_t desc_size;
-
-	if (mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
-		desc_size = sizeof(*desc);
-	else
-		desc_size = IWL_RX_DESC_SIZE_V1;
-
-	hdr = (void *)(pkt->data + desc_size);
-	u8 *dst_mac = hdr->addr1, *src_mac = hdr->addr2 ; //fflq key, get mac
-	memcpy(mvm->flq_src_mac, src_mac, ETH_ALEN);
-	memcpy(mvm->flq_dst_mac, dst_mac, ETH_ALEN);
-	u8 *mac = mvm->flq_src_mac;
-	//printk("****fflq %s, %x:%x:%x:%x:%x:%x\n", __func__, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-}
-
 //fflqkeykey
 void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 			struct iwl_rx_cmd_buffer *rxb, int queue)
@@ -2307,19 +2263,16 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 	u32 format;
 
 	/*
-	static int flqcnt = 0 ;
-	if (flqcnt++ % 10000 == 0)
-		printk(KERN_ERR "***fflq iwl_mvm_rx_mpdu_mq, (%x,%x)\n", pkt->hdr.group_id, pkt->hdr.cmd) ;
-		*/
-	//u8 *mac = mvm->time_sync.peer_addr; //000
-	//printk("****fflq %s, %x:%x:%x\n", __func__, mac[0], mac[1], mac[2]);
-	//mac = mvm->addresses[0].addr; //ifconfig mac
-	//printk("****fflq %s, %x:%x:%x\n", __func__, mac[0], mac[1], mac[2]);
-	//u8 *mac = mvm->last_phy_info.non_cfg_phy;
+	flqn_dbge(10000, "(%s), (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
+	u8 *mac = mvm->time_sync.peer_addr; //000
+	flqn_dbge(10000, "(%s), %x:%x:%x\n", __func__, mac[0], mac[1], mac[2]);
+	mac = mvm->addresses[0].addr; //ifconfig mac
+	flqn_dbge(10000, "(%s), %x:%x:%x\n", __func__, mac[0], mac[1], mac[2]);
+	u8 *mac = mvm->last_phy_info.non_cfg_phy;
 	/*
 	struct iwl_rx_phy_info *phy_info = &mvm->last_phy_info;
-	printk(KERN_ERR "### uts%llu, sts%llu, ts%llu, %d, %d\n", 
-		0, phy_info->system_timestamp, phy_info->timestamp,   
+	flqn_dbge(10000, "(%s), uts%llu, sts%llu, ts%llu, %d, %d\n", 
+		__func__, 0, phy_info->system_timestamp, phy_info->timestamp,   
 		phy_info->cfg_phy_cnt, phy_info->non_cfg_phy_cnt);
 	*/
 
@@ -2384,11 +2337,11 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 	phy_data.d4 = desc->phy_data4;
 
 	/*
-	printk("***fflq %s, energy(%d,%d) d(%d,%d,%d,%d) cfg_phy_cnt(%d) non_cfg_phy_cnt(%d)\n",
-		   	__func__, phy_data.energy_a, phy_data.energy_b,
+	flq_dbgi_fl("energy(%d,%d) d(%d,%d,%d,%d) cfg_phy_cnt(%d) non_cfg_phy_cnt(%d)",
+		   	phy_data.energy_a, phy_data.energy_b,
 			phy_data.d0, phy_data.d1, phy_data.d2, phy_data.d3,
 			mvm->last_phy_info.cfg_phy_cnt, mvm->last_phy_info.non_cfg_phy_cnt);
-			*/
+	*/
 
 	hdr = (void *)(pkt->data + desc_size);
 	/* Dont use dev_alloc_skb(), we'll have enough headroom once
@@ -2632,7 +2585,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 		iwl_mvm_pass_packet_to_mac80211(mvm, napi, skb, queue, sta,
 						link_sta);
 
-	flq_record_macs(mvm, rxb);
+	flq_mvm_record(mvm, rxb);
 
 out:
 	rcu_read_unlock();
@@ -2651,10 +2604,7 @@ void iwl_mvm_rx_monitor_no_data(struct iwl_mvm *mvm, struct napi_struct *napi,
 	struct iwl_mvm_rx_phy_data phy_data;
 	u32 format;
 
-	static int flqcnt = 0 ;
-	if (flqcnt++ % 10000 == 0)
-		printk(KERN_ERR "***fflq iwl_mvm_rx_monitor_no_data, (%x,%x)\n", 
-				pkt->hdr.group_id, pkt->hdr.cmd) ;
+	flqn_dbge(10000, "(%x,%x)\n", pkt->hdr.group_id, pkt->hdr.cmd) ;
 
 	if (unlikely(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
 		return;
@@ -2663,7 +2613,7 @@ void iwl_mvm_rx_monitor_no_data(struct iwl_mvm *mvm, struct napi_struct *napi,
 		return;
 
 	rssi = le32_to_cpu(desc->rssi);
-	//printk(KERN_ERR "***fflq %s, rssi %d\n", __func__, rssi) ; //iwl_mvm_rx_monitor_no_data
+	//flq_dbge_fl("rssi %d\n", rssi) ; //iwl_mvm_rx_monitor_no_data
 	info_type = le32_to_cpu(desc->info) & RX_NO_DATA_INFO_TYPE_MSK;
 	phy_data.d0 = desc->phy_info[0];
 	phy_data.d1 = desc->phy_info[1];

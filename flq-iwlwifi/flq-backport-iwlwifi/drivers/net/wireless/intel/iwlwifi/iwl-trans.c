@@ -4,6 +4,7 @@
  * Copyright (C) 2016-2017 Intel Deutschland GmbH
  * Copyright (C) 2019-2021 Intel Corporation
  */
+#include <linux/flq-dbg.h>
 #include <linux/kernel.h>
 #include <linux/bsearch.h>
 
@@ -185,7 +186,7 @@ int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
 	}
 
 	ret = iwl_trans_txq_send_hcmd(trans, cmd);
-	//printk(KERN_ERR "***fflq %s, iwl_trans_txq_send_hcmd=%d\n", __func__, ret) ;
+	//flq_dbge_fl("iwl_trans_txq_send_hcmd=%d\n", ret) ;
 
 	if (!(cmd->flags & CMD_ASYNC))
 		lock_map_release(&trans->sync_cmd_lockdep_map);

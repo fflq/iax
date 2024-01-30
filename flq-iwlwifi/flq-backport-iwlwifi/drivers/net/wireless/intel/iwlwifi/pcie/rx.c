@@ -4,6 +4,7 @@
  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
  * Copyright (C) 2016-2017 Intel Deutschland GmbH
  */
+#include <linux/flq-dbg.h>
 #include <linux/sched.h>
 #include <linux/wait.h>
 #include <linux/gfp.h>
@@ -1952,7 +1953,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
 
 	/* Error detected by uCode */
 	if (inta & CSR_INT_BIT_SW_ERR) { //fflqkey
-		printk(KERN_ERR "******fflq %s:%d sw err", __func__, __LINE__) ;
+		flq_dbge_fl("sw err");
 		IWL_ERR(trans, "Microcode SW error detected. "
 			" Restarting 0x%X.\n", inta);
 		isr_stats->sw++;
@@ -2284,7 +2285,7 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
 
 	/* Error detected by uCode */
 	if ((inta_fh & MSIX_FH_INT_CAUSES_FH_ERR) || sw_err) {
-		printk(KERN_ERR "******fflq %s:%d sw err", __func__, __LINE__) ;
+		flq_dbge_fl("sw err");
 		IWL_ERR(trans,
 			"Microcode SW error detected. Restarting 0x%X.\n",
 			inta_fh);

@@ -6,6 +6,7 @@
  */
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
+#include <linux/flq-dbg.h>
 #include <linux/module.h>
 #include <linux/pci.h>
 #include <linux/acpi.h>
@@ -1649,7 +1650,7 @@ static int iwl_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
 		 pdev->device, pdev->subsystem_device,
 		 iwl_trans->hw_rev, iwl_trans->hw_rf_id);
 
-	printk(KERN_ERR "******** %s %d", __func__, __LINE__);
+	flq_dbge_fl();
 	dev_info = iwl_pci_find_dev_info(pdev->device, pdev->subsystem_device,
 					 CSR_HW_REV_TYPE(iwl_trans->hw_rev),
 					 iwl_trans->hw_rev_step,
@@ -1864,7 +1865,7 @@ static struct pci_driver iwl_pci_driver = {
 
 int __must_check iwl_pci_register_driver(void)
 {
-	printk(KERN_ERR "******** %s %d", __func__, __LINE__);
+	flq_dbge_fl();
 	int ret;
 	ret = pci_register_driver(&iwl_pci_driver);
 	if (ret)

@@ -3,6 +3,7 @@
  * Copyright (C) 2017 Intel Deutschland GmbH
  * Copyright (C) 2018-2022 Intel Corporation
  */
+#include <linux/flq-dbg.h>
 #include "rs.h"
 #include "fw-api.h"
 #include "sta.h"
@@ -34,7 +35,7 @@ static u8 rs_fw_set_active_chains(u8 chains)
 		fw_chains |= IWL_TLC_MNG_CHAIN_A_MSK;
 	if (chains & ANT_B)
 		fw_chains |= IWL_TLC_MNG_CHAIN_B_MSK;
-	printk("***fflq chains(%u) fw_chains(%u)\n", chains, fw_chains) ;
+	flq_dbgi_fl("chains(%u) fw_chains(%u)\n", chains, fw_chains) ;
 
 	return fw_chains;
 }

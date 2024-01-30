@@ -30,8 +30,10 @@
  *
  *****************************************************************************/
 
-#include "connector.h"
+#include <linux/flq-dbg.h>
 #include <linux/export.h>
+
+#include "connector.h"
 
 /**
  * This struct is required for the connector interface to be set up.
@@ -131,7 +133,7 @@ void connector_send_msg(const u8 *data, const u32 size, const u8 code)
 	struct cn_msg *m;
 	u8 *buf;
 	u32 payload_size;
-	printk(KERN_ERR "********** %s %d", __func__, __LINE__) ;
+	flq_dbge_fl();
 
 	/* Payload + 1-byte "code" */
 	payload_size = size + 1 + sizeof(struct cn_msg);

@@ -752,7 +752,6 @@ static int iwl_run_unified_mvm_ucode(struct iwl_mvm *mvm)
 		}
 	}
 
-	//printk(KERN_ERR "***fflq %s, iwl_mvm_send_cmd_pdu\n", __func__) ;
 	ret = iwl_mvm_send_cmd_pdu(mvm, WIDE_ID(REGULATORY_AND_NVM_GROUP,
 						NVM_ACCESS_COMPLETE),
 				   CMD_SEND_IN_RFKILL,

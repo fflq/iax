@@ -4,6 +4,7 @@
  * Copyright (C) 2016 Intel Deutschland GmbH
  * Copyright (C) 2022 Intel Corporation
  */
+#include <linux/flq-dbg.h>
 #include <net/mac80211.h>
 #include "fw-api.h"
 #include "mvm.h"
@@ -21,18 +22,19 @@ struct iwl_mvm_iface_iterator_data {
 static int iwl_mvm_binding_cmd(struct iwl_mvm *mvm, u32 action,
 			       struct iwl_mvm_iface_iterator_data *data)
 {
-	printk("***fflq iwl_mvm_binding_cmd\n") ;
 	struct iwl_binding_cmd cmd;
 	struct iwl_mvm_phy_ctxt *phyctxt = data->phyctxt;
 	int i, ret;
 	u32 status;
 	int size;
 
+	flq_dbge_fl();
+
 	memset(&cmd, 0, sizeof(cmd));
 
 	if (fw_has_capa(&mvm->fw->ucode_capa,
 			IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT)) {
-		printk("***fflq IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT\n") ;
+		flq_dbge_fl("IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT") ;
 		size = sizeof(cmd);
 		cmd.lmac_id = cpu_to_le32(iwl_mvm_get_lmac_id(mvm->fw,
 							      phyctxt->channel->band));
@@ -49,20 +51,20 @@ static int iwl_mvm_binding_cmd(struct iwl_mvm *mvm, u32 action,
 	for (i = 0; i < MAX_MACS_IN_BINDING; i++)
 		cmd.macs[i] = cpu_to_le32(FW_CTXT_INVALID);
 	for (i = 0; i < data->idx; i++) {
-		printk("***fflq iwl_mvm_binding_cmd, data.idx=%d/i%d, ids%d, colors%d, cmd%d\n", 
+		flq_dbge_fl("data.idx=%d/i%d, ids%d, colors%d, cmd%d\n", 
 				data->idx, i, data->ids[i], data->colors[i], FW_CMD_ID_AND_COLOR(data->ids[i], data->colors[i]));
 		cmd.macs[i] = cpu_to_le32(FW_CMD_ID_AND_COLOR(data->ids[i], data->colors[i]));
 	}
 
 	status = 0;
 	//fflqkey different cmd cause diff
-	printk("***fflq id%d color%d action%d macs(%x:%x:%x)\n", phyctxt->id, phyctxt->color, 
+	flq_dbge_fl("id%d color%d action%d macs(%x:%x:%x)", phyctxt->id, phyctxt->color, 
 			action, cmd.macs[0], cmd.macs[1], cmd.macs[2]); // MAX_MACS_IN_BINDING=3
 	ret = iwl_mvm_send_cmd_pdu_status(mvm, BINDING_CONTEXT_CMD,
 					  size, &cmd, &status);
-	printk("***fflq %s, iwl_mvm_send_cmd_pdu_status=%d\n", __func__, ret) ;
+	flq_dbge_fl("iwl_mvm_send_cmd_pdu_status=%d", ret) ;
 	if (ret) {
-		printk("***fflq %s, send binding (action:%d): %d\n", __func__, action, ret);
+		flq_dbge_fl("send binding (action:%d): %d", action, ret);
 		IWL_ERR(mvm, "Failed to send binding (action:%d): %d\n",
 			action, ret);
 		return ret;
@@ -126,7 +128,7 @@ static int iwl_mvm_binding_update(struct iwl_mvm *mvm,
 			action = FW_CTXT_ACTION_REMOVE;
 	}
 
-	printk("***fflq iwl_mvm_binding_update, data.idx=%d\n", data.idx) ;
+	flq_dbge_fl("data.idx=%d\n", data.idx) ;
 	if (add) {
 		if (WARN_ON_ONCE(data.idx >= MAX_MACS_IN_BINDING)) 
 			return -EINVAL;
@@ -141,8 +143,8 @@ static int iwl_mvm_binding_update(struct iwl_mvm *mvm,
 
 int iwl_mvm_binding_add_vif(struct iwl_mvm *mvm, struct ieee80211_vif *vif)
 {
-	printk("***fflq iwl_mvm_binding_add_vif\n") ;
 	struct iwl_mvm_vif *mvmvif = iwl_mvm_vif_from_mac80211(vif);
+	flq_dbge_fl();
 
 	if (WARN_ON_ONCE(!mvmvif->deflink.phy_ctxt))
 		return -EINVAL;

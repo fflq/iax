@@ -8,6 +8,7 @@
  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
  *
  *****************************************************************************/
+#include <linux/flq-dbg.h>
 #include <linux/etherdevice.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -43,7 +44,7 @@ void iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb)
 	struct iwl_rx_phy_res *phy;
 	u32 *non_cfg_buf, *cfg_buf;
 	static u16 bfee_count;
-	printk(KERN_ERR "********** %s %d", __func__, __LINE__) ;
+	flq_dbge_fl();
 
 	if (priv->last_phy_res_valid) {
 		phy = &priv->last_phy_res;

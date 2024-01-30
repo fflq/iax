@@ -4,6 +4,7 @@
  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
  * Copyright (C) 2016-2017 Intel Deutschland GmbH
  */
+#include <linux/flq-dbg.h>
 #include <asm/unaligned.h>
 #include <linux/etherdevice.h>
 #include <linux/skbuff.h>
@@ -22,9 +23,7 @@ void iwl_mvm_rx_rx_phy_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
 	unsigned int pkt_len = iwl_rx_packet_payload_len(pkt);
 
-	static int flqcnt = 0 ;
-	if (flqcnt++ % 10000 == 0)
-		printk(KERN_ERR "***fflq %s, (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
+	flqn_dbge(10000, "(%s), (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
 
 	if (unlikely(pkt_len < sizeof(mvm->last_phy_info)))
 		return;
@@ -130,9 +129,7 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
 	rx_status->chain_signal[0] = energy_a;
 	rx_status->chain_signal[1] = energy_b;
 
-	static int flqcnt = 0 ;
-	if (flqcnt++ % 10000 == 0)
-	printk("***fflq rx.c iwl_mvm_get_signal_strength, energyABMax(%d,%d,%d), chains(%u)\n",
+	flqn_dbge(10000, "energyABMax(%d,%d,%d), chains(%u)",
 			energy_a, energy_b, max_energy, rx_status->chains);
 }
 
@@ -304,9 +301,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
 	u32 rx_pkt_status;
 	u8 crypt_len = 0;
 
-	static int flqcnt = 0 ;
-	if (flqcnt++ % 10000 == 0)
-		printk(KERN_ERR "***fflq %s, (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
+	flqn_dbge(10000, "(%s), (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
 
 	if (unlikely(pkt_len < sizeof(*rx_res))) {
 		IWL_DEBUG_DROP(mvm, "Bad REPLY_RX_MPDU_CMD size\n");
@@ -502,7 +497,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
 		rx_status->bw = RATE_INFO_BW_160;
 		break;
 	}
-	printk("***fflq iwl_mvm_rx_rx_mpdu, rx_status->bw=%04x\n", rx_status->bw) ;
+	flq_dbgi_fl("rx_status->bw=%04x\n", rx_status->bw) ;
 	if (!(rate_n_flags & RATE_MCS_CCK_MSK_V1) &&
 	    rate_n_flags & RATE_MCS_SGI_MSK_V1)
 		rx_status->enc_flags |= RX_ENC_FLAG_SHORT_GI;

@@ -572,7 +572,7 @@ static void iwlagn_rx_reply_rx_phy(struct iwl_priv *priv,
 	       sizeof(struct iwl_rx_phy_res));
 
 	//fflqb_csi_53
-	//printk(KERN_ERR "********** %s %d", __func__, __LINE__) ;
+	//flq_dbge_fl();
 	struct iwl_rx_phy_res *rx_phy_res = (void *)pkt->data;
 	memcpy(&priv->last_cfg_phy_buf, rx_phy_res->cfg_phy_buf,
 			rx_phy_res->cfg_phy_cnt * sizeof(u32));
@@ -841,9 +841,9 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv,
 						  le32_to_cpu(rx_pkt_status));
 
 	//fflqb_csi_53
-	//printk(KERN_ERR "********** %s %d %d", __func__, __LINE__, priv->connector_log) ;
+	//flq_dbge_fl("%d", priv->connector_log) ;
 	if (priv->connector_log & IWL_CONN_RX_MPDU_MSK) {
-		//IWL_ERR(priv, "*** fflq dvm %s, send_msg rx_mpdu %d\n", __func__, IWL_CONN_RX_MPDU) ;
+		//flq_dbge_fl("dvm send_msg rx_mpdu %d", IWL_CONN_RX_MPDU) ;
 		connector_send_msg((void *)header, len, IWL_CONN_RX_MPDU);
 	}
 

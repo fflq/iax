@@ -2,27 +2,27 @@
 #define _IAXCSI_H_
 
 static map<uint32_t, string> g_mod_type_map = {
-	{RATE_MCS_CCK_MSK, "CCK"}, 
-	{RATE_MCS_LEGACY_OFDM_MSK, "NOHT"}, 
-	{RATE_MCS_HT_MSK, "HT"}, 
-	{RATE_MCS_VHT_MSK, "VHT"}, 
-	{RATE_MCS_HE_MSK, "HE"}, 
-	{RATE_MCS_EHT_MSK, "EH"}, 
+	{ RATE_MCS_CCK_MSK, "CCK" }, 
+	{ RATE_MCS_LEGACY_OFDM_MSK, "NOHT" }, 
+	{ RATE_MCS_HT_MSK, "HT" }, 
+	{ RATE_MCS_VHT_MSK, "VHT" }, 
+	{ RATE_MCS_HE_MSK, "HE" }, 
+	{ RATE_MCS_EHT_MSK, "EH" }, 
 } ;
 
 static map<uint32_t, string> g_he_type_map = {
-	{RATE_MCS_HE_TYPE_SU, "HE-SU"}, 
-	{RATE_MCS_HE_TYPE_EXT_SU, "HE-EXT-SU"}, 
-	{RATE_MCS_HE_TYPE_MU, "HE-MU"}, 
-	{RATE_MCS_HE_TYPE_TRIG, "HE-TRIG"}, 
+	{ RATE_MCS_HE_TYPE_SU, "HE-SU" }, 
+	{ RATE_MCS_HE_TYPE_EXT_SU, "HE-EXT-SU" }, 
+	{ RATE_MCS_HE_TYPE_MU, "HE-MU" }, 
+	{ RATE_MCS_HE_TYPE_TRIG, "HE-TRIG" }, 
 } ;
 
 static map<uint32_t, int> g_chan_width_map = {
-	{RATE_MCS_CHAN_WIDTH_20, 20}, 
-	{RATE_MCS_CHAN_WIDTH_40, 40}, 
-	{RATE_MCS_CHAN_WIDTH_80, 80}, 
-	{RATE_MCS_CHAN_WIDTH_160, 160}, 
-	{RATE_MCS_CHAN_WIDTH_320, 320}, 
+	{ RATE_MCS_CHAN_WIDTH_20, 20 }, 
+	{ RATE_MCS_CHAN_WIDTH_40, 40 }, 
+	{ RATE_MCS_CHAN_WIDTH_80, 80 }, 
+	{ RATE_MCS_CHAN_WIDTH_160, 160 }, 
+	{ RATE_MCS_CHAN_WIDTH_320, 320 }, 
 } ;
 
 
@@ -35,20 +35,18 @@ static map<uint32_t, int> g_chan_width_map = {
 %HT40: 456=(1,1,114), 912=(2,1,114), 1824=(2,2,114)
 %VHT/BCC
 %VHT80: 968=(1,1,242), 1936=(2,1,242), 3872=(2,2,242)
-%doc say 484(fit data+pilot). rp_pico(3872,484)
+%doc 484(fit data+pilot). rp(3872,484)
 %VHT160: 1992=(1,1,498), 3984=(2,1,498), 7968=(2,2,498) 
 %HE/LDPC
 %HE20: 968=(1,1,242), 1936=(2,1,242), 3872=(2,2,242)
 %HE40: 1936=(1,1,484), 3872=(2,1,484), 7744=(2,2,484)
 %HE80: 3984=(1,1,996), 7968=(2,1,996), 15936=(2,2,996)
-% may 1992. rp_pico(15936/1992), me2020[23, 32, 1970, 2002, 2025]guess
+% may 1992. rp(15936/1992), 2020[23, 32, 1970, 2002, 2025]guess
 %HE160: 8080=(1,1,2020), 16160=(2,1,2020), 32320=(2,2,2020) 
-%Note
-%VHT80 and HE20 are same, avoid use
 */
 
 //little endian
-struct __attribute__((packed)) csi_hdr_t {
+typedef struct __attribute__((packed)) csi_hdr_t {
 	uint32_t csi_len ; // 0
 	uint8_t v4_7[4] ; // 4
 	uint32_t ftm ; // 8
@@ -69,9 +67,11 @@ struct __attribute__((packed)) csi_hdr_t {
 	uint8_t v77_87[11] ; // 77
 	uint32_t us ; // 88
 	uint32_t rate_n_flags ; // 92
-	uint8_t v96_271[0] ; // 96
-} ;
-typedef struct csi_hdr_t csi_hdr_t, *p_csi_hdr_t ; 
+	uint8_t v96_207[112] ; // 96
+	uint64_t ts ; // 208
+
+	uint8_t v214_271[0] ; // 214
+} csi_hdr_t, *p_csi_hdr_t ; 
 
 
 typedef struct rate_info_t {
@@ -88,7 +88,7 @@ typedef struct rate_info_t {
 
 
 //from include/netlink-private/types.h, origin struct nl_sock
-struct flq_nl_sock
+struct csi_nl_sock
 {
 	struct sockaddr_nl s_local;
 	struct sockaddr_nl s_peer;

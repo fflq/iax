@@ -4,6 +4,7 @@
  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
  * Copyright (C) 2016-2017 Intel Deutschland GmbH
  */
+#include <linux/flq-dbg.h>
 #include <linux/etherdevice.h>
 #include <linux/ieee80211.h>
 #include <linux/slab.h>
@@ -901,7 +902,7 @@ void iwl_trans_pcie_txq_disable(struct iwl_trans *trans, int txq_id,
 int iwl_pcie_enqueue_hcmd(struct iwl_trans *trans,
 			  struct iwl_host_cmd *cmd)
 {
-	//printk("***fflq iwl_pcie_enqueue_hcmd\n") ;
+	//flq_dbgi_fl();
 	struct iwl_txq *txq = trans->txqs.txq[trans->txqs.cmd.q_id];
 	struct iwl_device_cmd *out_cmd;
 	struct iwl_cmd_meta *out_meta;

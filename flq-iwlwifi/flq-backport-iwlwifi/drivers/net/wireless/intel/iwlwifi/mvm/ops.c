@@ -4,6 +4,7 @@
  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
  * Copyright (C) 2016-2017 Intel Deutschland GmbH
  */
+#include <linux/flq-dbg.h>
 #include <linux/module.h>
 #include <linux/rtnetlink.h>
 #include <linux/vmalloc.h>
@@ -74,7 +75,7 @@ static int __init iwl_mvm_init(void)
 {
 	int ret;
 
-	printk(KERN_ERR "********* %s %d", __func__, __LINE__);
+	flq_dbge_fl();
 	ret = iwl_mvm_rate_control_register();
 	if (ret) {
 		pr_err("Unable to register rate control algorithm: %d\n", ret);
@@ -178,9 +179,7 @@ static void iwl_mvm_rx_monitor_notif(struct iwl_mvm *mvm,
 	const struct ieee80211_sta_he_cap *he_cap;
 	struct ieee80211_vif *vif;
 
-	static int flqcnt = 0 ;
-	if (flqcnt++ % 10000 == 0)
-		printk(KERN_ERR "***fflq %s, (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
+	flqn_dbge(10000, "(%s), (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
 
 	if (notif->type != cpu_to_le32(IWL_DP_MON_NOTIF_TYPE_EXT_CCA))
 		return;
@@ -1230,7 +1229,7 @@ iwl_op_mode_mvm_start(struct iwl_trans *trans, const struct iwl_cfg *cfg,
 	int scan_size;
 	u32 min_backoff;
 	struct iwl_mvm_csme_conn_info *csme_conn_info __maybe_unused;
-	printk(KERN_ERR "********* %s %d", __func__, __LINE__);
+	flq_dbge_fl();
 
 	/*
 	 * We use IWL_MVM_STATION_COUNT_MAX to check the validity of the station
@@ -1755,11 +1754,7 @@ static void iwl_mvm_rx_common(struct iwl_mvm *mvm,
 			       IWL_FW_INI_TIME_POINT_FW_RSP_OR_NOTIF, &tp_data);
 	iwl_mvm_rx_check_trigger(mvm, pkt);
 
-	/*
-	static int flqcnt = 0 ;
-	if (flqcnt++ % 10000 == 0)
-		printk(KERN_ERR "***fflq %s, (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
-		*/
+	//flqn_loge(10000, "(%s), (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
 	/*
 	 * Do the notification wait before RX handlers so
 	 * even if the RX handler consumes the RXB we have
@@ -1809,7 +1804,7 @@ static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
 	u16 cmd = WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd);
 
-	//printk("***fflq %s, mq_rx_supported=%d\n", __func__, mvm->trans->trans_cfg->mq_rx_supported);
+	//flq_loge_fl("mq_rx_supported=%d", mvm->trans->trans_cfg->mq_rx_supported);
 #ifdef CPTCFG_IWLWIFI_DEVICE_TESTMODE
 	/*
 	 * RX data may be forwarded to userspace in case the user
@@ -1820,17 +1815,16 @@ static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
 	iwl_tm_gnl_send_rx(mvm->trans, rxb);
 #endif
 
-	static int flqcnt = 0 ; ++flqcnt;
 	if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD))) {
-		printk(KERN_ERR "***fflq %s, call iwl_mvm_rx_rx_mpdu\n", __func__);
+		flqn_dbge(10000, "(%s), call iwl_mvm_rx_rx_mpdu", __func__);
 		iwl_mvm_rx_rx_mpdu(mvm, napi, rxb); //fflqkey rx_mpdu
 	}
 	else if (cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_PHY_CMD)) {
-		printk(KERN_ERR "***fflq %s, call iwl_mvm_rx_rx_phy_cmd\n", __func__);
+		flqn_dbge(10000, "(%s), call iwl_mvm_rx_rx_phy_cmd", __func__);
 		iwl_mvm_rx_rx_phy_cmd(mvm, rxb);	//fflqkey rx_phy
 	}
 	else {
-		printk(KERN_ERR "***fflq %s, call iwl_mvm_rx_common\n", __func__);
+		flqn_dbge(10000, "(%s), call iwl_mvm_rx_common", __func__);
 		iwl_mvm_rx_common(mvm, rxb, pkt); //fflq
 	}
 }
@@ -1844,7 +1838,7 @@ void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
 	struct iwl_mvm *mvm = IWL_OP_MODE_GET_MVM(op_mode);
 	u16 cmd = WIDE_ID(pkt->hdr.group_id, pkt->hdr.cmd);
 
-	//printk("***fflq %s, mq_rx_supported=%d\n", __func__, mvm->trans->trans_cfg->mq_rx_supported);
+	//flq_dbgi_fl("mq_rx_supported=%d\n", mvm->trans->trans_cfg->mq_rx_supported);
 #ifdef CPTCFG_IWLWIFI_DEVICE_TESTMODE
 	/*
 	 * RX data may be forwarded to userspace in case the user
@@ -1854,14 +1848,9 @@ void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
 	 */
 	iwl_tm_gnl_send_rx(mvm->trans, rxb);
 #endif
-	//static int flqcnt = 0 ; ++flqcnt;
-	/*
-	if (flqcnt++ % 10000 == 0)
-		printk(KERN_ERR "***fflq %s judge, (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
-		*/
+	flqn_dbge(10000, "(%s), judge, (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
 
 	if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD))){
-		//printk("***fflq, mpdu_mq %d\n", flqcnt);
 		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, 0); //fflq, here recv injections 
 	}
 	else if (unlikely(cmd == WIDE_ID(DATA_PATH_GROUP, RX_QUEUES_NOTIFICATION)))
@@ -1873,7 +1862,6 @@ void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
 	else if (cmd == WIDE_ID(DATA_PATH_GROUP, RX_NO_DATA_NOTIF))
 		iwl_mvm_rx_monitor_no_data(mvm, napi, rxb, 0); //fflq no here
 	else{
-		//printk("***fflq, com %d\n", flqcnt);
 		iwl_mvm_rx_common(mvm, rxb, pkt); //fflq
 	}
 }

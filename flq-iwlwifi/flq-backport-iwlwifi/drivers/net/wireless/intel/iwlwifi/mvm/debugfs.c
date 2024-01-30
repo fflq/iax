@@ -4,6 +4,7 @@
  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
  * Copyright (C) 2016-2017 Intel Deutschland GmbH
  */
+#include <linux/flq-dbg.h>
 #include <linux/vmalloc.h>
 #include <linux/err.h>
 #include <linux/ieee80211.h>
@@ -1787,6 +1788,10 @@ static ssize_t iwl_dbgfs_dbg_time_point_write(struct iwl_mvm *mvm,
 #define MVM_DEBUGFS_ADD_FILE(name, parent, mode) \
 	MVM_DEBUGFS_ADD_FILE_ALIAS(#name, name, parent, mode)
 
+//fflq defined in mvm/flq-mvm.c
+MVM_DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate, 32);
+//DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate);
+
 static ssize_t
 _iwl_dbgfs_link_sta_wrap_write(ssize_t (*real)(struct ieee80211_link_sta *,
 					       struct iwl_mvm_sta *,
@@ -2156,7 +2161,7 @@ static ssize_t iwl_dbgfs_csi_enabled_write(struct iwl_mvm *mvm, char *buf,
 
 	if (iwl_mvm_firmware_running(mvm)) {
 		err = iwl_mvm_send_csi_cmd(mvm);
-		printk(KERN_ERR "***fflq %s, iwl_mvm_send_csi_cmd(ret=%d)\n", __func__, err) ;
+		flq_dbge_fl("iwl_mvm_send_csi_cmd(ret=%d)\n", err);
 	}
 	mutex_unlock(&mvm->mutex);
 
@@ -2308,7 +2313,7 @@ static ssize_t iwl_dbgfs_csi_interval_write(struct iwl_mvm *mvm, char *buf,
 	if (err)
 		return err;
 
-	printk(KERN_ERR "***fflq %s, set interval=%d\n", __func__, interval) ;
+	flq_dbge_fl("set interval=%d", interval);
 	mvm->csi_cfg.interval = interval;
 	if (interval)
 		mvm->csi_cfg.flags |= IWL_CHANNEL_ESTIMATION_INTERVAL;
@@ -2357,7 +2362,7 @@ static ssize_t iwl_dbgfs_csi_addresses_write(struct iwl_mvm *mvm, char *buf,
 
 		static char mac[18] = { 0 } ;
 		memcpy(mac, addrstr, 18) ;
-		printk(KERN_ERR "***fflq %s, mac(%s)\n", __func__, mac) ;
+		flq_dbge_fl("mac(%s)", mac);
 		n = sscanf(addrstr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
 			   &addr[0], &addr[1], &addr[2],
 			   &addr[3], &addr[4], &addr[5]);
@@ -2689,44 +2694,6 @@ static const struct file_operations iwl_dbgfs_mem_ops = {
 	.open = simple_open,
 	.llseek = default_llseek,
 };
-
-
-
-static ssize_t iwl_dbgfs_monitor_tx_rate_read(struct file *file,
-		char __user *user_buf, size_t count, loff_t *ppos)
-{
-	struct iwl_mvm *mvm = file->private_data;
-	char buf[16];
-	int len;
-
-	len = scnprintf(buf, sizeof(buf), "0x%x", mvm->flq_monitor_tx_rate);
-	printk(KERN_ERR "***fflq %s, read %s\n", __func__, buf) ;
-
-	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
-}
-
-static ssize_t iwl_dbgfs_monitor_tx_rate_write(struct iwl_mvm *mvm, 
-		char *buf, size_t count, loff_t *ppos)
-{
-	u32 val;
-	int ret;
-
-	if (count > 16)
-		return -EINVAL;
-
-	ret = kstrtou32(buf, 0, &val);
-	if (ret)
-		return ret;
-
-	mvm->flq_monitor_tx_rate = val;
-	printk(KERN_ERR "***fflq %s, write 0x%x\n", __func__, mvm->flq_monitor_tx_rate) ;
-
-	return count;
-}
-MVM_DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate, 32);
-//DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate);
-
-
 
 void iwl_mvm_link_sta_add_debugfs(struct ieee80211_hw *hw,
 				  struct ieee80211_vif *vif,

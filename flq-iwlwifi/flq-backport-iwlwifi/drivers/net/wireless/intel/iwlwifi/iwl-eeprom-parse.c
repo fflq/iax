@@ -4,6 +4,7 @@
  * Copyright (C) 2005-2014, 2018-2020 Intel Corporation
  * Copyright (C) 2015 Intel Mobile Communications GmbH
  */
+#include <linux/flq-dbg.h>
 #include <linux/types.h>
 #include <linux/slab.h>
 #include <linux/export.h>
@@ -530,7 +531,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
 		iwl_init_band_reference(cfg, eeprom, eeprom_size, band,
 					&eeprom_ch_count, &eeprom_ch_info,
 					&eeprom_ch_array);
-		printk(KERN_ERR "************* %s ecc %d %d", __func__, eeprom_ch_count, n_channels);
+		flq_dbgi_fl("ecc %d %d", eeprom_ch_count, n_channels);
 
 		/* Loop through each band adding each of the channels */
 		for (ch_idx = 0; ch_idx < eeprom_ch_count; ch_idx++) {
@@ -793,11 +794,12 @@ struct iwl_nvm_data *
 iwl_parse_eeprom_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
 		      const u8 *eeprom, size_t eeprom_size)
 {
-	printk(KERN_ERR "******* eeprom_data") ;
 	struct iwl_nvm_data *data;
 	struct device *dev = trans->dev;
 	const void *tmp;
 	u16 radio_cfg, sku;
+
+	flq_dbgi_fl();
 
 	if (WARN_ON(!cfg || !cfg->eeprom_params))
 		return NULL;

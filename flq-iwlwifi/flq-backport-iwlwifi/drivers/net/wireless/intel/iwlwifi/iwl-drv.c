@@ -9,6 +9,7 @@
 #include <linux/firmware.h>
 #include <linux/module.h>
 #include <linux/vmalloc.h>
+#include <linux/flq-dbg.h>
 
 #include "iwl-drv.h"
 #include "iwl-csr.h"
@@ -2166,7 +2167,7 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
 	int i;
 	struct iwl_drv *drv;
 	struct iwlwifi_opmode_table *op;
-	printk(KERN_ERR "******** %s:%d", __func__, __LINE__);
+	flq_dbge_fl();
 
 	mutex_lock(&iwlwifi_opmode_table_mtx);
 	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++) {
@@ -2177,7 +2178,7 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
 		/* TODO: need to handle exceptional case */
 		list_for_each_entry(drv, &op->drv, list)
 		{
-			printk(KERN_ERR "********fflq %s:%d %s %p", __func__, __LINE__, op->name, op->ops);
+			flq_dbge_fl("%s %p", op->name, op->ops);
 			drv->op_mode = _iwl_op_mode_start(drv, op);
 		}
 
@@ -2215,7 +2216,7 @@ static int __init iwl_drv_init(void)
 {
 	int i, err;
 
-	printk(KERN_ERR "******** %s %d", __func__, __LINE__);
+	flq_dbge_fl();
 	for (i = 0; i < ARRAY_SIZE(iwlwifi_opmode_table); i++)
 		INIT_LIST_HEAD(&iwlwifi_opmode_table[i].drv);
 

@@ -4,18 +4,17 @@
  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
  * Copyright (C) 2016-2017 Intel Deutschland GmbH
  */
+#include <linux/flq-dbg.h>
 #include <linux/etherdevice.h>
 #include <net/netlink.h>
 #include <net/mac80211.h>
 #include "mvm.h"
+#include "flq-mvm.h"
 #include "iwl-vendor-cmd.h"
 #include "fw/api/datapath.h"
 
 #include "iwl-io.h"
 #include "iwl-prph.h"
-
-//fflq
-#include <linux/timekeeping.h>
 
 static LIST_HEAD(device_list);
 static DEFINE_SPINLOCK(device_list_lock);
@@ -27,15 +26,11 @@ static int iwl_mvm_netlink_notifier(struct notifier_block *nb,
 	struct netlink_notify *notify = _notify;
 	struct iwl_mvm *mvm;
 
-	//printk(KERN_ERR "***fflq %s, state(%lu==%lu) protocol(%lu==%lu)\n", 
-	//		__func__, state, NETLINK_URELEASE, notify->protocol, NETLINK_GENERIC) ;
 	if (state != NETLINK_URELEASE || notify->protocol != NETLINK_GENERIC)
 		return NOTIFY_DONE;
 
 	spin_lock_bh(&device_list_lock);
 	list_for_each_entry(mvm, &device_list, list) {
-		//printk(KERN_ERR "***fflq %s, %s, csi_portid%d - notify(%u,%d)\n", 
-		//		__func__, mvm->nvm_file_name, mvm->csi_portid, notify->portid, notify->protocol) ;
 		if (mvm->csi_portid == notify->portid)
 			mvm->csi_portid = 0;
 	}
@@ -1519,7 +1514,7 @@ static int iwl_mvm_vendor_csi_register(struct wiphy *wiphy,
 	struct iwl_mvm *mvm = IWL_MAC80211_GET_MVM(hw);
 
 	mvm->csi_portid = cfg80211_vendor_cmd_get_sender(wiphy);
-	printk(KERN_ERR "***fflq %s, only one get valid csi_portid%u\n", __func__, mvm->csi_portid) ;
+	flq_dbge("%s, only one get valid csi_portid%u\n", __func__, mvm->csi_portid) ;
 
 	return 0;
 }
@@ -1999,8 +1994,7 @@ iwl_mvm_vendor_events[NUM_IWL_MVM_VENDOR_EVENT_IDX] = {
 
 void iwl_mvm_vendor_cmds_register(struct iwl_mvm *mvm)
 {
-	//fflqkey,y
-	printk(KERN_ERR "***fflq %s, set iwl_mvm_vendor_commands, NL80211_CMD_VENDOR%d\n", 
+	flq_dbge("%s, set iwl_mvm_vendor_commands, NL80211_CMD_VENDOR=%d\n", 
 			__func__, NL80211_CMD_VENDOR) ;
 	mvm->hw->wiphy->vendor_commands = iwl_mvm_vendor_commands;
 	mvm->hw->wiphy->n_vendor_commands = ARRAY_SIZE(iwl_mvm_vendor_commands);
@@ -2019,31 +2013,6 @@ void iwl_mvm_vendor_cmds_unregister(struct iwl_mvm *mvm)
 	spin_unlock_bh(&device_list_lock);
 }
 
-void fflq_send_test(struct iwl_mvm *mvm,
-		       void *hdr, unsigned int hdr_len)
-{
-	unsigned int data_len = 0;
-	struct sk_buff *msg;
-	struct nlattr *dattr;
-	//u8 *pos;
-	//int i;
-
-	msg = cfg80211_vendor_event_alloc_ucast(mvm->hw->wiphy, NULL,
-						0, 100 + hdr_len + data_len,
-						IWL_MVM_VENDOR_EVENT_IDX_CSI,
-						GFP_KERNEL);
-
-	if (!msg) return;
-
-	if (nla_put(msg, IWL_MVM_VENDOR_ATTR_CSI_HDR, hdr_len, hdr))
-		return;
-
-	dattr = nla_reserve(msg, IWL_MVM_VENDOR_ATTR_CSI_DATA, data_len);
-	if (!dattr) return;
-
-	cfg80211_vendor_event(msg, GFP_KERNEL);
-}
-
 static void
 iwl_mvm_send_csi_event(struct iwl_mvm *mvm,
 		       void *hdr, unsigned int hdr_len,
@@ -2055,15 +2024,7 @@ iwl_mvm_send_csi_event(struct iwl_mvm *mvm,
 	u8 *pos;
 	int i;
 
-	//fflq
-	static int flqcnt = 0 ;
-	if (flqcnt++ % 10000 == 0) {
-		//fflq_send_test(mvm, hdr, hdr_len) ;
-		//fflqkey will wrong
-		//int csid = cfg80211_vendor_cmd_get_sender(mvm->hw->wiphy);
-		//int csid = mvm->csi_portid ;
-		//printk(KERN_ERR "***fflq %s, csi_portid%d hdr_len%u(0 is unregister)\n", __func__, csid, hdr_len) ;
-	}
+	flq_dbgi("%s, csi_portid%d hdr_len%u(0 is unregister)\n", __func__, mvm->csi_portid, hdr_len) ;
 
 	if (!mvm->csi_portid)
 		return;
@@ -2131,73 +2092,6 @@ static void iwl_mvm_csi_steal(struct iwl_mvm *mvm, unsigned int idx,
 void iwl_mvm_rx_csi_header(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 {
 	iwl_mvm_csi_steal(mvm, 0, rxb);
-}
-
-//fflq
-// because csi_hdr/chunk call by schedule_work(&mvm->async_handlers_wk);
-// so call here asyncly, and flq_src_mac is not realtime and reorder.
-// ef:be:ad:de:ad:de
-void flq_expand_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr)
-{
-	//u32 i, sum_from_208_to_240 = 0;
-	time64_t unix_ts;
-	int pos = 208, size;
-
-	u8 *mac, *flq_smac = mvm->flq_src_mac, *csi_smac = csi_hdr+68;
-	u64 invalid_smac_tag = 0xdeaddeadbeef;
-	u64 csi_smac_tag = *(u64*)csi_smac;
-	//u64 flq_smac_tag = *(u64*)flq_smac;
-
-	//if ((csi_smac[5] != 0xde) && (flq_smac[5] != csi_smac[5])) {
-	if (csi_smac_tag == invalid_smac_tag) {
-		mac = flq_smac;
-		printk(KERN_ERR "***fflq %s, flq_smac %02x:%02x:%02x:%02x:%02x:%02x\n", 
-				__func__, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-		mac = csi_smac;
-		printk(KERN_ERR "***fflq %s, csi_smac %02x:%02x:%02x:%02x:%02x:%02x\n", 
-				__func__, mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-	}
-	//memcpy(csi_smac, flq_smac, ETH_ALEN) ;
-
-	//[208,240) is zeros
-	/*
-	for (i = 208; i < 240; i += 4) {
-		sum_from_208_to_240 += *(u32*)(csi_hdr+i);
-	}
-	if (sum_from_208_to_240) {
-		printk(KERN_ERR "***fflq %s, csi_hdr[208,240) not zero %d\n", 
-				__func__, sum_from_208_to_240);
-	}
-	*/
-
-	//1.timestamp
-	unix_ts = ktime_get_real_seconds();
-	memcpy(csi_hdr+pos, &unix_ts, sizeof(unix_ts)); 
-	pos += sizeof(unix_ts);
-
-	/* why all zeros
-	struct iwl_rx_phy_info *phy_info = &mvm->last_phy_info;
-	printk(KERN_ERR "*** uts%llu, sts%llu, ts%llu, %d, %d\n", 
-		unix_ts, phy_info->system_timestamp, phy_info->timestamp,   
-		phy_info->cfg_phy_cnt, phy_info->non_cfg_phy_cnt);
-	__le16 phy_flags;
-	__le16 channel;
-	__le32 non_cfg_phy[IWL_RX_INFO_PHY_CNT];
-	__le32 rate_n_flags;
-	//2.phy_flags
-	memcpy(csi_hdr+pos, &(phy_info->phy_flags), sizeof(phy_info->phy_flags));
-	pos += sizeof(phy_info->phy_flags);
-	//3.channel
-	memcpy(csi_hdr+pos, &(phy_info->channel), sizeof(phy_info->channel));
-	pos += sizeof(phy_info->channel);
-	//4.non_cfg_phy
-	//size = IWL_RX_INFO_PHY_CNT * sizeof(phy_info->non_cfg_phy[0]);
-	//memcpy(csi_hdr+pos, (phy_info->non_cfg_phy), size);
-	//pos += size;
-	//rnf
-	memcpy(csi_hdr+pos, &(phy_info->channel), sizeof(phy_info->channel));
-	pos += sizeof(phy_info->channel);
-	*/
 }
 
 static void iwl_mvm_csi_complete(struct iwl_mvm *mvm)
@@ -2282,7 +2176,7 @@ void iwl_mvm_rx_csi_chunk(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 		WARN_ON(1);
 		return;
 	}
-	//printk("***fflq %s, idx/num, %d/%d\n", __func__, idx, num) ;
+	//flq_dbgi("%s, idx/num, %d/%d\n", __func__, idx, num) ;
 
 	/* -1 to account for the header we also store there */
 	if (WARN_ON_ONCE(idx >= ARRAY_SIZE(mvm->csi_data_entries) - 1))

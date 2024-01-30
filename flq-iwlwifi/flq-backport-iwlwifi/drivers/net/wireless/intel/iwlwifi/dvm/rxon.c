@@ -10,6 +10,7 @@
  *
  *****************************************************************************/
 
+#include <linux/flq-dbg.h>
 #include <linux/etherdevice.h>
 #include "iwl-trans.h"
 #include "iwl-modparams.h"
@@ -1025,7 +1026,7 @@ int iwlagn_send_dsp_debug(struct iwl_priv *priv)
 	struct iwl5000_dsp_debug *dsp_debug = kmalloc(len, GFP_ATOMIC);
 	u16 *mib_indices;
 	int ret;
-	printk(KERN_ERR "********** %s %d", __func__, __LINE__) ;
+	flq_dbge_fl();
 
 	if (!dsp_debug)
 		return -ENOMEM;

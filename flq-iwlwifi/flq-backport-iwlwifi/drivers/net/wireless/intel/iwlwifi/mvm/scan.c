@@ -4,6 +4,7 @@
  * Copyright (C) 2013-2015 Intel Mobile Communications GmbH
  * Copyright (C) 2016-2017 Intel Deutschland GmbH
  */
+#include <linux/flq-dbg.h>
 #include <linux/etherdevice.h>
 #include <net/mac80211.h>
 #include <linux/crc32.h>
@@ -154,7 +155,7 @@ static inline __le16 iwl_mvm_scan_rx_chain(struct iwl_mvm *mvm)
 	rx_chain |= rx_ant << PHY_RX_CHAIN_FORCE_MIMO_SEL_POS;
 	rx_chain |= rx_ant << PHY_RX_CHAIN_FORCE_SEL_POS;
 	rx_chain |= 0x1 << PHY_RX_CHAIN_DRIVER_FORCE_POS;
-	printk("***fflq iwl_mvm_scan_rx_chain %u\n", rx_chain) ;
+	flq_dbgi_fl("rx_chain %u", rx_chain) ;
 	return cpu_to_le16(rx_chain);
 }
 

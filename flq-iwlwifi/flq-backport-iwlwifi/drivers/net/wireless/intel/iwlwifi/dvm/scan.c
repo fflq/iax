@@ -8,6 +8,7 @@
  *  Intel Linux Wireless <linuxwifi@intel.com>
  * Intel Corporation, 5200 N.E. Elam Young Parkway, Hillsboro, OR 97124-6497
  *****************************************************************************/
+#include <linux/flq-dbg.h>
 #include <linux/slab.h>
 #include <linux/types.h>
 #include <linux/etherdevice.h>
@@ -54,7 +55,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
 	    test_bit(STATUS_FW_ERROR, &priv->status))
 		return -EIO;
 
-	//printk(KERN_ERR "***fflq %s call iwl_dvm_send_cmd", __func__);
+	//flq_dbge_fl("call iwl_dvm_send_cmd");
 	ret = iwl_dvm_send_cmd(priv, &cmd);
 	if (ret)
 		return ret;
@@ -613,7 +614,7 @@ static u16 iwl_fill_probe_req(struct ieee80211_mgmt *frame, const u8 *ta,
 
 static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
 {
-	//printk(KERN_ERR "******fflq %s:%d", __func__, __LINE__);
+	flq_dbge_fl();
 	struct iwl_host_cmd cmd = {
 		.id = REPLY_SCAN_CMD,
 		.len = { sizeof(struct iwl_scan_cmd), },
@@ -900,7 +901,7 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
 		return ret;
 	}
 
-	//printk(KERN_ERR "***fflq %s call iwl_dvm_send_cmd itc.l=%d must 56 or crash", __func__, sizeof(struct iwl_tx_cmd));
+	//flq_dbge_fl("call iwl_dvm_send_cmd itc.l=%d must 56 or crash", sizeof(struct iwl_tx_cmd));
 	ret = iwl_dvm_send_cmd(priv, &cmd);
 	if (ret) {
 		clear_bit(STATUS_SCAN_HW, &priv->status);

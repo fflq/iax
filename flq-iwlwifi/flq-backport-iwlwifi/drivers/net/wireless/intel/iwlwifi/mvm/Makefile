@@ -16,6 +16,7 @@ iwlmvm-$(CONFIG_PM) += d3.o
 iwlmvm-$(CPTCFG_IWLMEI) += vendor-cmd.o
 
 #fflqb
+iwlmvm-y += flq-mvm.o
 #ccflags-y += -I $(srctree)/$(src)/../
 ccflags-y += -I$(src)/../
 #fflqe
