@@ -10,6 +10,7 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
+#include <linux/flq-dbg.h>
 #include <linux/if.h>
 #include <linux/module.h>
 #include <linux/err.h>
@@ -670,7 +671,7 @@ int wiphy_register(struct wiphy *wiphy)
 	int i;
 	u16 ifmodes = wiphy->interface_modes;
 
-	printk(KERN_ERR "***fflq %s", __func__) ;
+	flq_dbge_fl();
 #ifdef CONFIG_PM
 	if (WARN_ON(wiphy->wowlan &&
 		    (wiphy->wowlan->flags & WIPHY_WOWLAN_GTK_REKEY_FAILURE) &&

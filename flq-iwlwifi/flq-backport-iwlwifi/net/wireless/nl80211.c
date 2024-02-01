@@ -8,6 +8,7 @@
  * Copyright (C) 2018-2022 Intel Corporation
  */
 
+#include <linux/flq-dbg.h>
 #include <linux/if.h>
 #include <linux/module.h>
 #include <linux/err.h>
@@ -1124,7 +1125,7 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
 	}
 	//chan->flags &= ~IEEE80211_CHAN_RADAR ; //fflqkey change chan->flags, iw list radar dect
 	if (chan->flags & IEEE80211_CHAN_RADAR) {
-		//printk("***fflq nl80211_msg_put_channel, NL80211_FREQUENCY_ATTR_RADAR\n") ;
+		//flq_dbgi_fl("NL80211_FREQUENCY_ATTR_RADAR") ;
 		if (nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR)) {
 			goto nla_put_failure;
 		}
@@ -5791,13 +5792,14 @@ static bool nl80211_valid_auth_type(struct cfg80211_registered_device *rdev,
 
 static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
 {
-	printk("***fflq nl80211_start_ap\n") ;
 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
 	unsigned int link_id = nl80211_link_id(info->attrs);
 	struct net_device *dev = info->user_ptr[1];
 	struct wireless_dev *wdev = dev->ieee80211_ptr;
 	struct cfg80211_ap_settings *params;
 	int err;
+
+	flq_dbgi_fl();
 
 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
@@ -6061,7 +6063,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
 	/* FIXME: validate MLO/link-id against driver capabilities */
 
 	err = rdev_start_ap(rdev, dev, params); //fflq ap5g err=-5
-	printk("***fflq rdev_start_ap, err=%d\n", err) ;
+	flq_dbgi_fl("err=%d", err) ;
 	if (!err) {
 		wdev->links[link_id].ap.beacon_interval = params->beacon_interval;
 		wdev->links[link_id].ap.chandef = params->chandef;
@@ -6088,13 +6090,14 @@ out:
 
 static int nl80211_set_beacon(struct sk_buff *skb, struct genl_info *info)
 {
-	printk("***fflq nl80211_set_beacon\n") ;
 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
 	unsigned int link_id = nl80211_link_id(info->attrs);
 	struct net_device *dev = info->user_ptr[1];
 	struct wireless_dev *wdev = dev->ieee80211_ptr;
 	struct cfg80211_beacon_data params;
 	int err;
+
+	flq_dbgi_fl();
 
 	if (dev->ieee80211_ptr->iftype != NL80211_IFTYPE_AP &&
 	    dev->ieee80211_ptr->iftype != NL80211_IFTYPE_P2P_GO)
@@ -6985,12 +6988,13 @@ static int nl80211_parse_sta_txpower_setting(struct genl_info *info,
 
 static int nl80211_set_station(struct sk_buff *skb, struct genl_info *info)
 {
-	printk("***fflq nl80211_set_station\n") ;
 	struct cfg80211_registered_device *rdev = info->user_ptr[0];
 	struct net_device *dev = info->user_ptr[1];
 	struct station_parameters params;
 	u8 *mac_addr;
 	int err;
+
+	flq_dbgi_fl();
 
 	memset(&params, 0, sizeof(params));
 
@@ -8401,13 +8405,14 @@ nla_put_failure:
 
 static int nl80211_get_reg_do(struct sk_buff *skb, struct genl_info *info)
 {
-	printk(KERN_ERR "***fflq nl80211_get_reg_do") ;
 	const struct ieee80211_regdomain *regdom = NULL;
 	struct cfg80211_registered_device *rdev;
 	struct wiphy *wiphy = NULL;
 	struct sk_buff *msg;
 	int err = -EMSGSIZE;
 	void *hdr;
+
+	flq_dbgi_fl();
 
 	msg = nlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
 	if (!msg)
@@ -8608,7 +8613,6 @@ static int parse_reg_rule(struct nlattr *tb[],
 
 static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
 {
-	printk(KERN_ERR "***fflq nl80211_set_reg") ;
 	struct nlattr *tb[NL80211_REG_RULE_ATTR_MAX + 1];
 	struct nlattr *nl_reg_rule;
 	char *alpha2;
@@ -8616,6 +8620,8 @@ static int nl80211_set_reg(struct sk_buff *skb, struct genl_info *info)
 	u32 num_rules = 0, rule_idx = 0;
 	enum nl80211_dfs_regions dfs_region = NL80211_DFS_UNSET;
 	struct ieee80211_regdomain *rd;
+
+	flq_dbgi_fl();
 
 	if (!info->attrs[NL80211_ATTR_REG_ALPHA2])
 		return -EINVAL;
@@ -11470,9 +11476,7 @@ void __cfg80211_send_event_skb(struct sk_buff *skb, gfp_t gfp)
 	genlmsg_end(skb, hdr);
 
 	if (nlhdr->nlmsg_pid) {
-		static int flqcnt = 0 ;
-		if (flqcnt++ % 10000 == 0) 
-		printk(KERN_ERR "***fflq %s, nlmsg_pid%u\n", __func__, nlhdr->nlmsg_pid) ;
+		flqn_dbge_fl(10000, "nlmsg_pid=%u", nlhdr->nlmsg_pid) ;
 
 		genlmsg_unicast(wiphy_net(&rdev->wiphy), skb,
 				nlhdr->nlmsg_pid);
@@ -14717,8 +14721,8 @@ static int nl80211_vendor_check_policy(const struct wiphy_vendor_command *vcmd,
 				       struct nlattr *attr,
 				       struct netlink_ext_ack *extack)
 {
-	printk(KERN_ERR "***fflq %s, nla_type%d %d %d\n", __func__, 
-			attr->nla_type, NLA_F_NESTED, !(attr->nla_type & NLA_F_NESTED)) ;
+	flq_dbge_fl("nla_type%d %d %d", attr->nla_type, NLA_F_NESTED, 
+			!(attr->nla_type & NLA_F_NESTED)) ;
 
 	if (vcmd->policy == VENDOR_CMD_RAW_DATA) {
 		if (attr->nla_type & NLA_F_NESTED) {
@@ -14750,7 +14754,8 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 					   info->attrs);
 	int i, err;
 	u32 vid, subcmd;
-	printk(KERN_ERR "***fflq nl80211_vendor_cmd\n") ;
+
+	flq_dbgi_fl();
 
 	if (!rdev->wiphy.vendor_commands)
 		return -EOPNOTSUPP;
@@ -14770,7 +14775,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 
 	vid = nla_get_u32(info->attrs[NL80211_ATTR_VENDOR_ID]);
 	subcmd = nla_get_u32(info->attrs[NL80211_ATTR_VENDOR_SUBCMD]);
-	printk(KERN_ERR "***fflq %s, (vid,subcmd)=(0x%x,0x%x)\n", __func__, vid, subcmd) ;
+	flq_dbge_fl("(vid,subcmd)=(0x%x,0x%x)\n", vid, subcmd) ;
 	for (i = 0; i < rdev->wiphy.n_vendor_commands; i++) {
 		const struct wiphy_vendor_command *vcmd;
 		void *data = NULL;
@@ -14779,7 +14784,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 		vcmd = &rdev->wiphy.vendor_commands[i];
 
 		int n = rdev->wiphy.n_vendor_commands; 
-		//printk(KERN_ERR "---***fflq %s, i%d-n%d(csi)=(%x,%x)\n", __func__, i, n, vcmd->info.vendor_id, vcmd->info.subcmd) ;
+		//flq_dbge_fl("i%d-n%d(csi)=(%x,%x)\n", i, n, vcmd->info.vendor_id, vcmd->info.subcmd) ;
 
 		if (vcmd->info.vendor_id != vid || vcmd->info.subcmd != subcmd)
 			continue;
@@ -14811,7 +14816,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 					info->attrs[NL80211_ATTR_VENDOR_DATA],
 					genl_info_extack(info));
 			if (err) {
-				printk(KERN_ERR "***fflqkey %s, nl80211_vendor_check_policy err%d\n", __func__, err) ;
+				flq_dbge_fl("nl80211_vendor_check_policy err%d", err) ;
 				return err;
 			}
 		}
@@ -14819,7 +14824,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 		//fflqkkey
 		//if (vcmd->info.vendor_id == INTEL_OUI && vcmd->info.subcmd == IWL_MVM_VENDOR_CMD_CSI_EVENT)
 		if (vcmd->info.vendor_id == 0x001735 && vcmd->info.subcmd == 0x24)
-			printk(KERN_ERR "---fflqkey %s, i%d call csi(0x%x,0x%x)\n", __func__, i, 
+			flq_dbge_fl("i%d call csi(0x%x,0x%x)", i, 
 					vcmd->info.vendor_id, vcmd->info.subcmd) ;
 
 		rdev->cur_cmd_info = info;
@@ -14896,7 +14901,7 @@ static int nl80211_prepare_vendor_dump(struct sk_buff *skb,
 
 	vid = nla_get_u32(attrbuf[NL80211_ATTR_VENDOR_ID]);
 	subcmd = nla_get_u32(attrbuf[NL80211_ATTR_VENDOR_SUBCMD]);
-	printk(KERN_ERR "***fflq %s, (vid,subcmd)=(%x,%x)\n", __func__, vid, subcmd) ;
+	flq_dbge_fl("(vid,subcmd)=(%x,%x)", vid, subcmd) ;
 
 	for (i = 0; i < (*rdev)->wiphy.n_vendor_commands; i++) {
 		const struct wiphy_vendor_command *vcmd;
@@ -14904,8 +14909,8 @@ static int nl80211_prepare_vendor_dump(struct sk_buff *skb,
 		vcmd = &(*rdev)->wiphy.vendor_commands[i];
 
 		int n = (*rdev)->wiphy.n_vendor_commands; 
-		printk(KERN_ERR "---***fflq %s, i%d-n%d(%x,%x)=(%x,%x)\n", 
-				__func__, i, n, vid, subcmd, vcmd->info.vendor_id, vcmd->info.subcmd) ;
+		flq_dbge_fl("i%d-n%d(%x,%x)=(%x,%x)\n", i, n, vid, subcmd, 
+				vcmd->info.vendor_id, vcmd->info.subcmd) ;
 
 		if (vcmd->info.vendor_id != vid || vcmd->info.subcmd != subcmd)
 			continue;
@@ -14954,7 +14959,6 @@ out:
 static int nl80211_vendor_cmd_dump(struct sk_buff *skb,
 				   struct netlink_callback *cb)
 {
-	printk(KERN_ERR "***fflq %s\n", __func__) ;
 	struct cfg80211_registered_device *rdev;
 	struct wireless_dev *wdev;
 	unsigned int vcmd_idx;
@@ -14963,6 +14967,8 @@ static int nl80211_vendor_cmd_dump(struct sk_buff *skb,
 	int data_len;
 	int err;
 	struct nlattr *vendor_data;
+
+	flq_dbgi_fl();
 
 	rtnl_lock();
 	err = nl80211_prepare_vendor_dump(skb, cb, &rdev, &wdev);
@@ -17609,7 +17615,8 @@ void nl80211_send_sched_scan(struct cfg80211_sched_scan_request *req, u32 cmd)
 static bool nl80211_reg_change_event_fill(struct sk_buff *msg,
 					  struct regulatory_request *request)
 {
-	printk(KERN_ERR "***fflq %s\n", __func__) ;
+	flq_dbgi_fl();
+
 	/* Userspace can always count this one always being set */
 	if (nla_put_u8(msg, NL80211_ATTR_REG_INITIATOR, request->initiator))
 		goto nla_put_failure;

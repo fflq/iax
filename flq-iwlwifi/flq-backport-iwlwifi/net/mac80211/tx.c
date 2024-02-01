@@ -10,6 +10,7 @@
  * Transmit and frame generation functions.
  */
 
+#include <linux/flq-dbg.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/skbuff.h>
@@ -1786,7 +1787,7 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
 
 	switch (sdata->vif.type) {
 	case NL80211_IFTYPE_MONITOR:
-		//printk("***fflq %s, NL80211_IFTYPE_MONITOR\n", __func__) ;
+		//flq_dbgi_fl("NL80211_IFTYPE_MONITOR") ;
 		if (sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
 			vif = &sdata->vif;
 			break;
@@ -2311,7 +2312,6 @@ bool ieee80211_parse_tx_radiotap(struct sk_buff *skb,
 netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
 					 struct net_device *dev)
 {
-	//printk("***fflq ieee80211_monitor_start_xmit\n") ;
 	struct ieee80211_local *local = wdev_priv(dev->ieee80211_ptr);
 	struct ieee80211_chanctx_conf *chanctx_conf;
 	struct ieee80211_tx_info *info = IEEE80211_SKB_CB(skb);
@@ -2320,6 +2320,8 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
 	struct cfg80211_chan_def *chandef;
 	u16 len_rthdr;
 	int hdrlen;
+
+	//flq_dbgi_fl();
 
 	memset(info, 0, sizeof(*info));
 	info->flags = IEEE80211_TX_CTL_REQ_TX_STATUS |
@@ -2474,7 +2476,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
 	/* remove the injection radiotap header */
 	skb_pull(skb, len_rthdr);
 
-	//printk("***fflq ieee80211_monitor_start_xmit, before ieee80211_xmit\n") ;
+	//flq_dbgi_fl("before ieee80211_xmit") ;
 	ieee80211_xmit(sdata, NULL, skb);
 	rcu_read_unlock();
 

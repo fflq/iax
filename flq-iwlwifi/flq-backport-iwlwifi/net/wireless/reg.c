@@ -47,6 +47,7 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
+#include <linux/flq-dbg.h>
 #include <linux/kernel.h>
 #include <linux/export.h>
 #include <linux/slab.h>
@@ -1370,7 +1371,6 @@ static int reg_rules_intersect(const struct ieee80211_regdomain *rd1,
 			       const struct ieee80211_reg_rule *rule2,
 			       struct ieee80211_reg_rule *intersected_rule)
 {
-	printk("***fflq reg_rules_intersect\n") ;
 	const struct ieee80211_freq_range *freq_range1, *freq_range2;
 	struct ieee80211_freq_range *freq_range;
 	const struct ieee80211_power_rule *power_rule1, *power_rule2;
@@ -1378,6 +1378,8 @@ static int reg_rules_intersect(const struct ieee80211_regdomain *rd1,
 	const struct ieee80211_wmm_rule *wmm_rule1, *wmm_rule2;
 	struct ieee80211_wmm_rule *wmm_rule;
 	u32 freq_diff, max_bandwidth1, max_bandwidth2;
+
+	flq_dbgi_fl();
 
 	freq_range1 = &rule1->freq_range;
 	freq_range2 = &rule2->freq_range;
@@ -2809,9 +2811,10 @@ static enum reg_request_treatment
 reg_process_hint_driver(struct wiphy *wiphy,
 			struct regulatory_request *driver_request)
 {
-	printk(KERN_ERR "***fflq reg_process_hint_driver\n") ;
 	const struct ieee80211_regdomain *regd, *tmp;
 	enum reg_request_treatment treatment;
+
+	flq_dbgi_fl();
 
 	treatment = __reg_process_hint_driver(driver_request);
 
@@ -3164,12 +3167,13 @@ static void reg_process_pending_beacon_hints(void)
 
 static void reg_process_self_managed_hint(struct wiphy *wiphy)
 {
-	printk("***fflq reg_process_self_managed_hint\n") ;
 	struct cfg80211_registered_device *rdev = wiphy_to_rdev(wiphy);
 	const struct ieee80211_regdomain *tmp;
 	const struct ieee80211_regdomain *regd;
 	enum nl80211_band band;
 	struct regulatory_request request = {};
+
+	flq_dbgi_fl();
 
 	ASSERT_RTNL();
 	lockdep_assert_wiphy(wiphy);
@@ -3495,12 +3499,13 @@ static void restore_custom_reg_settings(struct wiphy *wiphy)
  */
 static void restore_regulatory_settings(bool reset_user, bool cached)
 {
-	printk(KERN_ERR "***fflq restore_regulatory_settings\n") ;
 	char alpha2[2];
 	char world_alpha2[2];
 	struct reg_beacon *reg_beacon, *btmp;
 	LIST_HEAD(tmp_reg_req_list);
 	struct cfg80211_registered_device *rdev;
+
+	flq_dbgi_fl();
 
 	ASSERT_RTNL();
 
@@ -3694,7 +3699,7 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
 	if (!reg_beacon)
 		return -ENOMEM;
 
-	printk("***fflq Found new beacon on frequency: %d.%03d MHz (Ch %d) on %s\n",
+	flq_dbgi_fl("Found new beacon on frequency: %d.%03d MHz (Ch %d) on %s\n",
 		 beacon_chan->center_freq, beacon_chan->freq_offset,
 		 ieee80211_freq_khz_to_channel(ieee80211_channel_to_khz(beacon_chan)),
 		 wiphy_name(wiphy));
@@ -3973,10 +3978,11 @@ static int reg_set_rd_country_ie(const struct ieee80211_regdomain *rd,
 int set_regdom(const struct ieee80211_regdomain *rd,
 	       enum ieee80211_regd_source regd_src)
 {
-	printk(KERN_ERR "***fflq set_regdom\n") ;
 	struct regulatory_request *lr;
 	bool user_reset = false;
 	int r;
+
+	flq_dbgi_fl();
 
 	if (IS_ERR_OR_NULL(rd))
 		return -ENODATA;
@@ -3991,7 +3997,7 @@ int set_regdom(const struct ieee80211_regdomain *rd,
 
 	lr = get_last_request();
 
-	printk("***fflq %s, lr->initiator %d\n", __func__, lr->initiator) ;
+	flq_dbgi_fl("lr->initiator %d", lr->initiator) ;
 	/* Note that this doesn't update the wiphys, this is done below */
 	switch (lr->initiator) {
 	case NL80211_REGDOM_SET_BY_CORE:

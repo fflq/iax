@@ -9,6 +9,7 @@
  * Copyright (C) 2018-2022 Intel Corporation
  */
 
+#include <linux/flq-dbg.h>
 #include <linux/jiffies.h>
 #include <linux/slab.h>
 #include <linux/kernel.h>
@@ -2735,7 +2736,6 @@ ieee80211_deliver_skb(struct ieee80211_rx_data *rx)
 static ieee80211_rx_result debug_noinline
 __ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx, u8 data_offset)
 {
-	//printk("***fflq ieee80211_rx_h_amsdu\n") ;
 	struct net_device *dev = rx->sdata->dev;
 	struct sk_buff *skb = rx->skb;
 	struct ieee80211_hdr *hdr = (struct ieee80211_hdr *)skb->data;
@@ -2743,6 +2743,8 @@ __ieee80211_rx_h_amsdu(struct ieee80211_rx_data *rx, u8 data_offset)
 	struct sk_buff_head frame_list;
 	struct ethhdr ethhdr;
 	const u8 *check_da = ethhdr.h_dest, *check_sa = ethhdr.h_source;
+
+	//flq_dbgi_fl();
 
 	if (unlikely(ieee80211_has_a4(hdr->frame_control))) {
 		check_da = NULL;
@@ -2996,7 +2998,6 @@ ieee80211_rx_h_mesh_fwding(struct ieee80211_rx_data *rx)
 static ieee80211_rx_result debug_noinline
 ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
 {
-	//printk("***fflq ieee80211_rx_h_data\n") ;
 	struct ieee80211_sub_if_data *sdata = rx->sdata;
 	struct ieee80211_local *local = rx->local;
 	struct net_device *dev = sdata->dev;
@@ -3004,6 +3005,8 @@ ieee80211_rx_h_data(struct ieee80211_rx_data *rx)
 	__le16 fc = hdr->frame_control;
 	bool port_control;
 	int err;
+
+	//flq_dbgi_fl();
 
 	if (unlikely(!ieee80211_is_data(hdr->frame_control)))
 		return RX_CONTINUE;

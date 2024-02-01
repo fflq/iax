@@ -1788,10 +1788,6 @@ static ssize_t iwl_dbgfs_dbg_time_point_write(struct iwl_mvm *mvm,
 #define MVM_DEBUGFS_ADD_FILE(name, parent, mode) \
 	MVM_DEBUGFS_ADD_FILE_ALIAS(#name, name, parent, mode)
 
-//fflq defined in mvm/flq-mvm.c
-MVM_DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate, 32);
-//DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate);
-
 static ssize_t
 _iwl_dbgfs_link_sta_wrap_write(ssize_t (*real)(struct ieee80211_link_sta *,
 					       struct iwl_mvm_sta *,
@@ -2554,7 +2550,6 @@ MVM_DEBUGFS_READ_WRITE_FILE_OPS(he_sniffer_params, 32);
 MVM_DEBUGFS_WRITE_FILE_OPS(ltr_config, 512);
 MVM_DEBUGFS_READ_WRITE_FILE_OPS(rfi_freq_table, 16);
 
-//fflqkey, cat mem err but get (8,fa/fb)
 static ssize_t iwl_dbgfs_mem_read(struct file *file, char __user *user_buf,
 				  size_t count, loff_t *ppos)
 {
@@ -2789,7 +2784,7 @@ void iwl_mvm_dbgfs_register(struct iwl_mvm *mvm)
 		MVM_DEBUGFS_ADD_FILE(csi_addresses, mvm->debugfs_dir, 0600);
 	}
 #endif
-	MVM_DEBUGFS_ADD_FILE(monitor_tx_rate, mvm->debugfs_dir, S_IRUSR | S_IWUSR); //fflq_add
+	MVM_DEBUGFS_ADD_FILE(monitor_tx_rate, mvm->debugfs_dir, S_IRUSR | S_IWUSR); //fflq-add
 
 	MVM_DEBUGFS_ADD_FILE(he_sniffer_params, mvm->debugfs_dir, 0600);
 

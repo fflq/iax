@@ -614,7 +614,7 @@ static u16 iwl_fill_probe_req(struct ieee80211_mgmt *frame, const u8 *ta,
 
 static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
 {
-	flq_dbge_fl();
+	//flq_dbge_fl();
 	struct iwl_host_cmd cmd = {
 		.id = REPLY_SCAN_CMD,
 		.len = { sizeof(struct iwl_scan_cmd), },

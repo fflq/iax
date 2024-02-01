@@ -157,7 +157,9 @@ void parse_csi_buf(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi
 	fflush(g_fp_csi) ;
 
 	// send to net
-	g_tcp_client->send(buf, pos) ;
+	if (g_tcp_client) {
+		g_tcp_client->send(buf, pos) ;
+	}
 
 	// parse csi_hdr in little endian
 	csi_hdr_t *pch = (p_csi_hdr_t)csi_hdr ;

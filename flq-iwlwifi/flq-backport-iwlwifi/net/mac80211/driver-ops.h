@@ -8,6 +8,7 @@
 #ifndef __MAC80211_DRIVER_OPS
 #define __MAC80211_DRIVER_OPS
 
+#include <linux/flq-dbg.h>
 #include <net/mac80211.h>
 #include "ieee80211_i.h"
 #include "trace.h"
@@ -949,8 +950,8 @@ static inline int drv_start_ap(struct ieee80211_local *local,
 			       struct ieee80211_sub_if_data *sdata,
 			       struct ieee80211_bss_conf *link_conf)
 {
-	printk("***fflq drv_start_ap\n") ;
 	int ret = 0;
+	flq_dbgi_fl();
 
 	/* make sure link_conf is protected */
 	drv_verify_link_exists(sdata, link_conf);

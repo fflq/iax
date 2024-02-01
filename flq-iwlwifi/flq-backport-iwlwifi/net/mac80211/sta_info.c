@@ -7,6 +7,7 @@
  * Copyright (C) 2018-2022 Intel Corporation
  */
 
+#include <linux/flq-dbg.h>
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/etherdevice.h>
@@ -2520,12 +2521,13 @@ static inline u64 sta_get_stats_bytes(struct ieee80211_sta_rx_stats *rxstats)
 void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
 		   bool tidstats)
 {
-	//printk(KERN_ERR "***fflq %s, get rssi in iw dev link\n", __func__) ;
 	struct ieee80211_sub_if_data *sdata = sta->sdata;
 	struct ieee80211_local *local = sdata->local;
 	u32 thr = 0;
 	int i, ac, cpu;
 	struct ieee80211_sta_rx_stats *last_rxstats;
+
+	//flq_dbgi_fl();
 
 	last_rxstats = sta_get_last_rx_stats(sta);
 
@@ -2652,7 +2654,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
 	    ieee80211_hw_check(&sta->local->hw, SIGNAL_UNSPEC)) {
 		if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_SIGNAL))) {
 			sinfo->signal = (s8)last_rxstats->last_signal;
-			//printk(KERN_ERR "***fflq %s, signal %d\n", __func__, sinfo->signal) ;
+			//flq_dbge_fl("signal %d", sinfo->signal) ;
 			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
 		}
 
@@ -2683,7 +2685,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
 			sinfo->chain_signal_avg[i] =
 				-ewma_signal_read(&sta->deflink.rx_stats_avg.chain_signal[i]);
 			//fflq get each ant rssi
-			//printk(KERN_ERR "***fflq %s, chain_signal[%d]=%d\n", __func__, i, sinfo->chain_signal[i]) ;
+			//flq_dbge_fl("chain_signal[%d]=%d", i, sinfo->chain_signal[i]) ;
 		}
 	}
 

@@ -518,7 +518,7 @@ static void iwl_pcie_rx_allocator(struct iwl_trans *trans)
 	struct list_head local_empty;
 	int pending = atomic_read(&rba->req_pending);
 
-	IWL_DEBUG_TPT(trans, "Pending allocation requests = %d\n", pending);
+	IWL_DEBUG_TPT(trans, "Pending allocation requests = %d\n", pending); //fflq frequently called
 
 	/* If we were scheduled - there is at least one request */
 	spin_lock_bh(&rba->lock);

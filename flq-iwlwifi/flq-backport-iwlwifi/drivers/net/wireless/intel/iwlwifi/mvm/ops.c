@@ -179,7 +179,7 @@ static void iwl_mvm_rx_monitor_notif(struct iwl_mvm *mvm,
 	const struct ieee80211_sta_he_cap *he_cap;
 	struct ieee80211_vif *vif;
 
-	flqn_dbge(10000, "(%s), (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
+	flqn_dbge_fl(10000, "(%x,%x)", pkt->hdr.group_id, pkt->hdr.cmd) ;
 
 	if (notif->type != cpu_to_le32(IWL_DP_MON_NOTIF_TYPE_EXT_CCA))
 		return;
@@ -1816,15 +1816,15 @@ static void iwl_mvm_rx(struct iwl_op_mode *op_mode,
 #endif
 
 	if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD))) {
-		flqn_dbge(10000, "(%s), call iwl_mvm_rx_rx_mpdu", __func__);
+		flqn_dbge_fl(10000, "call iwl_mvm_rx_rx_mpdu");
 		iwl_mvm_rx_rx_mpdu(mvm, napi, rxb); //fflqkey rx_mpdu
 	}
 	else if (cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_PHY_CMD)) {
-		flqn_dbge(10000, "(%s), call iwl_mvm_rx_rx_phy_cmd", __func__);
+		flqn_dbge_fl(10000, "call iwl_mvm_rx_rx_phy_cmd");
 		iwl_mvm_rx_rx_phy_cmd(mvm, rxb);	//fflqkey rx_phy
 	}
 	else {
-		flqn_dbge(10000, "(%s), call iwl_mvm_rx_common", __func__);
+		flqn_dbge_fl(10000, "call iwl_mvm_rx_common");
 		iwl_mvm_rx_common(mvm, rxb, pkt); //fflq
 	}
 }
@@ -1848,7 +1848,7 @@ void iwl_mvm_rx_mq(struct iwl_op_mode *op_mode,
 	 */
 	iwl_tm_gnl_send_rx(mvm->trans, rxb);
 #endif
-	flqn_dbge(10000, "(%s), judge, (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
+	flqn_dbge_fl(10000, "judge, (%x,%x)", pkt->hdr.group_id, pkt->hdr.cmd) ;
 
 	if (likely(cmd == WIDE_ID(LEGACY_GROUP, REPLY_RX_MPDU_CMD))){
 		iwl_mvm_rx_mpdu_mq(mvm, napi, rxb, 0); //fflq, here recv injections 

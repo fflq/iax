@@ -7,6 +7,7 @@
 #ifndef __CFG80211_RDEV_OPS
 #define __CFG80211_RDEV_OPS
 
+#include <linux/flq-dbg.h>
 #include <linux/rtnetlink.h>
 #include <net/cfg80211.h>
 #include "core.h"
@@ -164,8 +165,8 @@ static inline int rdev_start_ap(struct cfg80211_registered_device *rdev,
 				struct net_device *dev,
 				struct cfg80211_ap_settings *settings)
 {
-	printk("***fflq rdev_start_ap\n") ;
 	int ret;
+	flq_dbgi_fl();
 	trace_rdev_start_ap(&rdev->wiphy, dev, settings);
 	//fflq .start_ap = iwl_mvm_start_ap,
 	ret = rdev->ops->start_ap(&rdev->wiphy, dev, settings);

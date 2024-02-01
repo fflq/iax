@@ -35,10 +35,11 @@ ssize_t iwl_dbgfs_monitor_tx_rate_write(struct iwl_mvm *mvm,
 
 	return count;
 }
-//MVM_DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate, 32);
-//DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate);
 
-//fflq
+//follow in mvm/debugfs.c, next in mvm/debugfs.h
+//MVM_DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate, 32);
+//_MVM_DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate, 32, struct iwl_mvm);
+
 // because csi_hdr/chunk call by schedule_work(&mvm->async_handlers_wk);
 // so call here asyncly, and flq_src_mac is not realtime and reorder.
 // ef:be:ad:de:ad:de
@@ -49,7 +50,9 @@ void flq_expand_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr)
     struct flq_iwl_mvm_res *flq_res = &mvm->flq_res;
 	struct iwl_rx_mpdu_desc_v3 *desc3 = &(flq_res->desc.v3); ;
 	time64_t unix_ts;
-	int pos = 208, size;
+	int pos = 208;
+
+	flqn_dbge_fl(10000);
 
 	u8 *mac, *flq_smac = flq_res->src_mac, *csi_smac = csi_hdr+68;
 	u64 invalid_smac_tag = 0xdeaddeadbeef;
@@ -59,10 +62,10 @@ void flq_expand_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr)
 	//if ((csi_smac[5] != 0xde) && (flq_smac[5] != csi_smac[5])) {
 	if (csi_smac_tag == invalid_smac_tag) {
 		mac = flq_smac;
-		flq_dbgi("flq_smac %02x:%02x:%02x:%02x:%02x:%02x\n", 
+		flqn_dbgi(10000, "flq_smac %02x:%02x:%02x:%02x:%02x:%02x\n", 
 				mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 		mac = csi_smac;
-		flq_dbgi("flq_smac %02x:%02x:%02x:%02x:%02x:%02x\n", 
+		flqn_dbgi(10000, "flq_smac %02x:%02x:%02x:%02x:%02x:%02x\n", 
 				mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 	}
 	//memcpy(csi_smac, flq_smac, ETH_ALEN) ;
@@ -102,7 +105,7 @@ void flq_expand_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr)
 	memcpy(csi_hdr+pos, &(phy_info->channel), sizeof(phy_info->channel));
 	pos += sizeof(phy_info->channel);
 	//4.non_cfg_phy
-	//size = IWL_RX_INFO_PHY_CNT * sizeof(phy_info->non_cfg_phy[0]);
+	//int size = IWL_RX_INFO_PHY_CNT * sizeof(phy_info->non_cfg_phy[0]);
 	//memcpy(csi_hdr+pos, (phy_info->non_cfg_phy), size);
 	//pos += size;
 	//rnf
@@ -139,22 +142,22 @@ void flq_send_test(struct iwl_mvm *mvm, void *hdr, unsigned int hdr_len)
 
 /* 
  * that consistent during csi-hdr/chunk, and csi'mac is invalid
-[36800.967908] ****fflq flq_record_macs, cc:2d:21:d4:7:91
-[36800.991893] ****fflq flq_record_macs, 20:82:1a:28:3:10
-[36800.991960] ****fflq iwl_mvm_rx_csi_header, 0:0:fe:0:0:8
-[36800.991972] ****fflq iwl_mvm_rx_csi_chunk, fb:ff:5a:ff:d6:ff
-[36800.991982] ****fflq iwl_mvm_rx_csi_chunk, idx/num, 1/2
-[36800.991990] ****fflq iwl_mvm_rx_csi_chunk, 37:0:b6:ff:20:0
-[36800.991999] ****fflq iwl_mvm_rx_csi_chunk, idx/num, 2/2
-[36800.995844] ****fflq flq_record_macs, 66:5c:8:cd:18:11
-[36800.995892] ****fflq flq_record_macs, 60:2f:33:c:3:10
+[36800.967908] ***fflq flq_record_macs, cc:2d:21:d4:7:91
+[36800.991893] ***fflq flq_record_macs, 20:82:1a:28:3:10
+[36800.991960] ***fflq iwl_mvm_rx_csi_header, 0:0:fe:0:0:8
+[36800.991972] ***fflq iwl_mvm_rx_csi_chunk, fb:ff:5a:ff:d6:ff
+[36800.991982] ***fflq iwl_mvm_rx_csi_chunk, idx/num, 1/2
+[36800.991990] ***fflq iwl_mvm_rx_csi_chunk, 37:0:b6:ff:20:0
+[36800.991999] ***fflq iwl_mvm_rx_csi_chunk, idx/num, 2/2
+[36800.995844] ***fflq flq_record_macs, 66:5c:8:cd:18:11
+[36800.995892] ***fflq flq_record_macs, 60:2f:33:c:3:10
  * 
-[37296.943687] ****fflq iwl_mvm_csi_complete, flq_mac 66:5c:8:cd:18:11
-[37296.943699] ****fflq iwl_mvm_csi_complete, csi_hdr 66:5c:8:cd:18:11
-[37297.060271] ****fflq iwl_mvm_csi_complete, flq_mac 20:82:1a:28:3:10
-[37297.060284] ****fflq iwl_mvm_csi_complete, csi_hdr ef:be:ad:de:ad:de
-[37297.201618] ****fflq iwl_mvm_csi_complete, flq_mac 66:5c:8:cd:18:11
-[37297.201631] ****fflq iwl_mvm_csi_complete, csi_hdr ef:be:ad:de:ad:de
+[37296.943687] ***fflq iwl_mvm_csi_complete, flq_mac 66:5c:8:cd:18:11
+[37296.943699] ***fflq iwl_mvm_csi_complete, csi_hdr 66:5c:8:cd:18:11
+[37297.060271] ***fflq iwl_mvm_csi_complete, flq_mac 20:82:1a:28:3:10
+[37297.060284] ***fflq iwl_mvm_csi_complete, csi_hdr ef:be:ad:de:ad:de
+[37297.201618] ***fflq iwl_mvm_csi_complete, flq_mac 66:5c:8:cd:18:11
+[37297.201631] ***fflq iwl_mvm_csi_complete, csi_hdr ef:be:ad:de:ad:de
  */
 //called in mvm/rxmq.c/iwl_mvm_rx_mpdu_mq
 void flq_mvm_record(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
@@ -191,9 +194,7 @@ void flq_iwl_mvm_set_monitor_tx_rate(struct iwl_mvm *mvm, struct sk_buff *skb,
 			!flq_res->monitor_tx_rate) 
 		return ;
 
-
-	flqn_dbge(10000, "(%s), rate_n_flags=monitor_tx_rate=%08x",
-			flq_res->monitor_tx_rate) ;
+	flqn_dbge_fl(10000, "rate_n_flags=monitor_tx_rate=%08x", flq_res->monitor_tx_rate) ;
 
 	if (iwl_mvm_has_new_tx_api(mvm)) {
 		if (mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {

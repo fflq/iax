@@ -23,7 +23,7 @@ void iwl_mvm_rx_rx_phy_cmd(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 	struct iwl_rx_packet *pkt = rxb_addr(rxb);
 	unsigned int pkt_len = iwl_rx_packet_payload_len(pkt);
 
-	flqn_dbge(10000, "(%s), (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
+	flqn_dbge_fl(10000, "(group_id,cmd)=(%x,%x)", pkt->hdr.group_id, pkt->hdr.cmd) ;
 
 	if (unlikely(pkt_len < sizeof(mvm->last_phy_info)))
 		return;
@@ -129,7 +129,7 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
 	rx_status->chain_signal[0] = energy_a;
 	rx_status->chain_signal[1] = energy_b;
 
-	flqn_dbge(10000, "energyABMax(%d,%d,%d), chains(%u)",
+	flqn_dbge_fl(10000, "energyABMax(%d,%d,%d), chains(%u)",
 			energy_a, energy_b, max_energy, rx_status->chains);
 }
 
@@ -301,7 +301,7 @@ void iwl_mvm_rx_rx_mpdu(struct iwl_mvm *mvm, struct napi_struct *napi,
 	u32 rx_pkt_status;
 	u8 crypt_len = 0;
 
-	flqn_dbge(10000, "(%s), (%x,%x)\n", __func__, pkt->hdr.group_id, pkt->hdr.cmd) ;
+	flqn_dbge_fl(10000, "(group_id,cmd)=(%x,%x)", pkt->hdr.group_id, pkt->hdr.cmd) ;
 
 	if (unlikely(pkt_len < sizeof(*rx_res))) {
 		IWL_DEBUG_DROP(mvm, "Bad REPLY_RX_MPDU_CMD size\n");

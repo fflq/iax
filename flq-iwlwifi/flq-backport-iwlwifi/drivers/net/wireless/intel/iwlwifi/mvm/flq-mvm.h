@@ -17,6 +17,7 @@
 #include "iwl-vendor-cmd.h"
 #include "iwl-io.h"
 #include "iwl-prph.h"
+#include "debugfs.h"
 
 struct iwl_mvm;
 
@@ -34,8 +35,9 @@ ssize_t iwl_dbgfs_monitor_tx_rate_read(struct file *file,
 ssize_t iwl_dbgfs_monitor_tx_rate_write(struct iwl_mvm *mvm, 
 		char *buf, size_t count, loff_t *ppos) ;
 
+//follow in mvm/debugfs.c, next in mvm/debugfs.h
 //MVM_DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate, 32);
-//DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate);
+_MVM_DEBUGFS_READ_WRITE_FILE_OPS(monitor_tx_rate, 32, struct iwl_mvm);
 
 //called in mvm/vendor-cmd.c/iwl_mvm_csi_complete
 void flq_expand_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr) ;
