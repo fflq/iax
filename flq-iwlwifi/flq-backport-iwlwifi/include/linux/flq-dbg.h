@@ -7,34 +7,35 @@
 #include <linux/types.h>
 
 #define FLQ_PREFIX "***fflqp: "
+#define FLQ_KERN_DEBUG	KERN_DEBUG FLQ_PREFIX
+#define FLQ_KERN_ERR	KERN_ERR FLQ_PREFIX
 
 #ifdef FLQ_DEBUG
-#define _flq_dbg(fmt, args...) printk(FLQ_PREFIX fmt, ##args)
-#define _flq_dbg_fl(fmt, args...) \
-        _flq_dbg(FLQ_PREFIX "(%s:%d) " fmt, __func__, __LINE__, ##args)
-#define _flqn_dbg(n, fmt, args...) _flqn_printk(n, fmt, ##args)
-#define _flqn_dbg_fl(n, fmt, args...) \
-        _flqn_dbg(n, "(%s:%d) " fmt, __func__, __LINE__, ##args)
+#define _dbg(fmt, ...)	printk(fmt, ##__VA_ARGS__)
+#define _n_dbg(fmt, ...)	_n_printk(fmt, ##__VA_ARGS__)
 #else
-#define _flq_dbg(fmt, args...) do { } while (0)
-#define _flq_dbg_fl(fmt, args...) do { } while (0)
-#define _flqn_dbg(n, fmt, args...) do { } while (0)
-#define _flqn_dbg_fl(n, fmt, args...) do { } while (0)
+#define _dbg(...)	do { } while (0)
+#define _n_dbg(...)	do { } while (0)
 #endif
 
-#define flq_dbgi(fmt, args...) _flq_dbg(KERN_DEBUG fmt, ##args)
-#define flq_dbge(fmt, args...) _flq_dbg(KERN_ERR fmt, ##args)
-#define flq_dbgi_fl(fmt, args...) _flq_dbg_fl(KERN_DEBUG fmt, ##args)
-#define flq_dbge_fl(fmt, args...) _flq_dbg_fl(KERN_ERR fmt, ##args)
+//#define flq_dbgi(fmt, ...)	_dbg(FLQ_KERN_DEBUG fmt, ##__VA_ARGS__)		
+#define flq_dbgi(fmt, ...)	\
+    _dbg(FLQ_KERN_DEBUG "(%s:%d) " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#define flq_dbge(fmt, ...)	\
+    _dbg(FLQ_KERN_ERR "(%s:%d) " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#define flq_dbgi_fl(...)	flq_dbgi("")
+#define flq_dbge_fl(...)	flq_dbge("")
 
-#define flqn_dbgi(n, fmt, args...) _flqn_dbg(n, KERN_DEBUG fmt, ##args)
-#define flqn_dbge(n, fmt, args...) _flqn_dbg(n, KERN_ERR fmt, ##args)
-#define flqn_dbgi_fl(n, fmt, args...) _flqn_dbg_fl(n, KERN_DEBUG fmt, ##args)
-#define flqn_dbge_fl(n, fmt, args...) _flqn_dbg_fl(n, KERN_ERR fmt, ##args)
+#define flqn_dbgi(n, fmt, ...)	\
+	_n_dbg(n, FLQ_KERN_DEBUG "(%s:%d) " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#define flqn_dbge(n, fmt, ...)	\
+	_n_dbg(n, FLQ_KERN_ERR "(%s:%d) " fmt, __func__, __LINE__, ##__VA_ARGS__)
+#define flqn_dbgi_fl(n, ...)	flqn_dbgi(n, "")
+#define flqn_dbge_fl(n, ...)	flqn_dbge(n, "")
 
-static int _flqn_printk(int n, const char *fmt, ...) __attribute__((unused)) ;
+static int _n_printk(int n, const char *fmt, ...) __attribute__((unused)) ;
 
-static int _flqn_printk(int n, const char *fmt, ...) 
+static int _n_printk(int n, const char *fmt, ...) 
 {
     va_list args;
 

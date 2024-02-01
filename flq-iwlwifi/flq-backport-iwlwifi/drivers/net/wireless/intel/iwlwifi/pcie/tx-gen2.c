@@ -149,7 +149,7 @@ int iwl_pcie_gen2_enqueue_hcmd(struct iwl_trans *trans,
 		//fflq ap5g cmd(43) group_id(1) version(0) length(28) sequence(35)
 		//fflq ap2g cmd(24) group_id(1) version(0) length(48) sequence(33)
 		struct iwl_cmd_header_wide flqhw = out_cmd->hdr_wide;
-		flq_dbgi_fl("cmd(%d) group_id(%d) version(%d) length(%d) sequence(%u)\n",
+		flq_dbgi("cmd(%d) group_id(%d) version(%d) length(%d) sequence(%u)\n",
 				flqhw.cmd, flqhw.group_id, flqhw.version, flqhw.length, flqhw.sequence) ;
 	}
 

@@ -90,7 +90,7 @@ void iwlagn_bfee_notif(struct iwl_priv *priv, struct iwl_rx_cmd_buffer *rxb)
 	Ntx = bfee_notif->Ntx;
 	/* Log the bytes to a file */
 	if (priv->connector_log & IWL_CONN_BFEE_NOTIF_MSK) {
-		flqn_dbge_fl(10000, "send_msg(%d), Nrx=%u Ntx=%u Antsel=%02x, "
+		flqn_dbge(10000, "send_msg(%d), Nrx=%u Ntx=%u Antsel=%02x, "
 				"len=%u calc_len=%u\n", IWL_CONN_BFEE_NOTIF, Nrx, Ntx, 
 				bfee_notif->antenna_sel, len, (30*(3+2*Nrx*Ntx*8)+7)/8);
 

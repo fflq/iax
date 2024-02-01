@@ -2024,7 +2024,7 @@ iwl_mvm_send_csi_event(struct iwl_mvm *mvm,
 	u8 *pos;
 	int i;
 
-	flqn_dbgi_fl(10000, "csi_portid=%d hdr_len=%u (0 is unregister)", 
+	flqn_dbgi(10000, "csi_portid=%d hdr_len=%u (0 is unregister)", 
 			mvm->csi_portid, hdr_len) ;
 
 	if (!mvm->csi_portid)
@@ -2105,7 +2105,7 @@ static void iwl_mvm_csi_complete(struct iwl_mvm *mvm)
 	void *csi_hdr;
 	int i;
 
-	flqn_dbge_fl(10000, "csi_portid=%d", mvm->csi_portid) ;
+	flqn_dbge(10000, "csi_portid=%d", mvm->csi_portid) ;
 
 	/*
 	 * Ensure we have the right # of entries, the local data/len

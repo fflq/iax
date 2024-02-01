@@ -2654,7 +2654,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
 	    ieee80211_hw_check(&sta->local->hw, SIGNAL_UNSPEC)) {
 		if (!(sinfo->filled & BIT_ULL(NL80211_STA_INFO_SIGNAL))) {
 			sinfo->signal = (s8)last_rxstats->last_signal;
-			//flq_dbge_fl("signal %d", sinfo->signal) ;
+			//flq_dbge("signal %d", sinfo->signal) ;
 			sinfo->filled |= BIT_ULL(NL80211_STA_INFO_SIGNAL);
 		}
 
@@ -2685,7 +2685,7 @@ void sta_set_sinfo(struct sta_info *sta, struct station_info *sinfo,
 			sinfo->chain_signal_avg[i] =
 				-ewma_signal_read(&sta->deflink.rx_stats_avg.chain_signal[i]);
 			//fflq get each ant rssi
-			//flq_dbge_fl("chain_signal[%d]=%d", i, sinfo->chain_signal[i]) ;
+			//flq_dbge("chain_signal[%d]=%d", i, sinfo->chain_signal[i]) ;
 		}
 	}
 

@@ -351,7 +351,7 @@ static u32 iwl_mvm_get_tx_rate(struct iwl_mvm *mvm,
 		rate_idx = IWL_FIRST_OFDM_RATE;
 #endif
 		//fflq, ax210 not be here
-		//flq_dbgi_fl("rate_idx=%04x", rate_idx) ;
+		//flq_dbgi("rate_idx=%04x", rate_idx) ;
 	}
 
 	/* if the rate isn't a well known legacy rate, take the lowest one */
@@ -374,7 +374,7 @@ static u32 iwl_mvm_get_tx_rate(struct iwl_mvm *mvm,
 		rate_flags |= RATE_MCS_CCK_MSK_V1;
 	}
 	//fflq, here is 0x0000 | 0x0100
-	//flq_dbgi_fl("rate_plcp=%04x rate_flags=%04x", (u32)rate_plcp, rate_flags) ;
+	//flq_dbgi("rate_plcp=%04x rate_flags=%04x", (u32)rate_plcp, rate_flags) ;
 
 	return (u32)rate_plcp | rate_flags;
 }
@@ -570,7 +570,7 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
 			//rate_n_flags = 0xd400 ; //fflqkey he80 err
 			rate_n_flags = 0xc400 | RATE_MCS_LDPC_MSK | RATE_MCS_SGI_MSK ;
 			*/
-			//flq_dbgi_fl("rate_n_flags=%04x, tx_rate123|ants4\n", rate_n_flags) ;
+			//flq_dbgi("rate_n_flags=%04x, tx_rate123|ants4\n", rate_n_flags) ;
 		}
 
 		if (mvm->trans->trans_cfg->device_family >=
@@ -617,7 +617,7 @@ iwl_mvm_set_tx_params(struct iwl_mvm *mvm, struct sk_buff *skb,
 	iwl_mvm_set_tx_cmd(mvm, skb, tx_cmd, info, sta_id);
 
 	iwl_mvm_set_tx_cmd_rate(mvm, tx_cmd, info, sta, hdr->frame_control);
-	//flq_dbgi_fl("txcmd->rate_n_flags=%04x\n", tx_cmd->rate_n_flags) ;
+	//flq_dbgi("txcmd->rate_n_flags=%04x\n", tx_cmd->rate_n_flags) ;
 
 	/* Copy MAC header from skb into command buffer */
 	memcpy(tx_cmd->hdr, hdr, hdrlen);

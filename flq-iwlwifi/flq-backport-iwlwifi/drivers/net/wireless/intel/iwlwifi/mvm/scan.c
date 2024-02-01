@@ -155,7 +155,7 @@ static inline __le16 iwl_mvm_scan_rx_chain(struct iwl_mvm *mvm)
 	rx_chain |= rx_ant << PHY_RX_CHAIN_FORCE_MIMO_SEL_POS;
 	rx_chain |= rx_ant << PHY_RX_CHAIN_FORCE_SEL_POS;
 	rx_chain |= 0x1 << PHY_RX_CHAIN_DRIVER_FORCE_POS;
-	flq_dbgi_fl("rx_chain %u", rx_chain) ;
+	flq_dbgi("rx_chain %u", rx_chain) ;
 	return cpu_to_le16(rx_chain);
 }
 

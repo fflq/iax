@@ -192,7 +192,7 @@ struct ieee80211_regdomain *iwl_mvm_get_regdomain(struct wiphy *wiphy,
 	mvm->lar_regdom_set = true;
 	mvm->mcc_src = src_id;
 
-	flq_dbgi_fl("iwl_mei_set_country_code(%d)", resp->mcc) ;
+	flq_dbgi("iwl_mei_set_country_code(%d)", resp->mcc) ;
 	iwl_mei_set_country_code(__le16_to_cpu(resp->mcc));
 
 out:
@@ -813,7 +813,7 @@ void iwl_mvm_mac_tx(struct ieee80211_hw *hw,
 	//fflq
 	/*
 	if (info->control.vif->type == NL80211_IFTYPE_MONITOR) {
-		flq_dbgi_fl("type=MONITOR, fc=%04x\n", hdr->frame_control) ;
+		flq_dbgi("type=MONITOR, fc=%04x\n", hdr->frame_control) ;
 	}
 	*/
 
@@ -1278,7 +1278,7 @@ static void iwl_mvm_restart_complete(struct iwl_mvm *mvm)
 	//fflq, resend csi_cmd if csi_enabled before fw_restart
 	if (mvm->csi_cfg.flags & IWL_CHANNEL_ESTIMATION_ENABLE) {
 		int err = iwl_mvm_send_csi_cmd(mvm);
-		flq_dbge_fl("iwl_mvm_send_csi_cmd=%d\n", err) ;
+		flq_dbge("iwl_mvm_send_csi_cmd=%d", err) ;
 	}
 #endif
 
@@ -3027,7 +3027,7 @@ static int iwl_mvm_start_ap_ibss(struct ieee80211_hw *hw,
 
 	/* Perform the binding */
 	ret = iwl_mvm_binding_add_vif(mvm, vif); //fflq crash -5 here
-	flq_dbgi_fl("iwl_mvm_binding_add_vif=%d", ret) ;
+	flq_dbgi("iwl_mvm_binding_add_vif=%d", ret) ;
 	if (ret)
 		goto out_remove;
 

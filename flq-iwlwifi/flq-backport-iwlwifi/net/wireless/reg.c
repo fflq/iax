@@ -3699,7 +3699,7 @@ int regulatory_hint_found_beacon(struct wiphy *wiphy,
 	if (!reg_beacon)
 		return -ENOMEM;
 
-	flq_dbgi_fl("Found new beacon on frequency: %d.%03d MHz (Ch %d) on %s\n",
+	flq_dbgi("Found new beacon on frequency: %d.%03d MHz (Ch %d) on %s\n",
 		 beacon_chan->center_freq, beacon_chan->freq_offset,
 		 ieee80211_freq_khz_to_channel(ieee80211_channel_to_khz(beacon_chan)),
 		 wiphy_name(wiphy));
@@ -3997,7 +3997,7 @@ int set_regdom(const struct ieee80211_regdomain *rd,
 
 	lr = get_last_request();
 
-	flq_dbgi_fl("lr->initiator %d", lr->initiator) ;
+	flq_dbgi("lr->initiator %d", lr->initiator) ;
 	/* Note that this doesn't update the wiphys, this is done below */
 	switch (lr->initiator) {
 	case NL80211_REGDOM_SET_BY_CORE:

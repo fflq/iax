@@ -11,7 +11,7 @@ ssize_t iwl_dbgfs_monitor_tx_rate_read(struct file *file,
 	int len;
 
 	len = scnprintf(buf, sizeof(buf), "0x%x", mvm->flq_res.monitor_tx_rate);
-	flq_dbge_fl("read %s\n", buf) ;
+	flq_dbge("read %s", buf) ;
 
 	return simple_read_from_buffer(user_buf, count, ppos, buf, len);
 }
@@ -31,7 +31,7 @@ ssize_t iwl_dbgfs_monitor_tx_rate_write(struct iwl_mvm *mvm,
 		return ret;
 
 	mvm->flq_res.monitor_tx_rate = val;
-	flq_dbge_fl("write 0x%x\n", mvm->flq_res.monitor_tx_rate) ;
+	flq_dbge("write 0x%x", mvm->flq_res.monitor_tx_rate) ;
 
 	return count;
 }
@@ -178,7 +178,7 @@ void flq_mvm_record(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 	memcpy(flq_res->src_mac, src_mac, ETH_ALEN);
 	memcpy(flq_res->dst_mac, dst_mac, ETH_ALEN);
 	u8 *mac = flq_res->src_mac;
-	//flq_dbgi_fl("%x:%x:%x:%x:%x:%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	//flq_dbgi("%x:%x:%x:%x:%x:%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
 	memcpy(&(flq_res->desc), desc, sizeof(*desc));
 }
@@ -194,7 +194,7 @@ void flq_iwl_mvm_set_monitor_tx_rate(struct iwl_mvm *mvm, struct sk_buff *skb,
 			!flq_res->monitor_tx_rate) 
 		return ;
 
-	flqn_dbge_fl(10000, "rate_n_flags=monitor_tx_rate=%08x", flq_res->monitor_tx_rate) ;
+	flqn_dbge(10000, "rate_n_flags=monitor_tx_rate=%08x", flq_res->monitor_tx_rate) ;
 
 	if (iwl_mvm_has_new_tx_api(mvm)) {
 		if (mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210) {

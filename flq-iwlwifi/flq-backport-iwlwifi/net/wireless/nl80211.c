@@ -1125,7 +1125,7 @@ static int nl80211_msg_put_channel(struct sk_buff *msg, struct wiphy *wiphy,
 	}
 	//chan->flags &= ~IEEE80211_CHAN_RADAR ; //fflqkey change chan->flags, iw list radar dect
 	if (chan->flags & IEEE80211_CHAN_RADAR) {
-		//flq_dbgi_fl("NL80211_FREQUENCY_ATTR_RADAR") ;
+		//flq_dbgi("NL80211_FREQUENCY_ATTR_RADAR") ;
 		if (nla_put_flag(msg, NL80211_FREQUENCY_ATTR_RADAR)) {
 			goto nla_put_failure;
 		}
@@ -6063,7 +6063,7 @@ static int nl80211_start_ap(struct sk_buff *skb, struct genl_info *info)
 	/* FIXME: validate MLO/link-id against driver capabilities */
 
 	err = rdev_start_ap(rdev, dev, params); //fflq ap5g err=-5
-	flq_dbgi_fl("err=%d", err) ;
+	flq_dbgi("err=%d", err) ;
 	if (!err) {
 		wdev->links[link_id].ap.beacon_interval = params->beacon_interval;
 		wdev->links[link_id].ap.chandef = params->chandef;
@@ -11476,7 +11476,7 @@ void __cfg80211_send_event_skb(struct sk_buff *skb, gfp_t gfp)
 	genlmsg_end(skb, hdr);
 
 	if (nlhdr->nlmsg_pid) {
-		flqn_dbge_fl(10000, "nlmsg_pid=%u", nlhdr->nlmsg_pid) ;
+		flqn_dbge(10000, "nlmsg_pid=%u", nlhdr->nlmsg_pid) ;
 
 		genlmsg_unicast(wiphy_net(&rdev->wiphy), skb,
 				nlhdr->nlmsg_pid);
@@ -14721,7 +14721,7 @@ static int nl80211_vendor_check_policy(const struct wiphy_vendor_command *vcmd,
 				       struct nlattr *attr,
 				       struct netlink_ext_ack *extack)
 {
-	flq_dbge_fl("nla_type%d %d %d", attr->nla_type, NLA_F_NESTED, 
+	flq_dbge("nla_type%d %d %d", attr->nla_type, NLA_F_NESTED, 
 			!(attr->nla_type & NLA_F_NESTED)) ;
 
 	if (vcmd->policy == VENDOR_CMD_RAW_DATA) {
@@ -14775,7 +14775,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 
 	vid = nla_get_u32(info->attrs[NL80211_ATTR_VENDOR_ID]);
 	subcmd = nla_get_u32(info->attrs[NL80211_ATTR_VENDOR_SUBCMD]);
-	flq_dbge_fl("(vid,subcmd)=(0x%x,0x%x)\n", vid, subcmd) ;
+	flq_dbge("(vid,subcmd)=(0x%x,0x%x)\n", vid, subcmd) ;
 	for (i = 0; i < rdev->wiphy.n_vendor_commands; i++) {
 		const struct wiphy_vendor_command *vcmd;
 		void *data = NULL;
@@ -14784,7 +14784,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 		vcmd = &rdev->wiphy.vendor_commands[i];
 
 		int n = rdev->wiphy.n_vendor_commands; 
-		//flq_dbge_fl("i%d-n%d(csi)=(%x,%x)\n", i, n, vcmd->info.vendor_id, vcmd->info.subcmd) ;
+		//flq_dbge("i%d-n%d(csi)=(%x,%x)\n", i, n, vcmd->info.vendor_id, vcmd->info.subcmd) ;
 
 		if (vcmd->info.vendor_id != vid || vcmd->info.subcmd != subcmd)
 			continue;
@@ -14816,7 +14816,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 					info->attrs[NL80211_ATTR_VENDOR_DATA],
 					genl_info_extack(info));
 			if (err) {
-				flq_dbge_fl("nl80211_vendor_check_policy err%d", err) ;
+				flq_dbge("nl80211_vendor_check_policy err%d", err) ;
 				return err;
 			}
 		}
@@ -14824,7 +14824,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 		//fflqkkey
 		//if (vcmd->info.vendor_id == INTEL_OUI && vcmd->info.subcmd == IWL_MVM_VENDOR_CMD_CSI_EVENT)
 		if (vcmd->info.vendor_id == 0x001735 && vcmd->info.subcmd == 0x24)
-			flq_dbge_fl("i%d call csi(0x%x,0x%x)", i, 
+			flq_dbge("i%d call csi(0x%x,0x%x)", i, 
 					vcmd->info.vendor_id, vcmd->info.subcmd) ;
 
 		rdev->cur_cmd_info = info;
@@ -14901,7 +14901,7 @@ static int nl80211_prepare_vendor_dump(struct sk_buff *skb,
 
 	vid = nla_get_u32(attrbuf[NL80211_ATTR_VENDOR_ID]);
 	subcmd = nla_get_u32(attrbuf[NL80211_ATTR_VENDOR_SUBCMD]);
-	flq_dbge_fl("(vid,subcmd)=(%x,%x)", vid, subcmd) ;
+	flq_dbge("(vid,subcmd)=(%x,%x)", vid, subcmd) ;
 
 	for (i = 0; i < (*rdev)->wiphy.n_vendor_commands; i++) {
 		const struct wiphy_vendor_command *vcmd;
@@ -14909,7 +14909,7 @@ static int nl80211_prepare_vendor_dump(struct sk_buff *skb,
 		vcmd = &(*rdev)->wiphy.vendor_commands[i];
 
 		int n = (*rdev)->wiphy.n_vendor_commands; 
-		flq_dbge_fl("i%d-n%d(%x,%x)=(%x,%x)\n", i, n, vid, subcmd, 
+		flq_dbge("i%d-n%d(%x,%x)=(%x,%x)\n", i, n, vid, subcmd, 
 				vcmd->info.vendor_id, vcmd->info.subcmd) ;
 
 		if (vcmd->info.vendor_id != vid || vcmd->info.subcmd != subcmd)

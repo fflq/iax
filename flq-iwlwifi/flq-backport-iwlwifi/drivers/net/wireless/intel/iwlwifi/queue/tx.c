@@ -1762,7 +1762,7 @@ static int iwl_trans_txq_send_hcmd_sync(struct iwl_trans *trans,
 
 	//fflq .send_cmd = iwl_pcie_gen2_enqueue_hcmd
 	cmd_idx = trans->ops->send_cmd(trans, cmd);
-	//flq_dbgi_fl("send_cmd=%d 5g35 2g32", cmd_idx) ;
+	//flq_dbgi("send_cmd=%d 5g35 2g32", cmd_idx) ;
 	if (cmd_idx < 0) {
 		ret = cmd_idx;
 		clear_bit(STATUS_SYNC_HCMD_ACTIVE, &trans->status);

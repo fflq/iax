@@ -2178,7 +2178,7 @@ int iwl_opmode_register(const char *name, const struct iwl_op_mode_ops *ops)
 		/* TODO: need to handle exceptional case */
 		list_for_each_entry(drv, &op->drv, list)
 		{
-			flq_dbge_fl("%s %p", op->name, op->ops);
+			flq_dbge("%s %p", op->name, op->ops);
 			drv->op_mode = _iwl_op_mode_start(drv, op);
 		}
 

@@ -531,7 +531,7 @@ static int iwl_init_channel_map(struct device *dev, const struct iwl_cfg *cfg,
 		iwl_init_band_reference(cfg, eeprom, eeprom_size, band,
 					&eeprom_ch_count, &eeprom_ch_info,
 					&eeprom_ch_array);
-		flq_dbgi_fl("ecc %d %d", eeprom_ch_count, n_channels);
+		flq_dbgi("ecc %d %d", eeprom_ch_count, n_channels);
 
 		/* Loop through each band adding each of the channels */
 		for (ch_idx = 0; ch_idx < eeprom_ch_count; ch_idx++) {

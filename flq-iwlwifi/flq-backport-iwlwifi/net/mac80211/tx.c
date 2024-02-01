@@ -1787,7 +1787,7 @@ static bool __ieee80211_tx(struct ieee80211_local *local,
 
 	switch (sdata->vif.type) {
 	case NL80211_IFTYPE_MONITOR:
-		//flq_dbgi_fl("NL80211_IFTYPE_MONITOR") ;
+		//flq_dbgi("NL80211_IFTYPE_MONITOR") ;
 		if (sdata->u.mntr.flags & MONITOR_FLAG_ACTIVE) {
 			vif = &sdata->vif;
 			break;
@@ -2476,7 +2476,7 @@ netdev_tx_t ieee80211_monitor_start_xmit(struct sk_buff *skb,
 	/* remove the injection radiotap header */
 	skb_pull(skb, len_rthdr);
 
-	//flq_dbgi_fl("before ieee80211_xmit") ;
+	//flq_dbgi("before ieee80211_xmit") ;
 	ieee80211_xmit(sdata, NULL, skb);
 	rcu_read_unlock();
 

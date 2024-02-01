@@ -841,9 +841,9 @@ static void iwlagn_rx_reply_rx(struct iwl_priv *priv,
 						  le32_to_cpu(rx_pkt_status));
 
 	//fflqb_csi_53
-	//flq_dbge_fl("%d", priv->connector_log) ;
+	//flq_dbge("%d", priv->connector_log) ;
 	if (priv->connector_log & IWL_CONN_RX_MPDU_MSK) {
-		//flq_dbge_fl("dvm send_msg rx_mpdu %d", IWL_CONN_RX_MPDU) ;
+		//flq_dbge("dvm send_msg rx_mpdu %d", IWL_CONN_RX_MPDU) ;
 		connector_send_msg((void *)header, len, IWL_CONN_RX_MPDU);
 	}
 

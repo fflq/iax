@@ -2157,7 +2157,7 @@ static ssize_t iwl_dbgfs_csi_enabled_write(struct iwl_mvm *mvm, char *buf,
 
 	if (iwl_mvm_firmware_running(mvm)) {
 		err = iwl_mvm_send_csi_cmd(mvm);
-		flq_dbge_fl("iwl_mvm_send_csi_cmd(ret=%d)\n", err);
+		flq_dbge("iwl_mvm_send_csi_cmd(ret=%d)\n", err);
 	}
 	mutex_unlock(&mvm->mutex);
 
@@ -2309,7 +2309,7 @@ static ssize_t iwl_dbgfs_csi_interval_write(struct iwl_mvm *mvm, char *buf,
 	if (err)
 		return err;
 
-	flq_dbge_fl("set interval=%d", interval);
+	flq_dbge("set interval=%d", interval);
 	mvm->csi_cfg.interval = interval;
 	if (interval)
 		mvm->csi_cfg.flags |= IWL_CHANNEL_ESTIMATION_INTERVAL;
@@ -2358,7 +2358,7 @@ static ssize_t iwl_dbgfs_csi_addresses_write(struct iwl_mvm *mvm, char *buf,
 
 		static char mac[18] = { 0 } ;
 		memcpy(mac, addrstr, 18) ;
-		flq_dbge_fl("mac(%s)", mac);
+		flq_dbge("mac(%s)", mac);
 		n = sscanf(addrstr, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
 			   &addr[0], &addr[1], &addr[2],
 			   &addr[3], &addr[4], &addr[5]);

@@ -34,7 +34,7 @@ static int iwl_mvm_binding_cmd(struct iwl_mvm *mvm, u32 action,
 
 	if (fw_has_capa(&mvm->fw->ucode_capa,
 			IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT)) {
-		flq_dbge_fl("IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT") ;
+		flq_dbge("IWL_UCODE_TLV_CAPA_BINDING_CDB_SUPPORT") ;
 		size = sizeof(cmd);
 		cmd.lmac_id = cpu_to_le32(iwl_mvm_get_lmac_id(mvm->fw,
 							      phyctxt->channel->band));
@@ -51,20 +51,20 @@ static int iwl_mvm_binding_cmd(struct iwl_mvm *mvm, u32 action,
 	for (i = 0; i < MAX_MACS_IN_BINDING; i++)
 		cmd.macs[i] = cpu_to_le32(FW_CTXT_INVALID);
 	for (i = 0; i < data->idx; i++) {
-		flq_dbge_fl("data.idx=%d/i%d, ids%d, colors%d, cmd%d\n", 
+		flq_dbge("data.idx=%d/i%d, ids%d, colors%d, cmd%d\n", 
 				data->idx, i, data->ids[i], data->colors[i], FW_CMD_ID_AND_COLOR(data->ids[i], data->colors[i]));
 		cmd.macs[i] = cpu_to_le32(FW_CMD_ID_AND_COLOR(data->ids[i], data->colors[i]));
 	}
 
 	status = 0;
 	//fflqkey different cmd cause diff
-	flq_dbge_fl("id%d color%d action%d macs(%x:%x:%x)", phyctxt->id, phyctxt->color, 
+	flq_dbge("id%d color%d action%d macs(%x:%x:%x)", phyctxt->id, phyctxt->color, 
 			action, cmd.macs[0], cmd.macs[1], cmd.macs[2]); // MAX_MACS_IN_BINDING=3
 	ret = iwl_mvm_send_cmd_pdu_status(mvm, BINDING_CONTEXT_CMD,
 					  size, &cmd, &status);
-	flq_dbge_fl("iwl_mvm_send_cmd_pdu_status=%d", ret) ;
+	flq_dbge("iwl_mvm_send_cmd_pdu_status=%d", ret) ;
 	if (ret) {
-		flq_dbge_fl("send binding (action:%d): %d", action, ret);
+		flq_dbge("send binding (action:%d): %d", action, ret);
 		IWL_ERR(mvm, "Failed to send binding (action:%d): %d\n",
 			action, ret);
 		return ret;
@@ -128,7 +128,7 @@ static int iwl_mvm_binding_update(struct iwl_mvm *mvm,
 			action = FW_CTXT_ACTION_REMOVE;
 	}
 
-	flq_dbge_fl("data.idx=%d\n", data.idx) ;
+	flq_dbge("data.idx=%d\n", data.idx) ;
 	if (add) {
 		if (WARN_ON_ONCE(data.idx >= MAX_MACS_IN_BINDING)) 
 			return -EINVAL;

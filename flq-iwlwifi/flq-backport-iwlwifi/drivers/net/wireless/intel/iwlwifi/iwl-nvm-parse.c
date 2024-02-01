@@ -1657,7 +1657,7 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
 	data->n_hw_addrs = iwl_get_n_hw_addrs(cfg, nvm_sw);
 
 	if (cfg->nvm_type != IWL_NVM_EXT) {
-		flq_dbge_fl("cfg->nvm_type != IWL_NVM_EXT") ;
+		flq_dbge("cfg->nvm_type != IWL_NVM_EXT") ;
 		/* Checking for required sections */
 		if (!nvm_calib) {
 			IWL_ERR(trans,
@@ -1672,7 +1672,7 @@ iwl_parse_nvm_data(struct iwl_trans *trans, const struct iwl_cfg *cfg,
 
 		lar_enabled = true;
 	} else {
-		flq_dbge_fl("cfg->nvm_type == IWL_NVM_EXT") ;
+		flq_dbge("cfg->nvm_type == IWL_NVM_EXT") ;
 		u16 lar_offset = data->nvm_version < 0xE39 ?
 				 NVM_LAR_OFFSET_OLD :
 				 NVM_LAR_OFFSET;
@@ -2243,7 +2243,7 @@ struct iwl_nvm_data *iwl_get_nvm(struct iwl_trans *trans,
 	    fw_has_capa(&fw->ucode_capa,
 			IWL_UCODE_TLV_CAPA_LAR_SUPPORT)) {
 		nvm->lar_enabled = true;
-		flq_dbgi_fl("lar_enabled=%d", nvm->lar_enabled) ;
+		flq_dbgi("lar_enabled=%d", nvm->lar_enabled) ;
 		sbands_flags |= IWL_NVM_SBANDS_FLAGS_LAR;
 	}
 	//nvm->lar_enabled=false; //fflq lar

@@ -1135,7 +1135,7 @@ static int iwl_init_drv(struct iwl_priv *priv)
 	//fflqb_csi_53
 	/* Dan's parameters */
 	priv->connector_log = iwlwifi_mod_params.connector_log;
-	flq_dbge_fl("connector_log=%d", priv->connector_log) ;
+	flq_dbge("connector_log=%d", priv->connector_log) ;
 	priv->bf_enabled = 1;		/* Enabled */
 	priv->rotate_rates = 0;		/* Disabled */
 	priv->last_rotate_rate = 0;	/* Disabled */

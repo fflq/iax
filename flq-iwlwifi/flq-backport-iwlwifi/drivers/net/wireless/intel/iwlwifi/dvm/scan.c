@@ -55,7 +55,7 @@ static int iwl_send_scan_abort(struct iwl_priv *priv)
 	    test_bit(STATUS_FW_ERROR, &priv->status))
 		return -EIO;
 
-	//flq_dbge_fl("call iwl_dvm_send_cmd");
+	//flq_dbge("call iwl_dvm_send_cmd");
 	ret = iwl_dvm_send_cmd(priv, &cmd);
 	if (ret)
 		return ret;
@@ -901,7 +901,7 @@ static int iwlagn_request_scan(struct iwl_priv *priv, struct ieee80211_vif *vif)
 		return ret;
 	}
 
-	//flq_dbge_fl("call iwl_dvm_send_cmd itc.l=%d must 56 or crash", sizeof(struct iwl_tx_cmd));
+	//flq_dbge("call iwl_dvm_send_cmd itc.l=%d must 56 or crash", sizeof(struct iwl_tx_cmd));
 	ret = iwl_dvm_send_cmd(priv, &cmd);
 	if (ret) {
 		clear_bit(STATUS_SCAN_HW, &priv->status);

@@ -276,7 +276,7 @@ static void iwl_mvm_get_signal_strength(struct iwl_mvm *mvm,
 	rx_status->chain_signal[0] = energy_a;
 	rx_status->chain_signal[1] = energy_b;
 
-	flqn_dbgi_fl(10000, "energyABMax(%d,%d,%d), chains(%u)",
+	flqn_dbgi(10000, "energyABMax(%d,%d,%d), chains(%u)",
 			energy_a, energy_b, max_energy, rx_status->chains);
 }
 
@@ -2153,7 +2153,7 @@ static void iwl_mvm_rx_fill_status(struct iwl_mvm *mvm,
 	}
 
 	//0xc100 0x0100 0x0
-	flqn_dbge_fl(10000, "rate_n_flags=%04x, format=%04x, switch=%04x", 
+	flqn_dbge(10000, "rate_n_flags=%04x, format=%04x, switch=%04x", 
 			rate_n_flags, format, (rate_n_flags & RATE_MCS_CHAN_WIDTH_MSK)) ;
 
 	/* must be before L-SIG data */
@@ -2264,13 +2264,13 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 
 	/*
 	u8 *mac = mvm->time_sync.peer_addr; //000
-	flqn_dbge_fl(10000, "%x:%x:%x", mac[0], mac[1], mac[2]);
+	flqn_dbge(10000, "%x:%x:%x", mac[0], mac[1], mac[2]);
 	mac = mvm->addresses[0].addr; //ifconfig mac
-	flqn_dbge_fl(10000, "%x:%x:%x", mac[0], mac[1], mac[2]);
+	flqn_dbge(10000, "%x:%x:%x", mac[0], mac[1], mac[2]);
 	u8 *mac = mvm->last_phy_info.non_cfg_phy;
 	/*
 	struct iwl_rx_phy_info *phy_info = &mvm->last_phy_info;
-	flqn_dbge_fl(10000, "uts%llu, sts%llu, ts%llu, %d, %d", 
+	flqn_dbge(10000, "uts%llu, sts%llu, ts%llu, %d, %d", 
 		0, phy_info->system_timestamp, phy_info->timestamp,   
 		phy_info->cfg_phy_cnt, phy_info->non_cfg_phy_cnt);
 	*/
@@ -2336,7 +2336,7 @@ void iwl_mvm_rx_mpdu_mq(struct iwl_mvm *mvm, struct napi_struct *napi,
 	phy_data.d4 = desc->phy_data4;
 
 	/*
-	flq_dbgi_fl("energy(%d,%d) d(%d,%d,%d,%d) cfg_phy_cnt(%d) non_cfg_phy_cnt(%d)",
+	flq_dbgi("energy(%d,%d) d(%d,%d,%d,%d) cfg_phy_cnt(%d) non_cfg_phy_cnt(%d)",
 		   	phy_data.energy_a, phy_data.energy_b,
 			phy_data.d0, phy_data.d1, phy_data.d2, phy_data.d3,
 			mvm->last_phy_info.cfg_phy_cnt, mvm->last_phy_info.non_cfg_phy_cnt);
@@ -2603,7 +2603,7 @@ void iwl_mvm_rx_monitor_no_data(struct iwl_mvm *mvm, struct napi_struct *napi,
 	struct iwl_mvm_rx_phy_data phy_data;
 	u32 format;
 
-	flqn_dbge_fl(10000, "(group_id,cmd)=(%x,%x)", pkt->hdr.group_id, pkt->hdr.cmd) ;
+	flqn_dbge(10000, "(group_id,cmd)=(%x,%x)", pkt->hdr.group_id, pkt->hdr.cmd) ;
 
 	if (unlikely(test_bit(IWL_MVM_STATUS_IN_HW_RESTART, &mvm->status)))
 		return;
@@ -2612,7 +2612,7 @@ void iwl_mvm_rx_monitor_no_data(struct iwl_mvm *mvm, struct napi_struct *napi,
 		return;
 
 	rssi = le32_to_cpu(desc->rssi);
-	//flq_dbge_fl("rssi %d\n", rssi) ; //iwl_mvm_rx_monitor_no_data
+	//flq_dbge("rssi %d", rssi) ; //iwl_mvm_rx_monitor_no_data
 	info_type = le32_to_cpu(desc->info) & RX_NO_DATA_INFO_TYPE_MSK;
 	phy_data.d0 = desc->phy_info[0];
 	phy_data.d1 = desc->phy_info[1];

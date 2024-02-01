@@ -1953,7 +1953,7 @@ irqreturn_t iwl_pcie_irq_handler(int irq, void *dev_id)
 
 	/* Error detected by uCode */
 	if (inta & CSR_INT_BIT_SW_ERR) { //fflqkey
-		flq_dbge_fl("sw err");
+		flq_dbge("sw err");
 		IWL_ERR(trans, "Microcode SW error detected. "
 			" Restarting 0x%X.\n", inta);
 		isr_stats->sw++;
@@ -2285,7 +2285,7 @@ irqreturn_t iwl_pcie_irq_msix_handler(int irq, void *dev_id)
 
 	/* Error detected by uCode */
 	if ((inta_fh & MSIX_FH_INT_CAUSES_FH_ERR) || sw_err) {
-		flq_dbge_fl("sw err");
+		flq_dbge("sw err");
 		IWL_ERR(trans,
 			"Microcode SW error detected. Restarting 0x%X.\n",
 			inta_fh);

@@ -186,7 +186,7 @@ int iwl_trans_send_cmd(struct iwl_trans *trans, struct iwl_host_cmd *cmd)
 	}
 
 	ret = iwl_trans_txq_send_hcmd(trans, cmd);
-	//flq_dbge_fl("iwl_trans_txq_send_hcmd=%d\n", ret) ;
+	//flq_dbge("iwl_trans_txq_send_hcmd=%d\n", ret) ;
 
 	if (!(cmd->flags & CMD_ASYNC))
 		lock_map_release(&trans->sync_cmd_lockdep_map);

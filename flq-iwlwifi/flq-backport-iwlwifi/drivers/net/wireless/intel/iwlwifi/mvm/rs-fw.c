@@ -35,7 +35,7 @@ static u8 rs_fw_set_active_chains(u8 chains)
 		fw_chains |= IWL_TLC_MNG_CHAIN_A_MSK;
 	if (chains & ANT_B)
 		fw_chains |= IWL_TLC_MNG_CHAIN_B_MSK;
-	flq_dbgi_fl("chains(%u) fw_chains(%u)\n", chains, fw_chains) ;
+	flq_dbgi("chains(%u) fw_chains(%u)\n", chains, fw_chains) ;
 
 	return fw_chains;
 }
