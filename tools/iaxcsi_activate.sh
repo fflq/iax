@@ -19,6 +19,7 @@ fi
 chtype=NOHT
 interval_us=10000
 #macs=00:16:ea:12:34:56
+macs=""
 
 if [ $# -gt 0 ]; then
 	chtype=$1 ;
