@@ -1,5 +1,5 @@
 %{
-libs: file_handler, tcp_client_handler, endian, csiutils, csi_handler_interface
+libs: file_handler, socket_handler, endian, csiutils, csi_handler_base
 %}
 
 classdef iaxcsi < csi_handler_base
@@ -64,7 +64,6 @@ methods (Access='public')
 
 end
 
-
 methods (Static)
 
 	function st = sread_next(input_name, save_name)
@@ -83,10 +82,10 @@ methods (Static)
 		tones = squeeze(st.csi(1,1,:)) ;
 		stones = squeeze(st.scsi(1,1,:)) ;
 
-		title(st.chan_type_str);
+		title(st.mod_bw_type);
 		plot(subc.subcs, abs(stones), 'LineWidth',2) ; hold on;
 		plot(subc.subcs(1:length(tones)), abs(tones)-10, 'LineWidth',2) ; hold on;
-		input('a') ;
+		pause;
 	end
 
 	function st = fill_csist(hdr_st, rnf_st, csi)
@@ -97,16 +96,17 @@ methods (Static)
 		st.seq = hdr_st.seq ;
 		st.us = hdr_st.us ;
 		%st.ftm = hdr_st.ftm ;
-		st.ts = hdr_st.ts;
-		st.datetime = utils.ts_to_dt(st.ts);
+		st.timestamp = hdr_st.timestamp/1e9;
+		st.datetime = utils.ts_to_dt(st.timestamp);
 
 		st.rnf = dec2hex(hdr_st.rnf) ;
-		%st.mod_type_str = rnf_st.mod_type_str ;
-		st.chan_width = rnf_st.chan_width ;
-		st.chan_type_str = rnf_st.chan_type_str ;
-		st.ant_sel = rnf_st.ant_sel ;
+		st.bandwidth = rnf_st.bandwidth ;
+		st.mod_type = rnf_st.mod_type ;
+		st.mod_bw_type = rnf_st.mod_bw_type ;
+		%st.ant_sel = rnf_st.ant_sel ;
 		%st.ldpc = rnf_st.ldpc ;
 
+		st.channel = hdr_st.channel ;
 		st.rssi = [hdr_st.rssi1, hdr_st.rssi2] ;
 		st.nrx = hdr_st.nrx ;
 		st.ntx = hdr_st.ntx ;
@@ -117,28 +117,6 @@ methods (Static)
 
 		st = iaxcsi.calib_csi_subcs(st) ;
 		%st = iaxcsi.calib_csi_perm(st) ; %call by hand
-	end
-
-
-	function [k, b, tones] = fit_csi(tones, xs)
-		tones = tones(:) ;
-		xs = xs(:) ;
-		mag = abs(tones) ;
-		uwphase = unwrap(angle(tones)) ;
-		%xs = 1:length(tones) ;
-		z = polyfit(xs, uwphase, 1) ;
-		k = z(1) ;
-		b = z(2) ;
-		%fprintf("* k(%f) b(%f)\n", k, b) ;
-		%pha = uwphase - k*xs - b;
-		%pha = uwphase - k*xs*0.2; %prev 
-		%pha = uwphase - k*xs;
-		pha = uwphase - b;
-		%plot(xs, pha); hold on;
-		%plot(xs, uwphase, ':o'); hold on;
-		%plot(xs, unwrap(angle(tones))-b); hold on;
-		tones = mag.*exp(1j*pha);
-		%plot(xs, unwrap(angle(tones)),':o'); hold on;
 	end
 
 	function st = calib_csi_perm_ppo_qtr_lambda(st, plus_ppos, do_plot)
@@ -250,33 +228,10 @@ methods (Static)
 
 		return;
 
-		ppos = unwrap(angle(csi2 .* conj(csi)));
-		z = polyfit(1:length(ppos), ppos, 1) ;
-		%[z(1), z(2), mean(ppos)]
-		%figure(21); hold on; plot(ppos,'-o'); 
-		%figure(22); hold off; plot(abs(csi),'r-o'); hold on; plot(abs(csi2),'b-o');
-		%global recs hdr_buf;
-		%recs(end+1,:) = ([st.rssi(1), st.rssi(2), pw1, pw2, hdr_buf(241:256).']);
-		%recs(end+1,:) = ([0, z(1), z(2), mean(ppos), hdr_buf(257:272).']);
-
-		%{
-		pause
-		[a,b,st.scsi(1,1,:)] = iaxcsi.fit_csi(st.scsi(1,1,:), st.subc.subcs) ;
-		[a,b,st.scsi(2,1,:)] = iaxcsi.fit_csi(st.scsi(2,1,:), st.subc.subcs) ;
-		[dk, deltab, tones] = iaxcsi.fit_csi(st.scsi(2,1,:) .* conj(st.scsi(1,1,:)), st.subc.subcs);
-		%}
-		%if ~(st.rssi(1) > st.rssi(2) && pw1 > pw2)
-		if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2)) %no
-		%if (pw1 < pw2) %no
-			%st.perm = [2,1] ; 
-			%st
-			%pause;
-			%st.scsi(:,:,:) = st.scsi(st.perm,:,:) ;
-			%for i = 1:st.ntx; st.scsi(:,i,:) = st.scsi(st.perm,i,:) ; end
+		if (pw1 >= pw2) ~= (st.rssi(1) >= st.rssi(2)) 
+			st = iaxcsi.perm_csi(st, [2,1]);
 		end
-		%pause;
 	end
-
 
 	% interp complex num by (mag,phase)
 	function yv = do_complex_interp(xv, x, y)
@@ -290,20 +245,19 @@ methods (Static)
 		yv = mag.*exp(1j*phase) ;
 	end
 
-
 	% raw_csi only data_subcs+pilot_subcs, need add dc_subcs, then interp pilot_dc_subcs
 	% eg. csi={-28:-1,1:28}, pilot{-21,-7,7,21} in csi is nan, dc{0} not in csi
 	function st = calib_csi_subcs(st)
 		% handle special
-		if strcmp(st.chan_type_str, "VHT160") 
-			st.csi = st.csi(:,:,subcarry.get_vht160_noextra_subc(st.ntone));
+		if strcmp(st.mod_bw_type, "VHT160") 
+			st.csi = st.csi(:,:,subcarrier.get_vht160_noextra_subc(st.ntone));
 			st.ntone = size(st.csi, 3) ;
-		elseif strcmp(st.chan_type_str, "HE160")
-			st.csi = st.csi(:,:,subcarry.get_he160_noextra_subc(st.ntone));
+		elseif strcmp(st.mod_bw_type, "HE160")
+			st.csi = st.csi(:,:,subcarrier.get_he160_noextra_subc(st.ntone));
 			st.ntone = size(st.csi, 3) ;
 		end
 
-		subc = subcarry.get_subc(st.chan_type_str) ;
+		subc = subcarrier.get_subc(st.mod_bw_type) ;
 		scsi = zeros(st.nrx, st.ntx, subc.subcs_len) ; % add for dc
 		data_pilot_dc_tones = zeros(1, subc.subcs_len) ;
 
@@ -325,7 +279,6 @@ methods (Static)
 		st.nstone = length(subc.subcs) ;
 	end
 
-
 	function [type, val] = get_rate_mcs_fmt_val(pos, msk_base, vals, rnf)
 		msk = bitshift(msk_base, pos) ; 
 		fmt_type = bitand(rnf, msk) ;
@@ -333,25 +286,39 @@ methods (Static)
 		val = vals(type+1) ;
 	end
 
-
 	function rnf_st = get_rnf_st(rnf)
 		rnf_st = struct() ;
 
+        % Bits 3-0: MCS
+        %rnf_st.mcs = RATE_HT_MCS_INDEX(rnf & RATE_MCS_CODE_MSK)
+
 		%Bits 10-8: mod type
-		mod_type_strs = ["CCK", "NOHT", "HT", "VHT", "HE", "EH"] ;
-		[mod_type, rnf_st.mod_type_str] = iaxcsi.get_rate_mcs_fmt_val(8, 7, mod_type_strs, rnf) ;  
+		persistent mod_type_strs ;
+		if isempty(mod_type_strs)
+			mod_type_strs = ["CCK", "NOHT", "HT", "VHT", "HE", "EH"] ;
+		end
+		[mod_type, rnf_st.mod_type] = iaxcsi.get_rate_mcs_fmt_val(8, 7, mod_type_strs, rnf) ;  
 
 		%Bits 24-23: HE type
-		if (mod_type == 4+1) 
+		persistent he_type_strs ;
+		if mod_type == 4+1 && isempty(he_type_strs)
 			he_type_strs = ["HE-SU", "HE-EXT-SU", "HE-MU", "HE-TRIG"] ;
-			[~, rnf_st.mod_type_str] = iaxcsi.get_rate_mcs_fmt_val(23, 3, he_type_strs, rnf) ;
+		end
+		if (mod_type == 4+1) 
+			[~, rnf_st.mod_type] = iaxcsi.get_rate_mcs_fmt_val(23, 3, he_type_strs, rnf) ;
 		end
 
 		%Bits 13-11: chan width
-		chan_width_vals = [20, 40, 80, 160, 320] ;
-		[~, rnf_st.chan_width] = iaxcsi.get_rate_mcs_fmt_val(11, 7, chan_width_vals, rnf) ;
+		persistent chan_width_vals ;
+		if isempty(chan_width_vals)
+			chan_width_vals = [20, 40, 80, 160, 320] ;
+		end
+		[~, rnf_st.bandwidth] = iaxcsi.get_rate_mcs_fmt_val(11, 7, chan_width_vals, rnf) ;
+		if strcmpi(rnf_st.mod_type, "NOHT")
+			rnf_st.bandwidth = 20 ;
+		end
 
-		rnf_st.chan_type_str = strcat(rnf_st.mod_type_str, num2str(rnf_st.chan_width)) ;
+		rnf_st.mod_bw_type = strcat(rnf_st.mod_type, num2str(rnf_st.bandwidth)) ;
 
 		%Bits 15-14: ant sel
 		ant_sel_vals = 0:3 ;
@@ -360,7 +327,6 @@ methods (Static)
 		%Bits 16
 		rnf_st.ldpc = rnf & bitshift(1, 16) ;
 	end
-
 
 	function hdr_st = get_csi_hdr_st(hdr_buf) 
 		hdr_st = struct() ;
@@ -378,7 +344,8 @@ methods (Static)
 		hdr_st.us = uint64(endian.le32u(hdr_buf(89:92))) ;
 		hdr_st.rnf = endian.le32u(hdr_buf(93:96)) ;
 		%custom
-		hdr_st.ts = endian.le64u(hdr_buf(209:216));
+		hdr_st.timestamp = endian.le64u(hdr_buf(209:216));
+		hdr_st.channel = hdr_buf(217);
 		%{
 		hdr_st.w1 = endian.le16u(hdr_buf(249:250)) + double(hdr_buf(261)) + endian.le16u(hdr_buf(265:266));
 		hdr_st.w2 = endian.le16u(hdr_buf(249+4:250+4)) + double(hdr_buf(261+2)) + endian.le16u(hdr_buf(265+2:266+2));
@@ -386,16 +353,12 @@ methods (Static)
 		%}
 	end
 
-
-	%从f中提取4*nrx*ntx*ntone字节到csi矩阵
 	function csi = get_csi(csi_buf, hdr_st)
 		%nsymbol = 16 ;
 		pos = 1 ;
 
 		csi = zeros(hdr_st.nrx, hdr_st.ntx, hdr_st.ntone) ;
 		for rxidx = 1:hdr_st.nrx; for txidx = 1:hdr_st.ntx; for toneidx = 1:hdr_st.ntone
-			%imag = fread(f, 1, 'int16', 'l') ;
-			%real = fread(f, 1, 'int16', 'l') ;
 			imag = double(endian.le16i(csi_buf(pos:pos+1))) ;
 			real = double(endian.le16i(csi_buf(pos+2:pos+3))) ;
 			csi(rxidx, txidx, toneidx) = real + 1j*imag ;

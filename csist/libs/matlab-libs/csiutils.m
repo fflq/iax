@@ -12,7 +12,6 @@ methods (Access='public')
 	end
 end
 
-
 methods (Static)
 
     function plot_aoa(aoa, fid, fig_title, holdon, color)
@@ -30,7 +29,6 @@ methods (Static)
         title(fig_title);
 		pause(0.001)
     end
-
 
     function plot_ppo12(csi, fid, hold_off, spec)
         if nargin < 2; fid = 13; end
@@ -92,8 +90,6 @@ methods (Static)
 		pause(0.0001);
     end
 
-
-
     %{
 	    plot_cir(squeeze(csi(1,1,:)), 20, 11);
     %}
@@ -126,7 +122,6 @@ methods (Static)
         xlabel('Time(ns)');
         ylabel('Magnitude');
     end
-
 
     %{
 	    plot_cir(squeeze(csi(:,1,:)), 20, 11);
@@ -181,7 +176,6 @@ methods (Static)
 		b = z(2) ;
 		%fprintf("* k(%f) b(%f)\n", k, b) ;
 		%pha = uwphase - k*xs - b;
-		%pha = uwphase - k*xs*0.2; %prev 
 		%pha = uwphase - k*xs;
 		pha = uwphase - b;
 		%plot(xs, pha); hold on;

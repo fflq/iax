@@ -23,23 +23,20 @@ using namespace std ;
 #include "tcp_client.h"
 #include "iaxcsi.h"
 
-
 #define log(fmt, ...)	fprintf(stdout, fmt, ##__VA_ARGS__)
 
 #define DEBUG
 #ifdef DEBUG
 #define dbg_log	log
 #else
-#define dbg_log(fmt, ...)	
+#define dbg_log(fmt, ...)	do {} while (0)
 #endif
-
 
 FILE *g_fp_csi = nullptr ;
 struct nl_cb *g_nl_cb = nullptr ;
 unsigned int g_port_id = 0;
 int g_dev_idx = -1 ;
-unique_ptr<iaxcsi::TcpClient> g_tcp_client = nullptr ;
-
+std::unique_ptr<iaxcsi::TcpClient> g_tcp_client = nullptr ;
 
 void register_iwl_mvm_vendor_csi(struct nl_sock *sk, int family_id)
 {
