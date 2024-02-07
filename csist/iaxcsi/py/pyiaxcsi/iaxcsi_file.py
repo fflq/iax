@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import struct
-
 from pyiaxcsi.iaxcsi_st import iaxcsi_st
-
 
 class iaxcsi_file:
     csipath = None
@@ -16,11 +14,9 @@ class iaxcsi_file:
         self.csist_callback = csist_callback
         self.iaxcsist_callback = iaxcsist_callback
 
-
     def start(self):
         with open(self.csipath, 'rb') as f:
             self.read_iaxcsi_file(f)
-            
 
     def read_iaxcsi_file(self, f):
         n = 0

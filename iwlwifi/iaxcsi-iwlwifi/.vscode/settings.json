@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "iwl-trans.h": "c",
+        "time-sync.h": "c",
+        "flq-mvm.h": "c"
+    }
+}

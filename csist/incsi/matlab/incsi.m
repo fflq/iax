@@ -47,7 +47,6 @@ methods (Access='public')
 
 end
 
-
 methods (Static)
 
 end

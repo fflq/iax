@@ -7,6 +7,7 @@ ALL = random_packets
 all: $(ALL)
 
 clean:
+	make -C lorcon-old clean
 	rm -f *.o $(ALL)
 
 random_packets: random_packets.c util.o
