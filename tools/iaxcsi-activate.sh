@@ -35,7 +35,7 @@ chtype=${chtype^^};
 
 
 #[function get_pci]
-pci_ids=$(lspci -D | grep 'AX200\|AX201\|2725\|AX210\|AX211' | awk '{print $1}') ; 
+pci_ids=$(lspci -D | grep 'AX200\|AX201\|2725\|AX210\|AX211\|272b\|BE200' | awk '{print $1}') ; 
 if [ "$pci_ids" == "" ]; then
 	echo "* no find iax pciid, exit." ;
 	exit -1 ;
