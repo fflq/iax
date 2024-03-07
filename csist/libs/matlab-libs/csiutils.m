@@ -60,7 +60,7 @@ methods (Static)
             set(gcf, 'Position', sz);
         end
         if ~hold_off;  hold on; end
-        if ~mod(n, 100); hold off; end
+        if ~mod(n, 500); hold off; end
         ppo = unwrap(angle(squeeze(csi2 .* conj(csi1))));
         plot(ppo, spec);
         %ylim([-pi, pi]*1.2);

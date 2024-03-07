@@ -150,8 +150,10 @@ void parse_csi_buf(uint8_t *csi_hdr, int csi_hdr_len, uint8_t *csi_data, int csi
 	memcpy(buf, &n32, 4); 
 
 	// save to file
-	fwrite(buf, 1, pos, g_fp_csi) ;
-	fflush(g_fp_csi) ;
+	if (g_fp_csi) {
+		fwrite(buf, 1, pos, g_fp_csi) ;
+		fflush(g_fp_csi) ;
+	}
 
 	// send to net
 	if (g_tcp_client) {
@@ -268,8 +270,8 @@ void loop_recv_msg(struct nl_sock *sk)
 
 void handle_args(int argc, char **argv)
 {
-	if (argc < 3) {
-		log("Usage: sudo %s wlan file [addr]\n"
+	if (argc < 2) {
+		log("Usage: sudo %s wlan [file] [addr]\n"
 			"- wlan: eg wlp8s0\n"
 			"- file: eg ./a.csi\n"
 			"* eg: sudo %s wlp8s0 ./a.csi [127.0.0.1:7120]\n", argv[0], argv[0]) ;
@@ -277,10 +279,12 @@ void handle_args(int argc, char **argv)
 	}
 
 	g_dev_idx = if_nametoindex(argv[1]) ;
-	g_fp_csi = fopen(argv[2], "w") ;
-	if (!g_dev_idx || !g_fp_csi) {
-		log("* args err(%s), devidx(%d) fp_csi(%p)\n", strerror(errno), g_dev_idx, g_fp_csi) ;
-		exit(EXIT_FAILURE) ;
+	if (argc > 2) {
+		g_fp_csi = fopen(argv[2], "w") ;
+		if (!g_dev_idx || !g_fp_csi) {
+			log("* args err(%s), devidx(%d) fp_csi(%p)\n", strerror(errno), g_dev_idx, g_fp_csi) ;
+			exit(EXIT_FAILURE) ;
+		}
 	}
 
 	if (argc > 3) {

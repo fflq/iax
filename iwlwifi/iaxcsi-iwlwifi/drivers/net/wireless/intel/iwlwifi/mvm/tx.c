@@ -823,7 +823,7 @@ int iwl_mvm_tx_skb_non_sta(struct iwl_mvm *mvm, struct sk_buff *skb)
 	dev_cmd = iwl_mvm_set_tx_params(mvm, skb, &info, hdrlen, NULL, sta_id);//fflqinj
 	if (!dev_cmd)
 		return -1;
-	//flq_iwl_mvm_set_monitor_tx_rate(mvm, skb, &info, dev_cmd) ;
+	flq_iwl_mvm_set_monitor_tx_rate(mvm, skb, &info, dev_cmd) ;
 
 	/* From now on, we cannot access info->control */
 	iwl_mvm_skb_prepare_status(skb, dev_cmd);//fflqinj
