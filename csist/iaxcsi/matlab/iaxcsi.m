@@ -132,16 +132,58 @@ methods (Static)
 		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,3]); end
 	end
 
+	function st = calib_csi_perm_ppo(st, plus_ppos, do_plot)
+		if nargin < 3; do_plot = false; end
+		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,1]); end
+
+		st = iaxcsi.calib_csi_perm(st);
+		if ~iaxcsi.is_calib_perm_valid(st); return; end
+		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,2]); end
+
+		st = iaxcsi.calib_csi_ppo(st, plus_ppos);
+		if do_plot; csiutils.plot_ppo12(st.scsi(:,1,:), [1,3,3]); end
+	end
+
 	function r = is_calib_perm_valid(st)
-		r = st.permw >= 0.2;
+		r = ~isfield(st, "permw") || st.permw >= 0.2;
+		if ~r; warning("permw=%f\n", st.permw); end
 	end
 
 	function r = is_calib_dppo_valid(st)
-		r = st.dppow >= 0.2;
+		r = ~isfield(st, "dppow") || st.dppow >= 0.2;
+		if ~r; warning("dppow=%f\n", st.dppow); end
 	end
 
 	function r = is_calib_valid(st)
 		r = iaxcsi.is_calib_perm_valid(st) && iaxcsi.is_calib_dppo_valid(st);
+	end
+
+	%convert [k,b] to ppos
+	function r_ppos = convert_from_ppos(st, ppos)
+		if length(ppos) == 2
+			ppos_kb = ppos;
+			r_ppos = ppos_kb(1)*st.subc.subcs + ppos_kb(2);
+		else
+			r_ppos = ppos;
+		end
+		if isrow(r_ppos); r_ppos = r_ppos.'; end
+		%[ppo1,ppo2] => [exp(1j*ppo1),exp(1j*ppo2)]
+		%complex avoid 0 value
+		if isreal(r_ppos); r_ppos = complex(exp(1j*r_ppos)); end
+	end
+
+	%ppos or [k,b]
+	function st = calib_csi_ppo(st, plus_ppos)
+		if st.nrx < 2
+			return;
+		end
+
+		plus_ppos = iaxcsi.convert_from_ppos(st, plus_ppos);
+
+		for i = 1:st.ntx
+			st.scsi(2,i,:) = squeeze(st.scsi(2,i,:)) .* conj(plus_ppos);
+			%st.csi(2,i,:) = squeeze(st.csi(2,i,:)) .* conj(plus_ppos);
+		end
 	end
 
 	%ppos or [k,b]
@@ -153,14 +195,7 @@ methods (Static)
 			return;
 		end
 
-		%convert [k,b] to ppos
-		if length(plus_ppos) == 2
-			ppos_kb = plus_ppos;
-			plus_ppos = ppos_kb(1)*st.subc.subcs + ppos_kb(2);
-		end
-		if isrow(plus_ppos); plus_ppos = plus_ppos.'; end
-		%[ppo1,ppo2] => [exp(1j*ppo1),exp(1j*ppo2)]
-		if isreal(plus_ppos); plus_ppos = exp(1j*plus_ppos); end
+		plus_ppos = iaxcsi.convert_from_ppos(st, plus_ppos);
 
 		%judge ppo12 by subc0
 		csi1 = squeeze(st.scsi(1,1,:));
@@ -182,10 +217,8 @@ methods (Static)
 		%minus pi
 		%wrong, need calib plus_ppos first, then judge extra pi.
 		dppo_ppos = plus_ppos * exp(-1j*double(is_hop_pi)*pi); 
-		for i = 1:st.ntx
-			st.scsi(2,i,:) = squeeze(st.scsi(2,i,:)) .* conj(dppo_ppos);
-			%st.csi(2,i,:) = squeeze(st.csi(2,i,:)) .* conj(dppo_ppos);
-		end
+		%complex avoid 0 value
+		st = iaxcsi.calib_csi_ppo(st, complex(dppo_ppos));
 	end
 
 	function st = perm_csi(st, new_perm)
