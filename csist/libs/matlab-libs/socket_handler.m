@@ -132,7 +132,7 @@ methods (Access='public')
         n = 1;
         while self.sbuf.len < count
             if n == 1
-                fprintf("* wait read buf(%d/%d) ", self.sbuf.len, count);
+                fprintf("* wait read buf(%d/%d)\n", self.sbuf.len, count);
             elseif ~mod(n, 50)
                 fprintf(".\n");
             else

@@ -14,6 +14,19 @@ end
 
 methods (Static)
 
+    function r = is_csi_linear(csi)
+        r = false;
+        uw = unwrap(angle(squeeze(csi)));
+        cc = corrcoef(1:length(uw), uw);
+        c = abs(cc(1,2));
+        if c > 0.8
+            r = true;
+        else
+            cc
+            warning('CSI is not linear %d', c);
+        end
+    end
+
     function plot_aoa(aoa, fid, fig_title, holdon, color)
         if nargin < 2; fid = 15; end
         if nargin < 3; fig_title = "aoa"; end
@@ -30,16 +43,17 @@ methods (Static)
 		pause(0.001)
     end
 
-    function plot_ppo12(csi, fid, hold_off, spec)
+    function ppo = plot_ppo12(csi, fid, hold_off, spec)
         if nargin < 2; fid = 13; end
         if nargin < 3; hold_off = false; end
         if nargin < 4; spec = "-o"; end
         
         csi = squeeze(csi);
-        csiutils.plot_ppo(csi(2,:), csi(1,:), fid, hold_off, spec);
+        %csiutils.plot_ppo(csi(2,:), csi(1,:), fid, hold_off, spec);
+        csiutils.plot_ppo(csi(1,:), csi(2,:), fid, hold_off, spec);
     end
 
-    function plot_ppo(csi1, csi2, fid, hold_off, spec)
+    function ppo = plot_ppo(csi1, csi2, fid, hold_off, spec)
         persistent n;
         if isempty(n); n = 1; end
         n = n + 1;
@@ -47,6 +61,7 @@ methods (Static)
         if nargin < 4; hold_off = false; end
         if nargin < 5; spec = "-o"; end
         
+        modn = 1;
         if size(fid) == 1
             figure(fid);
         else
@@ -58,12 +73,14 @@ methods (Static)
             sz(3) = fid(2)*szw;
             sz(4) = fid(1)*szh; 
             set(gcf, 'Position', sz);
+            modn = 3;
         end
         if ~hold_off;  hold on; end
-        if ~mod(n, 500); hold off; end
+        if mod(n, 100*length(fid)) < modn; hold off; end
         ppo = unwrap(angle(squeeze(csi2 .* conj(csi1))));
         plot(ppo, spec);
-        %ylim([-pi, pi]*1.2);
+        ylim([-pi, pi]*1.5);
+        title(n);
 		pause(0.0001);
     end
 
