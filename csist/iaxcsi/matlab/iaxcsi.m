@@ -82,7 +82,7 @@ methods (Static)
 		tones = squeeze(st.csi(1,1,:)) ;
 		stones = squeeze(st.scsi(1,1,:)) ;
 
-		title(st.mod_bw_type);
+		title(st.rate_bw_type);
 		plot(subc.subcs, abs(stones), 'LineWidth',2) ; hold on;
 		plot(subc.subcs(1:length(tones)), abs(tones)-10, 'LineWidth',2) ; hold on;
 		pause;
@@ -101,10 +101,12 @@ methods (Static)
 
 		st.rnf = dec2hex(hdr_st.rnf) ;
 		st.bandwidth = rnf_st.bandwidth ;
-		st.mod_type = rnf_st.mod_type ;
-		st.mod_bw_type = rnf_st.mod_bw_type ;
+		st.rate_type = rnf_st.rate_type ;
+		st.rate_bw_type = rnf_st.rate_bw_type ;
 		%st.ant_sel = rnf_st.ant_sel ;
 		%st.ldpc = rnf_st.ldpc ;
+		st.mcs = rnf_st.mcs;
+		st.nss = rnf_st.nss;
 
 		st.channel = hdr_st.channel ;
 		st.rssi = [hdr_st.rssi1, hdr_st.rssi2] ;
@@ -282,15 +284,15 @@ methods (Static)
 	% eg. csi={-28:-1,1:28}, pilot{-21,-7,7,21} in csi is nan, dc{0} not in csi
 	function st = calib_csi_subcs(st)
 		% handle special
-		if strcmp(st.mod_bw_type, "VHT160") 
+		if strcmp(st.rate_bw_type, "VHT160") 
 			st.csi = st.csi(:,:,subcarrier.get_vht160_noextra_subc(st.ntone));
 			st.ntone = size(st.csi, 3) ;
-		elseif strcmp(st.mod_bw_type, "HE160")
+		elseif strcmp(st.rate_bw_type, "HE160")
 			st.csi = st.csi(:,:,subcarrier.get_he160_noextra_subc(st.ntone));
 			st.ntone = size(st.csi, 3) ;
 		end
 
-		subc = subcarrier.get_subc(st.mod_bw_type) ;
+		subc = subcarrier.get_subc(st.rate_bw_type) ;
 		scsi = zeros(st.nrx, st.ntx, subc.subcs_len) ; % add for dc
 		data_pilot_dc_tones = zeros(1, subc.subcs_len) ;
 
@@ -298,13 +300,15 @@ methods (Static)
 			data_pilot_dc_tones = 0;
 			csi_data_pilot_tones = squeeze(st.csi(irx, itx, :)) ;
 			data_pilot_dc_tones(subc.idx_data_pilot_subcs) = csi_data_pilot_tones ; 
-			%figure(51);hold on; plot(subc.subcs, abs(data_pilot_dc_tones), '-o');
+			%figure(51);hold on; plot(subc.subcs, abs(data_pilot_dc_tones), 'b-o'); input("");
 
 			% for raw_csi, only data_tones valid
 			x = subc.idx_data_subcs ;
 			xv = subc.idx_pilot_dc_subcs ;
 			data_pilot_dc_tones(xv) = iaxcsi.do_complex_interp(xv, x, data_pilot_dc_tones(x)) ;
 			scsi(irx,itx,:) = data_pilot_dc_tones ;
+			%scsi(irx,itx,subc.idx_data_pilot_subcs) = squeeze(st.csi(irx, itx, :)) ;
+			%figure(51);hold on; plot(abs(squeeze(scsi(irx,itx,:))), 'r-*'); input("");
 		end; end;
 		
 		st.scsi = scsi ;
@@ -312,33 +316,39 @@ methods (Static)
 		st.nstone = length(subc.subcs) ;
 	end
 
-	function [type, val] = get_rate_mcs_fmt_val(pos, msk_base, vals, rnf)
-		msk = bitshift(msk_base, pos) ; 
-		fmt_type = bitand(rnf, msk) ;
-		type = bitshift(fmt_type, -pos) ; 
-		val = vals(type+1) ;
+	%function [type, val] = get_rnf_fmt_val(pos, msk_base, vals, rnf)
+	function val = get_rnf_fmt_val(rnf, pos, msk_base)
+		%msk = bitshift(msk_base, pos) ; fmt_type = bitand(rnf, msk) ; type = bitshift(fmt_type, -pos) ; 
+		%val = vals(type+1) ;
+		val = bitand(bitshift(rnf, -pos), msk_base) ;
 	end
 
 	function rnf_st = get_rnf_st(rnf)
 		rnf_st = struct() ;
 
-        % Bits 3-0: MCS
-        %rnf_st.mcs = RATE_HT_MCS_INDEX(rnf & RATE_MCS_CODE_MSK)
+        %Bits 3-0: MCS
+        %rnf_st.mcs = RATE_HT_MCS_INDEX(rnf & RATE_MCS_CODE_MSK);
+		rnf_st.mcs = iaxcsi.get_rnf_fmt_val(rnf, 0, 15) ; 
+
+		%Bits 5-4: nss
+		rnf_st.nss = iaxcsi.get_rnf_fmt_val(rnf, 4, 3)+1 ;
 
 		%Bits 10-8: mod type
-		persistent mod_type_strs ;
-		if isempty(mod_type_strs)
-			mod_type_strs = ["CCK", "NOHT", "HT", "VHT", "HE", "EH"] ;
+		persistent rate_type_strs ;
+		if isempty(rate_type_strs)
+			rate_type_strs = ["CCK", "NOHT", "HT", "VHT", "HE", "EH"] ;
 		end
-		[mod_type, rnf_st.mod_type] = iaxcsi.get_rate_mcs_fmt_val(8, 7, mod_type_strs, rnf) ;  
+		rate_type = iaxcsi.get_rnf_fmt_val(rnf, 8, 7) ;  
+		rnf_st.rate_type = rate_type_strs(rate_type+1) ;
 
 		%Bits 24-23: HE type
 		persistent he_type_strs ;
-		if mod_type == 4+1 && isempty(he_type_strs)
+		if rate_type == 4+1 && isempty(he_type_strs)
 			he_type_strs = ["HE-SU", "HE-EXT-SU", "HE-MU", "HE-TRIG"] ;
 		end
-		if (mod_type == 4+1) 
-			[~, rnf_st.mod_type] = iaxcsi.get_rate_mcs_fmt_val(23, 3, he_type_strs, rnf) ;
+		if (rate_type == 4+1) 
+			rate_type = iaxcsi.get_rnf_fmt_val(rnf, 23, 3);
+			%rnf_st.rate_type = he_type_strs(rate_type+1) ;
 		end
 
 		%Bits 13-11: chan width
@@ -346,16 +356,16 @@ methods (Static)
 		if isempty(chan_width_vals)
 			chan_width_vals = [20, 40, 80, 160, 320] ;
 		end
-		[~, rnf_st.bandwidth] = iaxcsi.get_rate_mcs_fmt_val(11, 7, chan_width_vals, rnf) ;
-		if strcmpi(rnf_st.mod_type, "NOHT")
+		val = iaxcsi.get_rnf_fmt_val(rnf, 11, 7) ;
+		rnf_st.bandwidth = chan_width_vals(val+1);
+		if strcmpi(rnf_st.rate_type, "NOHT")
 			rnf_st.bandwidth = 20 ;
 		end
 
-		rnf_st.mod_bw_type = strcat(rnf_st.mod_type, num2str(rnf_st.bandwidth)) ;
+		rnf_st.rate_bw_type = strcat(rnf_st.rate_type, num2str(rnf_st.bandwidth)) ;
 
 		%Bits 15-14: ant sel
-		ant_sel_vals = 0:3 ;
-		rnf_st.ant_sel = iaxcsi.get_rate_mcs_fmt_val(14, 3, ant_sel_vals, rnf) ;
+		rnf_st.ant_sel = iaxcsi.get_rnf_fmt_val(rnf, 14, 3);
 
 		%Bits 16
 		rnf_st.ldpc = rnf & bitshift(1, 16) ;
@@ -391,6 +401,7 @@ methods (Static)
 		pos = 1 ;
 
 		csi = zeros(hdr_st.nrx, hdr_st.ntx, hdr_st.ntone) ;
+		%for toneidx = 1:hdr_st.ntone; for rxidx = 1:hdr_st.nrx; for txidx = 1:hdr_st.ntx; 
 		for rxidx = 1:hdr_st.nrx; for txidx = 1:hdr_st.ntx; for toneidx = 1:hdr_st.ntone
 			imag = double(endian.le16i(csi_buf(pos:pos+1))) ;
 			real = double(endian.le16i(csi_buf(pos+2:pos+3))) ;

@@ -18,7 +18,9 @@ methods (Access='public')
     end
 
     function write(self, wbuf)
-        if isrow(self.buf) ~= isrow(wbuf); wbuf = wbuf.'; end
+        %if isrow(self.buf) ~= isrow(wbuf); wbuf = wbuf.'; end
+        if ~isrow(self.buf); self.buf = self.buf.'; end
+        if ~isrow(wbuf); wbuf = wbuf.'; end
         self.buf = [self.buf, uint8(wbuf)];
         self.len = length(self.buf);
     end
