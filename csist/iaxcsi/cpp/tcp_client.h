@@ -1,3 +1,5 @@
+// Copyright 2023 fflq
+
 #pragma once
 #ifndef _IAXCSI_TCP_CLIENT_H_
 #define _IAXCSI_TCP_CLIENT_H_
@@ -11,17 +13,19 @@
 #include <sstream>
 #include <cstring>
 #include <vector>
-#include <thread>
-#include <chrono>
+#include <algorithm>
 #include <atomic>
+#include <utility>
+#include <thread> 
+#include <chrono>
 #include <mutex>
 #include <condition_variable>
 
 namespace iaxcsi {
 
 class TcpClient {
-public:
-    TcpClient(const char *addr) {
+ public:
+    explicit TcpClient(const char *addr) {
         char *sep = strchr(const_cast<char*>(addr), ':');
         if (!sep) {
             throw std::runtime_error("Invalid addr");
@@ -32,18 +36,49 @@ public:
     }
 
     TcpClient(const char *serverIp, int serverPort) : serverPort_(serverPort) {
-        strcpy(serverIp_, serverIp);
+        strncpy(serverIp_, serverIp, sizeof(serverIp_));
         init();
-    }
-
-    void init() {
-        signal(SIGPIPE, TcpClient::handleSigPipe);
-        connectServer();
     }
 
     ~TcpClient() {
         end_ = true;
         close(sfd_);
+    }
+
+    void send(uint8_t *buf, size_t size) {
+        if (needReconn_)    return;
+
+        if (::send(sfd_, buf, size, 0) < 0) {
+            std::cerr << "* send error: buf size " << size << std::endl;
+            std::lock_guard<std::mutex> lock(mutex_);
+            needReconn_ = true;
+            cv_.notify_one();
+        }
+        std::cout << "* send: buf size " << size << std::endl;
+    }
+
+    void send(std::vector<std::pair<int, uint8_t*>> msgs) {
+        static uint8_t buf[4096];
+        uint32_t total_len = 0, n32 = 0;
+        int pos = 4;
+        for (auto msg : msgs) {
+            total_len += 4 + msg.first;
+            n32 = htonl(msg.first);
+            memcpy(buf+pos, &n32, 4);
+            pos += 4;
+            memcpy(buf+pos, msg.second, msg.first);
+            pos += msg.first;
+        }
+        n32 = htonl(total_len);
+        memcpy(buf, &n32, 4);
+
+        this->send(buf, pos);
+    }
+
+ private:
+    void init() {
+        signal(SIGPIPE, TcpClient::handleSigPipe);
+        connectServer();
     }
 
     void connectServer() {
@@ -63,6 +98,7 @@ public:
                     cv_.wait(lock, [&]{ return needReconn_; });
                 }
 
+                std::cout << "********** Reconnecting to server" << std::endl;
                 if ((sfd_ = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
                     throw std::runtime_error("Error creating socket");
                 }
@@ -72,8 +108,7 @@ public:
                     throw std::runtime_error("Error setsockopt");
                 }
 
-                if (connect(sfd_, reinterpret_cast<struct sockaddr*>(&serverAddr_), 
-                        sizeof(serverAddr_)) < 0) {
+                if (connect(sfd_, reinterpret_cast<struct sockaddr*>(&serverAddr_), sizeof(serverAddr_)) < 0) {
                     perror("* Connection faild");
                 } else {
                     sleep_second = 1;
@@ -81,58 +116,28 @@ public:
                     std::cout << "* Connected to server" << std::endl;
                 }
 
-                sleep_second = std::min(sleep_second*2, 10);
+                sleep_second = std::min<int>(sleep_second*2, 10);
                 std::this_thread::sleep_for(std::chrono::seconds(sleep_second));
-            } 
-        }) ;
+            }
+        });
         reconnThread_.detach();
-    }
-
-    void send(uint8_t *buf, size_t size) {
-        if (needReconn_)    return;
-
-        if (::send(sfd_, buf, size, 0) < 0) {
-            std::cerr << "* send error: buf size " << size << std::endl ;
-            std::lock_guard<std::mutex> lock(mutex_);
-            needReconn_ = true;
-            cv_.notify_one();
-        }
-        std::cout << "* send: buf size " << size << std::endl ;
-    }
-
-    void send(std::vector<std::pair<int, uint8_t*>> msgs)
-    {
-        static uint8_t buf[4096] ;
-        uint32_t total_len, n32 = 0 ;
-        int pos = 4 ;
-        for (auto msg : msgs) {
-            total_len += 4 + msg.first ;
-            n32 = htonl(msg.first) ;
-            memcpy(buf+pos, &n32, 4); pos += 4 ;
-            memcpy(buf+pos, msg.second, msg.first); pos += msg.first ;
-        }
-        n32 = htonl(total_len) ;
-        memcpy(buf, &n32, 4); 
-
-        this->send(buf, pos) ;
     }
 
     static void handleSigPipe(int signo) {
         std::cout << "* handleSigPipe signo " << signo << std::endl;
     }
 
-private:
-    char serverIp_[16] ;
-    int serverPort_ ;
-    struct sockaddr_in serverAddr_ ;
-    int sfd_ ;
-    std::mutex mutex_ ;
-    std::condition_variable cv_ ;
-    bool needReconn_ = true ;
+ private:
+    char serverIp_[16];
+    int serverPort_;
+    struct sockaddr_in serverAddr_;
+    int sfd_;
+    std::mutex mutex_;
+    std::condition_variable cv_;
+    bool needReconn_ = true;
     bool end_ = false;
     std::thread reconnThread_;
 };
-
-}
+}   // namespace iaxcsi
 
 #endif

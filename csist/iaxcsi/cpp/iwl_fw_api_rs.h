@@ -318,6 +318,7 @@ enum {
  * 3-0: MCS
  *
  */
+#define RATE_HT_MCS_CODE_POS		0x0
 #define RATE_HT_MCS_CODE_MSK		0x7
 #define RATE_MCS_NSS_POS		4
 #define RATE_MCS_NSS_MSK		(1 << RATE_MCS_NSS_POS)

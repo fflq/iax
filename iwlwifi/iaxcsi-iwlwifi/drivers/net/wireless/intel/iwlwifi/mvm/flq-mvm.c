@@ -87,6 +87,7 @@ void flq_expand_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr)
 	pos += sizeof(unix_ts);
 	//2. channel
 	*(csi_hdr+pos) = desc3->channel;
+	//flq_dbge("%d", desc3->channel);
 	pos += 1;
 
 	/* all zeros
