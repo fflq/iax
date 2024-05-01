@@ -128,7 +128,7 @@ void tcp_server::broadcast(uint8_t *buf, size_t size)
 
 void tcp_server::broadcast(std::vector<std::pair<int, uint8_t*>> msgs)
 {
-    uint32_t total_len, n32 = 0 ;
+    uint32_t total_len = 0, n32 = 0 ;
     static uint8_t buf[4096] ;
     int pos = 4 ;
     for (auto msg : msgs) {

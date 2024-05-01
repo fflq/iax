@@ -225,7 +225,7 @@ static const struct pci_device_id iwl_hw_card_ids[] = {
 	{IWL_PCI_DEVICE(0x0893, 0x0262, iwl135_bgn_cfg)},
 	{IWL_PCI_DEVICE(0x0892, 0x0462, iwl135_bgn_cfg)},
 #endif /* CONFIG_IWLDVM */
-//fflqe_csi_mvm
+//fflqe_csi_dvm
 
 #if IS_ENABLED(CPTCFG_IWLMVM)
 /* 7260 Series */

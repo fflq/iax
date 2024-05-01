@@ -1,5 +1,5 @@
 %{
-libs: file_handler, tcp_client_handler, endian, csiutils, csi_handler_interface
+libs: file_handler, tcp_client_handler, endian, csi_handler_interface
 %}
 
 classdef csi_handler_base < handle
@@ -14,8 +14,11 @@ properties (Access='public')
 	io_handler = [];
 	io_type = csi_handler_base.IoType.NONE;
 	io_handler_func_map = [];
-	debug = false;
 	no_io_handler = false;
+
+	debug = false;
+	read_count = inf;
+	read_time = inf;
 end
 
 methods (Access='public')
@@ -37,14 +40,19 @@ methods (Access='public')
 		%warning("** csi_handler_base");
 	end
 
-    function set(self, varargin)
+    function self = set(self, varargin)
 		self.io_handler.set(varargin{:});
 
         for i = 1:2:length(varargin)
             argin = string(varargin{i});
+			val = varargin{i+1};
             switch argin
             case "debug"
-                self.debug = varargin{i+1};
+                self.debug = val;
+			case "read_count"
+				self.read_count = val;
+			case "read_time"
+				self.read_time = val;
             otherwise
                 ;
             end
@@ -90,8 +98,9 @@ methods (Access='public')
 	function sts = read(self, save_name)
 		if (nargin < 2); save_name = '' ; end
 
+		read_count = self.read_count;
 		sts = {} ;
-		while ~self.is_end()
+		while ~self.is_end() && read_count > 0
 			st = self.read_next();
 			if isempty(st); continue; end
 
@@ -100,6 +109,7 @@ methods (Access='public')
 			if ~mod(length(sts)-1,1000)
 				fprintf("* read no.%d\n", length(sts));
 			end
+			read_count = read_count - 1;
 		end
 
 		if ~isempty(save_name)

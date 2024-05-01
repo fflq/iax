@@ -25,9 +25,10 @@ iwlwifi-$(CONFIG_EFI)	+= fw/uefi.o
 iwlwifi-$(CONFIG_PCI) += pcie/drv.o pcie/rx.o pcie/tx.o pcie/trans.o
 iwlwifi-$(CONFIG_PCI) += pcie/ctxt-info.o pcie/ctxt-info-gen3.o pcie/trans-gen2.o pcie/tx-gen2.o
 
-#fflqb
+#fflqb i53
 iwlwifi-$(CONFIG_IWLDVM) += cfg/1000.o cfg/2000.o cfg/5000.o cfg/6000.o
 #fflqe
+
 iwlwifi-$(CPTCFG_IWLMVM) += cfg/7000.o cfg/8000.o
 iwlwifi-$(CPTCFG_IWLMVM) += cfg/9000.o cfg/22000.o
 
@@ -44,7 +45,7 @@ ccflags-y += -I$(src)
 subdir-ccflags-y += $(call cc-option,-Wimplicit-fallthrough)
 # for FreeBSD compatibility - they use most of our driver
 
-#fflqb
+#fflqb i53
 obj-$(CONFIG_IWLDVM)	+= dvm/
 #fflqe
 obj-$(CPTCFG_IWLMVM)	+= mvm/

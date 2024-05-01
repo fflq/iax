@@ -3,7 +3,7 @@ classdef subcarrier < handle
 
 properties (Constant)
 	range_end = 0 ; % for matlab, noneed. for py, need=1
-	subc_space = 312.5 ;
+	subc_space = 312.5e3 ;
 	he_subc_space = subcarrier.subc_space / 4 ;
 end	
 	
