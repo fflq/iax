@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "iwl-vendor-cmd.h": "c",
+        "iwl-modparams.h": "c",
+        "pci.h": "c",
+        "format": "c",
+        "mvm.h": "c"
+    }
+}

@@ -14783,7 +14783,7 @@ static int nl80211_vendor_cmd(struct sk_buff *skb, struct genl_info *info)
 
 		vcmd = &rdev->wiphy.vendor_commands[i];
 
-		int n = rdev->wiphy.n_vendor_commands; 
+		//int n = rdev->wiphy.n_vendor_commands; 
 		//flq_dbge("i%d-n%d(csi)=(%x,%x)\n", i, n, vcmd->info.vendor_id, vcmd->info.subcmd) ;
 
 		if (vcmd->info.vendor_id != vid || vcmd->info.subcmd != subcmd)
@@ -14908,9 +14908,11 @@ static int nl80211_prepare_vendor_dump(struct sk_buff *skb,
 
 		vcmd = &(*rdev)->wiphy.vendor_commands[i];
 
+		{
 		int n = (*rdev)->wiphy.n_vendor_commands; 
 		flq_dbge("i%d-n%d(%x,%x)=(%x,%x)\n", i, n, vid, subcmd, 
 				vcmd->info.vendor_id, vcmd->info.subcmd) ;
+		}
 
 		if (vcmd->info.vendor_id != vid || vcmd->info.subcmd != subcmd)
 			continue;

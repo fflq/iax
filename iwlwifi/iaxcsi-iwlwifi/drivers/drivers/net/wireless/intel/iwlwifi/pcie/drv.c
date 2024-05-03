@@ -1865,8 +1865,8 @@ static struct pci_driver iwl_pci_driver = {
 
 int __must_check iwl_pci_register_driver(void)
 {
-	flq_dbge_fl();
 	int ret;
+	flq_dbge_fl();
 	ret = pci_register_driver(&iwl_pci_driver);
 	if (ret)
 		pr_err("Unable to initialize PCI module\n");
