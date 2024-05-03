@@ -10,8 +10,7 @@ KBUILD_CFLAGS := $(KBUILD_CFLAGS) -Wformat-security \
 	$(call backport-cc-disable-error, date-time) \
 	$(call backport-cc-disable-warning, date-time)
 
-#fflq
-KBUILD_CFLAGS += -DFLQ_DEBUG
+#KBUILD_CFLAGS += -DFLQ_DEBUG
 
 NOSTDINC_FLAGS += \
 	-I$(M)/backport-include/ \

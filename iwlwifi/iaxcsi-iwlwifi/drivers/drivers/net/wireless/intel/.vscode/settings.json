@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "connector.h": "c",
+        "internal.h": "c",
+        "tx.h": "c"
+    }
+}

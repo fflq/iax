@@ -52,12 +52,12 @@ void flq_expand_csi_hdr(struct iwl_mvm *mvm, u_int8_t *csi_hdr)
 	time64_t unix_ts;
 	int pos = 208;
 
-	flqn_dbge_fl(10000);
-
 	u8 *mac, *flq_smac = flq_res->src_mac, *csi_smac = csi_hdr+68;
 	u64 invalid_smac_tag = 0xdeaddeadbeef;
 	u64 csi_smac_tag = *(u64*)csi_smac;
 	//u64 flq_smac_tag = *(u64*)flq_smac;
+
+	flqn_dbge_fl(10000);
 
 	//if ((csi_smac[5] != 0xde) && (flq_smac[5] != csi_smac[5])) {
 	if (csi_smac_tag == invalid_smac_tag) {
@@ -167,6 +167,8 @@ void flq_mvm_record(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 	struct ieee80211_hdr *hdr;
     struct flq_iwl_mvm_res *flq_res = &mvm->flq_res;
 	size_t desc_size;
+	u8 *dst_mac, *src_mac; //fflq key, get mac
+	//u8 *mac;
 
 	if (mvm->trans->trans_cfg->device_family >= IWL_DEVICE_FAMILY_AX210)
 		desc_size = sizeof(*desc);
@@ -174,10 +176,10 @@ void flq_mvm_record(struct iwl_mvm *mvm, struct iwl_rx_cmd_buffer *rxb)
 		desc_size = IWL_RX_DESC_SIZE_V1;
 
 	hdr = (void *)(pkt->data + desc_size);
-	u8 *dst_mac = hdr->addr1, *src_mac = hdr->addr2 ; //fflq key, get mac
+	dst_mac = hdr->addr1; 
+	src_mac = hdr->addr2; 
 	memcpy(flq_res->src_mac, src_mac, ETH_ALEN);
 	memcpy(flq_res->dst_mac, dst_mac, ETH_ALEN);
-	u8 *mac = flq_res->src_mac;
 	//flq_dbgi("%x:%x:%x:%x:%x:%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
 	memcpy(&(flq_res->desc), desc, sizeof(*desc));
