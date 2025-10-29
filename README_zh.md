@@ -10,8 +10,9 @@ IAX CSI工具支持：
 
 # 安装
 ## 前提
-1. 目前针对Intel AX网卡的CSI功能主要在Linux内核5.x的Ubuntu 20.04/22.04系统上。而对于移植的Intel 5300 CSI Tool功能是基于Linux 5.15.69内核的iwldvm驱动。
-2. 安装过程需要确保网络连接正常。
+1. 目前针对Intel AX网卡的CSI功能是基于Linux 5.15.x内核（API规范）。测试中使用过内核匹配的Ubuntu 20.04/22.04系统，比如22.04.5默认内核6.8就不符合。有的发行版要在``Advanced Options for Ubuntu``启动项中选择5.15.x内核。推荐使用Ubuntu 22.04.0/1.
+2. 移植的Intel 5300 CSI Tool功能是基于Linux 5.15.69内核的iwldvm驱动。
+3. 安装依赖过程需要确保网络连接正常。
 
 ## 安装命令
 主要是依赖安装、驱动编译更新及固件更新，因此耗时较长。
@@ -159,6 +160,12 @@ $ sudo ./csi/iaxcsi/cpp/iaxcsi wlp8s0mon0 /tmp/iax.csi
 $ sudo ./tools/iaxcsi-set-monitor.sh wlp8s0 40 VHT80
 $ sudo ./csi/iaxcsi/cpp/iaxcsi wlp8s0mon0 /tmp/iax.csi 127.0.0.1:12345
 ```
+## 恢复
+恢复原始的驱动和固件。
+```shell
+$ cd iwlwifi
+$ sudo ./restore.sh
+```
 
 # 其他
 ## 脚本说明
@@ -185,16 +192,26 @@ $ # sudo ./iaxcsi-set-monitor.sh wlp8s0 40 HE160
 
 ## 其他说明
 * Intel AX210/211支持6G下CSI。
+* Intel AX201的固件尚未包含，使用系统自带的尚不明确。（暂无设备调试）
 * 注入数据包的天线选择可在`iaxcsi-activate.sh`中修改。
 * `incsi`对应Intel 5300 CSI功能，使用类似。
 
 # FAQ
-## 重新加载驱动
-很多问题可通过重新加载驱动来解决。
+## 重新配置
+很多问题可通过重新配置来解决。
 ```shell
-$ cd iwlwifi/iaxcsi-iwlwifi
-$ sudo ./tools/remake-csi-iwlwifi.sh
+$ cd iwlwifi
+$ sudo ./setup.sh
 ```
+## 失败检查
+在激活失败时可查看`dmesg`检查，可能原因包括： 
+1. 内核版本不对应（非5.15.x），可通过`uname -r`检查。
+2. 安装过程失败。
+
+## 数据接收错误
+在cpp程序运行中，返回-28、-31或别的错误，可能原因：
+1. 未使用sudo运行。
+2. 存储的目标文件权限问题。
 
 # 技术支持
 ## Intelligent Perception Lab

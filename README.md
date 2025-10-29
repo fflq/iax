@@ -10,8 +10,9 @@ IAX CSI Tool supports:
 
 # Installation
 ## Prerequisites
-1. CSI functionality for Intel AX cards is mainly supported on Linux kernel 5.x Ubuntu 20.04/22.04 systems. For the ported Intel 5300 CSI Tool functionality, it's based on the Linux 5.15.69 kernel iwldvm driver.
-2. Ensure a stable internet connection during installation.
+1. The current CSI feature for Intel AX NIC is based on the Linux 5.15.x kernel (API specification). Ubuntu 20.04/22.04 systems that have been tested with kernel matching, such as 22.04.5 default kernel 6.8 do not match. Some distributions have to select the 5.15.x kernel in the `Advanced Options for Ubuntu` startup item. Ubuntu 22.04.0/1 is recommended.
+2. For the ported Intel 5300 CSI Tool functionality, it's based on the Linux 5.15.69 kernel iwldvm driver.
+3. Ensure a stable internet connection during installation.
 
 ## Installation Commands
 The installation process involves dependency installation, driver compilation updates, and firmware updates, which can be time-consuming.
@@ -163,6 +164,12 @@ $ sudo ./csi/iaxcsi/cpp/iaxcsi wlp8s0mon0 /tmp/iax.csi
 $ sudo ./tools/iaxcsi-set-monitor.sh wlp8s0 40 VHT80
 $ sudo ./csi/iaxcsi/cpp/iaxcsi wlp8s0mon0 /tmp/iax.csi 127.0.0.1:12345
 ```
+## Restore
+To restore original firmware and driver.
+```shell
+$ cd iwlwifi
+$ sudo ./restore.sh
+```
 
 # Miscellaneous
 ## Script Explanation
@@ -189,16 +196,26 @@ For 5300 using `00:16:ea:12:34:56` MAC address, use `iaxcsi-set-injector.sh` ins
 
 ## Other Notes
 * Intel AX210/211 supports 6G CSI.
+* The firmware for Intel AX201 is not yet included, and it is not clear to use the firmware that comes with the system. (No equipment yet)
 * Antenna selection for injected packets can be modified in `iaxcsi-activate.sh`.
 * `incsi` corresponds to Intel 5300 CSI functionality and is used similarly.
 
 # FAQ
-## Reload Driver
-Many issues can be resolved by reloading the driver.
+## Reset
+Many issues can be resolved by reseting.
 ```shell
-$ cd iwlwifi/iaxcsi-iwlwifi
-$ sudo ./tools/remake-csi-iwlwifi.sh
+$ cd iwlwifi
+$ sudo ./setup.sh
 ```
+## Failure check
+You can check the `dmesg` check when activation fails, for possible reasons: 
+1. The kernel version does not correspond (not 5.15.x), which can be checked by `uname -r`.
+2. The installation process failed.
+
+## Data reception error
+In the operation of the cpp program, -28, -31 or other errors are returned, which may be caused by:
+1. Not running with sudo.
+2. Stored target file permission issues.
 
 # Powered By
 ## Intelligent Perception Lab
