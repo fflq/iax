@@ -1,0 +1,3 @@
+1. AX211
+iwlwifi-so-a0-gf-a0-64.ucode  iwlwifi-so-a0-gf-a0.pnvm
+only 64.ucode work when test in Ubuntu 22.04.0. 

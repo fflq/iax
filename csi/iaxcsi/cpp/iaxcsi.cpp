@@ -312,10 +312,7 @@ struct nl_sock *init_nl_socket() {
         return nullptr;
     }
 
-    // nl_socket_add_memberships(sk, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 0) ;
-    // nl_socket_add_memberships(sk, 13, 0) ;
-
-    nl_socket_set_buffer_size(sk, 8192, 8192);
+    nl_socket_set_buffer_size(sk, 32768, 32768);
     // miss will nl_recvmsgs_default=-16
     nl_socket_disable_seq_check(sk);
     int family_id = genl_ctrl_resolve(sk, "nl80211");

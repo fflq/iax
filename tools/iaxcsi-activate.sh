@@ -1,6 +1,10 @@
 #!/usr/bin/sudo /bin/bash
 #set -x ;
 
+if [ -z "$(sudo ls /sys/kernel/debug/iwlwifi/*/iwlmvm/csi_enabled)" ]; then
+	echo "* iax not ready, please check setup";
+	exit;	
+fi
 
 #[function usage]
 if [ $# -ge 1 ] && [ "$1" = "-h" ]; then
@@ -35,12 +39,15 @@ chtype=${chtype^^};
 
 
 #[function get_pci]
-pci_ids=$(lspci -D | grep 'AX200\|AX201\|2725\|AX210\|AX211\|272b\|BE200' | awk '{print $1}') ; 
+# AX211: 7af0
+pci_ids=$(sudo lspci -D | grep -i 'AX200\|AX201\|2725\|AX210\|AX211\|272b\|BE200\|7af0' | awk '{print $1}') ; 
+pci_ids2=$(sudo ls /sys/kernel/debug/iwlwifi/);
 if [ "$pci_ids" == "" ]; then
-	echo "* no find iax pciid, exit." ;
-	exit -1 ;
+	echo "* no find iax pciid by lspci, use ls" ;
+	pci_ids=$pci_ids2;
+	#exit -1 ;
 fi
-echo "* for pci_ids($pci_ids) $interval_us $chtype $macs" ;
+echo "* for pci_ids($pci_ids)($pci_ids2) $interval_us $chtype $macs" ;
 
 
 #[function judge chtype]
@@ -74,6 +81,10 @@ fi
 for pci_id in ${pci_ids[@]}; do
 	dbgfs_dir=/sys/kernel/debug/iwlwifi/$pci_id/iwlmvm/ ;
 	echo "* for $dbgfs_dir";
+	if [ ! -d $dbgfs_dir ]; then
+		echo "* not exists, skip";
+		continue;
+	fi
 
 	# interval us
 	echo $interval_us | sudo tee $dbgfs_dir/csi_interval > /dev/null ;
