@@ -216,3 +216,14 @@ $ sudo ./setup.sh
 # 技术支持
 ## Intelligent Perception Lab
 <a href="https://ustc-ip-lab.github.io/">![SEEMOO logo](https://ustc-ip-lab.github.io/media/logo_hua1e91360984d470552124c70967b3097_101197_0x70_resize_lanczos_3.png)</a>
+
+# 引用
+```latex
+@article{zhang2025enhancing,
+  title={Enhancing CSI-based Wireless Sensing with Open Source Linux 802.11 ax CSI Tool},
+  author={Zhang, Dongheng and Fang, Liquan and Xie, Xuecheng and Yang, Shuai and Chen, Jie and Chen, Yan},
+  journal={IEEE Sensors Journal},
+  year={2025},
+  publisher={IEEE}
+}
+```
